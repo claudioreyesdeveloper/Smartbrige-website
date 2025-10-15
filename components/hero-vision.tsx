@@ -19,9 +19,9 @@ export function HeroVision() {
         </p>
 
         <p className="text-base sm:text-lg text-foreground/90 mb-8 sm:mb-10 max-w-3xl mx-auto leading-relaxed px-4">
-          SmartBridge is the control environment I wished for when playing my Genos. It fuses the precision of Yamaha's
-          hardware with modern UI design, giving you full, fast control over performance, sound, and mixing through an
-          elegant, touch-ready interface.
+          SmartBridge is the control environment I wished for when playing my PSR, Tyros and Genos. It fuses the
+          precision of Yamaha's hardware with modern UI design, giving you full, fast control over performance, sound,
+          and mixing through an elegant, touch-ready interface.
         </p>
 
         <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center items-center px-4 mb-8">
@@ -59,7 +59,7 @@ export function HeroVision() {
         </div>
 
         <div className="inline-block px-4 py-2 bg-primary/10 border border-primary/20 rounded-full">
-          <p className="text-sm text-foreground font-medium">Compatible with PSR, Genos & Tyros5</p>
+          <p className="text-sm text-foreground font-medium">Compatible with PSR, Tyros and Genos</p>
         </div>
       </div>
     </section>
