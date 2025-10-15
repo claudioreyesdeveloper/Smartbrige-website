@@ -1,10 +1,11 @@
 import { Header } from "@/components/header"
 import { HeroVision } from "@/components/hero-vision"
-import { ExperienceToday } from "@/components/experience-today"
-import { ComingFeatures } from "@/components/coming-features"
-import { TechnicalFoundation } from "@/components/technical-foundation"
-import { DevelopmentProgress } from "@/components/development-progress"
+import { OverviewSection } from "@/components/overview-section"
+import { DevelopmentPhase } from "@/components/development-phase"
+import { RoadmapSection } from "@/components/roadmap-section"
 import { AboutCreator } from "@/components/about-creator"
+import { CommunityCollaboration } from "@/components/community-collaboration"
+import { TryItSection } from "@/components/try-it-section"
 import { EditionsLicensing } from "@/components/editions-licensing"
 import { CommunityVoices } from "@/components/community-voices"
 import { SupportDocs } from "@/components/support-docs"
@@ -18,11 +19,12 @@ export default function Home() {
       <Header />
       <main>
         <HeroVision />
-        <ExperienceToday />
-        <ComingFeatures />
-        <TechnicalFoundation />
-        <DevelopmentProgress />
+        <OverviewSection />
+        <DevelopmentPhase />
+        <RoadmapSection />
         <AboutCreator />
+        <CommunityCollaboration />
+        <TryItSection />
         <EditionsLicensing />
         <CommunityVoices />
         <SupportDocs />
