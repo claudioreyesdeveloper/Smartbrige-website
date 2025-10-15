@@ -1,45 +1,47 @@
-import { Cpu, Zap, Shield } from "lucide-react"
+import { Code, Smartphone, Layers } from "lucide-react"
 
 export function TechnicalFoundation() {
   return (
-    <section className="py-24 px-6">
+    <section className="py-24 px-6 relative">
       <div className="container mx-auto max-w-6xl">
-        <h2 className="text-4xl font-bold text-foreground mb-12 text-center">Technical Foundation</h2>
+        <h2 className="text-4xl md:text-5xl font-bold text-white mb-6 text-center font-heading">
+          Technical Foundation
+        </h2>
 
-        <div className="grid md:grid-cols-2 gap-12">
-          <div>
-            <h3 className="text-2xl font-semibold text-foreground mb-4">Yamaha Compatibility</h3>
-            <p className="text-muted-foreground mb-6 leading-relaxed">
-              Built specifically for Yamaha PSR-SX and Genos series keyboards. SmartBridge speaks the native language of
-              your instrument, ensuring seamless integration and reliable performance.
+        <div className="max-w-4xl mx-auto">
+          {/* Glass panel with technical description */}
+          <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-8 md:p-12 shadow-2xl">
+            <p className="text-lg md:text-xl text-gray-300 leading-relaxed mb-8">
+              SmartBridge is a comprehensive web-based MIDI control interface for the Yamaha Tyros5 keyboard, built with
+              modern technologies including Next.js 15, React 19, and TypeScript to provide professional-grade control
+              over all aspects of the instrument through an intuitive interface optimized for both desktop and touch
+              devices, with standalone applications utilizing the JUCE framework for the VST version and the native
+              Swift/UIKit framework for the iOS application.
             </p>
-            <div className="space-y-3">
-              <div className="flex items-center gap-3">
-                <Cpu className="w-5 h-5 text-primary" strokeWidth={1.5} />
-                <span className="text-foreground">PSR-SX900, SX700, SX600</span>
-              </div>
-              <div className="flex items-center gap-3">
-                <Cpu className="w-5 h-5 text-primary" strokeWidth={1.5} />
-                <span className="text-foreground">Genos, Genos2</span>
-              </div>
-            </div>
-          </div>
 
-          <div>
-            <h3 className="text-2xl font-semibold text-foreground mb-4">Performance</h3>
-            <div className="space-y-4">
+            {/* Technology highlights */}
+            <div className="grid md:grid-cols-3 gap-6 mt-8">
               <div className="flex items-start gap-3">
-                <Zap className="w-5 h-5 text-primary mt-1" strokeWidth={1.5} />
+                <Code className="w-6 h-6 text-cyan-400 mt-1 flex-shrink-0" strokeWidth={1.5} />
                 <div>
-                  <p className="text-foreground font-medium">Low Latency</p>
-                  <p className="text-sm text-muted-foreground">Real-time MIDI communication with minimal delay</p>
+                  <p className="text-white font-semibold mb-1">Web Technologies</p>
+                  <p className="text-sm text-gray-400">Next.js 15, React 19, TypeScript</p>
                 </div>
               </div>
+
               <div className="flex items-start gap-3">
-                <Shield className="w-5 h-5 text-primary mt-1" strokeWidth={1.5} />
+                <Layers className="w-6 h-6 text-cyan-400 mt-1 flex-shrink-0" strokeWidth={1.5} />
                 <div>
-                  <p className="text-foreground font-medium">Stable Connection</p>
-                  <p className="text-sm text-muted-foreground">Robust USB-MIDI implementation</p>
+                  <p className="text-white font-semibold mb-1">VST Plugin</p>
+                  <p className="text-sm text-gray-400">JUCE Framework</p>
+                </div>
+              </div>
+
+              <div className="flex items-start gap-3">
+                <Smartphone className="w-6 h-6 text-cyan-400 mt-1 flex-shrink-0" strokeWidth={1.5} />
+                <div>
+                  <p className="text-white font-semibold mb-1">iOS Application</p>
+                  <p className="text-sm text-gray-400">Swift/UIKit Framework</p>
                 </div>
               </div>
             </div>

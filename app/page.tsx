@@ -5,6 +5,7 @@ import { DevelopmentPhase } from "@/components/development-phase"
 import { RoadmapSection } from "@/components/roadmap-section"
 import { AboutCreator } from "@/components/about-creator"
 import { CommunityCollaboration } from "@/components/community-collaboration"
+import { TechnicalFoundation } from "@/components/technical-foundation"
 import { TryItSection } from "@/components/try-it-section"
 import { EditionsLicensing } from "@/components/editions-licensing"
 import { CommunityVoices } from "@/components/community-voices"
@@ -24,6 +25,7 @@ export default function Home() {
         <RoadmapSection />
         <AboutCreator />
         <CommunityCollaboration />
+        <TechnicalFoundation />
         <TryItSection />
         <EditionsLicensing />
         <CommunityVoices />

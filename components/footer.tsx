@@ -71,8 +71,8 @@ export function Footer() {
         </div>
 
         <div className="pt-8 border-t border-border text-center text-sm text-muted-foreground space-y-2">
-          <p>© 2025 SmartBridge. All rights reserved.</p>
-          <p className="text-xs">Built by Claudio — Yamaha player and independent developer.</p>
+          <p>© 2025 SmartBridge – An independent project by Claudio.</p>
+          <p className="text-xs">Not affiliated with Yamaha Corporation.</p>
         </div>
       </div>
     </footer>

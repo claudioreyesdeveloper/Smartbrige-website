@@ -6,28 +6,21 @@ export function EditionsLicensing() {
   const editions = [
     {
       name: "Standalone (Desktop)",
-      price: "$49",
+      price: "$70",
       description: "Full desktop application for Windows and macOS",
       features: ["All current modules", "Lifetime updates", "Priority support"],
     },
     {
       name: "VST/AU Plugin",
-      price: "$39",
+      price: "$100",
       description: "Integrate with your DAW workflow",
       features: ["DAW integration", "Automation support", "Lifetime updates"],
     },
     {
       name: "iPad Edition",
-      price: "$29",
+      price: "$110",
       description: "Touch-optimized interface for iPad",
       features: ["Touch interface", "Portable control", "Lifetime updates"],
-    },
-    {
-      name: "Complete Bundle",
-      price: "$99",
-      description: "All editions at a special price",
-      features: ["All platforms", "All modules", "Priority support", "Lifetime updates"],
-      featured: true,
     },
   ]
 
@@ -41,19 +34,12 @@ export function EditionsLicensing() {
           </p>
         </div>
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
           {editions.map((edition) => (
             <Card
               key={edition.name}
-              className={`p-6 bg-card border-border ${
-                edition.featured ? "ring-2 ring-primary" : ""
-              } hover:border-primary/50 transition-all duration-300`}
+              className="p-6 bg-card border-border hover:border-primary/50 transition-all duration-300"
             >
-              {edition.featured && (
-                <span className="inline-block px-3 py-1 bg-primary text-primary-foreground text-xs font-medium rounded-full mb-4">
-                  Best Value
-                </span>
-              )}
               <h3 className="text-xl font-semibold text-foreground mb-2">{edition.name}</h3>
               <p className="text-3xl font-bold text-primary mb-2">{edition.price}</p>
               <p className="text-sm text-muted-foreground mb-6">{edition.description}</p>
@@ -65,7 +51,7 @@ export function EditionsLicensing() {
                   </li>
                 ))}
               </ul>
-              <Button className="w-full" variant={edition.featured ? "default" : "outline"}>
+              <Button className="w-full" variant="default">
                 Get Started
               </Button>
             </Card>

@@ -1,12 +1,18 @@
 import type React from "react"
 import type { Metadata } from "next"
-import { Inter, JetBrains_Mono } from "next/font/google"
+import { Inter, Montserrat, JetBrains_Mono } from "next/font/google"
 import { Suspense } from "react"
 import "./globals.css"
 
 const inter = Inter({
   subsets: ["latin"],
   variable: "--font-inter",
+  display: "swap",
+})
+
+const montserrat = Montserrat({
+  subsets: ["latin"],
+  variable: "--font-montserrat",
   display: "swap",
 })
 
@@ -28,9 +34,11 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en" className={`dark ${inter.variable} ${jetbrainsMono.variable}`}>
+    <html lang="en" className={`dark ${inter.variable} ${montserrat.variable} ${jetbrainsMono.variable}`}>
       <body className="font-sans antialiased">
-        <Suspense fallback={null}>{children}</Suspense>
+        <div className="gradient-bg min-h-screen">
+          <Suspense fallback={null}>{children}</Suspense>
+        </div>
       </body>
     </html>
   )

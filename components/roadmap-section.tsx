@@ -42,22 +42,23 @@ export function RoadmapSection() {
       <div className="container mx-auto max-w-6xl">
         <div className="text-center mb-12 sm:mb-16">
           <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-foreground mb-4 sm:mb-6">
-            The Roadmap Ahead.
+            The Journey Ahead: <span className="text-amber-500">Built Together.</span>
           </h2>
           <p className="text-base sm:text-lg md:text-xl text-foreground/90 leading-relaxed max-w-3xl mx-auto">
-            SmartBridge will expand through planned releases, each adding new modules and capabilities.
-            <br className="hidden sm:block" />
-            The roadmap reflects both technical goals and community input.
+            Every stage is open to feedback. Your input guides the development process and shapes the final product.
           </p>
         </div>
 
         <div className="space-y-6">
           {roadmapPhases.map((phase, index) => (
-            <Card key={index} className="p-6 sm:p-8 bg-card border-border hover:border-primary/50 transition-colors">
+            <Card
+              key={index}
+              className="p-6 sm:p-8 bg-card border-cyan-500/30 hover:border-cyan-500/50 transition-all hover:shadow-lg hover:shadow-cyan-500/20"
+            >
               <div className="flex flex-col sm:flex-row sm:items-start gap-4 sm:gap-6">
                 <div className="flex-shrink-0">
-                  <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary/10 border border-primary/20">
-                    <span className="text-lg font-bold text-primary">{phase.version}</span>
+                  <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-cyan-500/10 border border-cyan-500/30 shadow-lg shadow-cyan-500/20">
+                    <span className="text-lg font-bold text-cyan-400">{phase.version}</span>
                   </div>
                 </div>
                 <div className="flex-1">
@@ -68,7 +69,7 @@ export function RoadmapSection() {
                         key={featureIndex}
                         className="flex items-start gap-2 text-sm sm:text-base text-muted-foreground"
                       >
-                        <span className="text-primary mt-1">•</span>
+                        <span className="text-cyan-400 mt-1">•</span>
                         <span>{feature}</span>
                       </li>
                     ))}
