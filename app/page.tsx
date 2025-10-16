@@ -7,7 +7,6 @@ import { AboutCreator } from "@/components/about-creator"
 import { CommunityCollaboration } from "@/components/community-collaboration"
 import { TechnicalFoundation } from "@/components/technical-foundation"
 import { TryItSection } from "@/components/try-it-section"
-import { EditionsLicensing } from "@/components/editions-licensing"
 import { CommunityVoices } from "@/components/community-voices"
 import { SupportDocs } from "@/components/support-docs"
 import { FeedbackForm } from "@/components/feedback-form"
@@ -27,7 +26,7 @@ export default function Home() {
         <CommunityCollaboration />
         <TechnicalFoundation />
         <TryItSection />
-        <EditionsLicensing />
+        {/* <EditionsLicensing /> */}
         <CommunityVoices />
         <SupportDocs />
         <FeedbackForm />
