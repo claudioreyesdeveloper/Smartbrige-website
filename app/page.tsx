@@ -1,5 +1,6 @@
 import { Header } from "@/components/header"
 import { HeroVision } from "@/components/hero-vision"
+import { ProgressUpdatesSection } from "@/components/progress-updates-section"
 import { OverviewSection } from "@/components/overview-section"
 import { DevelopmentPhase } from "@/components/development-phase"
 import { RoadmapSection } from "@/components/roadmap-section"
@@ -19,6 +20,7 @@ export default function Home() {
       <Header />
       <main>
         <HeroVision />
+        <ProgressUpdatesSection />
         <OverviewSection />
         <DevelopmentPhase />
         <RoadmapSection />

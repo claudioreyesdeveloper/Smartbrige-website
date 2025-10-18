@@ -73,12 +73,19 @@ export function Footer() {
         <div className="pt-8 border-t border-border text-center text-sm text-muted-foreground space-y-2">
           <p>© 2025 SmartBridge – An independent project by Claudio.</p>
           <p className="text-xs">Not affiliated with Yamaha Corporation.</p>
-          <p className="text-xs mt-4">
+          <p className="text-xs mt-4 space-x-3">
             <Link
               href="/admin/feedback"
               className="text-muted-foreground/50 hover:text-muted-foreground transition-colors"
             >
-              Admin
+              Feedback Admin
+            </Link>
+            <span className="text-muted-foreground/30">•</span>
+            <Link
+              href="/admin/progress"
+              className="text-muted-foreground/50 hover:text-muted-foreground transition-colors"
+            >
+              Progress Admin
             </Link>
           </p>
         </div>

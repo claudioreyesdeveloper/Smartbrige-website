@@ -33,18 +33,6 @@ export function DevelopmentPhase() {
   return (
     <section className="py-16 sm:py-24 px-4 sm:px-6 bg-muted/30">
       <div className="container mx-auto max-w-6xl">
-        <div className="text-center mb-12 sm:mb-16">
-          <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-foreground mb-4 sm:mb-6">
-            Currently in Development.
-          </h2>
-          <p className="text-base sm:text-lg md:text-xl text-foreground/90 leading-relaxed max-w-3xl mx-auto mb-6">
-            SmartBridge is in its initial development phase.
-            <br className="hidden sm:block" />
-            The first milestone, version 0.9, will deliver three functional modules forming the foundation of the
-            system:
-          </p>
-        </div>
-
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 mb-12">
           {features.map((feature, index) => {
             const Icon = feature.icon
