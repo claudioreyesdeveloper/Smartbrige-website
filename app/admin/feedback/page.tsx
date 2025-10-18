@@ -40,7 +40,7 @@ export default function AdminFeedbackPage() {
   }
 
   const handleLogin = () => {
-    if (password === "smartbridge2024") {
+    if (password === "claudio") {
       setIsAuthenticated(true)
       sessionStorage.setItem("smartbridge-admin-auth", "true")
       loadFeedback()

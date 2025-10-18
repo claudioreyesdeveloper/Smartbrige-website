@@ -54,7 +54,7 @@ export default function AdminProgressPage() {
   }
 
   const handleLogin = () => {
-    if (password === "smartbridge2024") {
+    if (password === "claudio") {
       setIsAuthenticated(true)
     } else {
       alert("Incorrect password")
