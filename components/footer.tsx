@@ -1,94 +1,16 @@
-import Link from "next/link"
-import { Music, Github, Mail } from "lucide-react"
+import { Heart } from "lucide-react"
 
 export function Footer() {
   return (
-    <footer className="border-t border-border bg-background py-12 px-6">
-      <div className="container mx-auto max-w-6xl">
-        <div className="grid md:grid-cols-4 gap-8 mb-8">
-          <div>
-            <Link href="/" className="flex items-center gap-2 mb-4">
-              <Music className="h-6 w-6 text-primary" strokeWidth={1.5} />
-              <span className="text-xl font-bold text-foreground">SmartBridge</span>
-            </Link>
-            <p className="text-sm text-muted-foreground">Your Yamaha, Unlocked.</p>
-          </div>
-
-          <div>
-            <h3 className="font-semibold mb-3 text-foreground">Product</h3>
-            <ul className="space-y-2 text-sm">
-              <li>
-                <Link href="#experience" className="text-muted-foreground hover:text-foreground transition-colors">
-                  Features
-                </Link>
-              </li>
-              <li>
-                <Link href="#editions" className="text-muted-foreground hover:text-foreground transition-colors">
-                  Editions
-                </Link>
-              </li>
-            </ul>
-          </div>
-
-          <div>
-            <h3 className="font-semibold mb-3 text-foreground">Resources</h3>
-            <ul className="space-y-2 text-sm">
-              <li>
-                <Link href="#support" className="text-muted-foreground hover:text-foreground transition-colors">
-                  Documentation
-                </Link>
-              </li>
-              <li>
-                <Link href="#support" className="text-muted-foreground hover:text-foreground transition-colors">
-                  Support
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="mailto:claudio.private@gmail.com"
-                  className="text-muted-foreground hover:text-foreground transition-colors"
-                >
-                  Contact
-                </Link>
-              </li>
-            </ul>
-          </div>
-
-          <div>
-            <h3 className="font-semibold mb-3 text-foreground">Connect</h3>
-            <div className="flex gap-3">
-              <Link href="#" className="text-muted-foreground hover:text-foreground transition-colors">
-                <Github className="h-5 w-5" strokeWidth={1.5} />
-              </Link>
-              <Link
-                href="mailto:claudio.private@gmail.com"
-                className="text-muted-foreground hover:text-foreground transition-colors"
-              >
-                <Mail className="h-5 w-5" strokeWidth={1.5} />
-              </Link>
-            </div>
-          </div>
+    <footer className="bg-white border-t border-slate-100 py-12">
+      <div className="container mx-auto px-6 text-center">
+        <div className="flex items-center justify-center gap-2 text-slate-400 mb-4">
+          <Heart className="w-4 h-4 fill-current" />
         </div>
-
-        <div className="pt-8 border-t border-border text-center text-sm text-muted-foreground space-y-2">
-          <p>© 2025 SmartBridge – An independent project by Claudio.</p>
-          <p className="text-xs">Not affiliated with Yamaha Corporation.</p>
-          <p className="text-xs mt-4 space-x-3">
-            <Link
-              href="/admin/feedback"
-              className="text-muted-foreground/50 hover:text-muted-foreground transition-colors"
-            >
-              Feedback Admin
-            </Link>
-            <span className="text-muted-foreground/30">•</span>
-            <Link
-              href="/admin/progress"
-              className="text-muted-foreground/50 hover:text-muted-foreground transition-colors"
-            >
-              Progress Admin
-            </Link>
-          </p>
-        </div>
+        <p className="text-slate-500 text-sm mb-2">© 2025 SmartBridge — An independent project by Claudio.</p>
+        <p className="text-slate-400 text-xs">
+          Not affiliated with Yamaha Corporation. Built with passion for the community.
+        </p>
       </div>
     </footer>
   )
