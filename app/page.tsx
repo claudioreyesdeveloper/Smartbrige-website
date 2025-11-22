@@ -45,6 +45,12 @@ export default function Home() {
                   I'm sharing it now because I think other keyboard players might find the same value and inspiration in
                   it that I have.
                 </p>
+                <p className="pt-2 border-t border-slate-200">
+                  If you're interested in SmartBridge, feel free to contact me at{" "}
+                  <a href="mailto:claudio.privategmail.com" className="text-amber-600 hover:text-amber-700 underline">
+                    claudio.privategmail.com
+                  </a>
+                </p>
               </div>
             </div>
           </div>
