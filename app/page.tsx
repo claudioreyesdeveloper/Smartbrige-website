@@ -28,7 +28,7 @@ export default function Home() {
         <section className="container mx-auto px-6 max-w-4xl mb-32">
           <div className="bg-white rounded-2xl p-8 md:p-12 shadow-sm border border-slate-100 flex flex-col md:flex-row gap-10 items-center">
             <div className="w-32 h-32 md:w-40 md:h-40 shrink-0 rounded-full overflow-hidden border-4 border-amber-50 shadow-inner bg-slate-100 relative">
-              <Image src="/portrait-of-a-friendly-musician.jpg" alt="Claudio" fill className="object-cover" />
+              <Image src="/images/claudio.jpeg" alt="Claudio" fill className="object-cover" />
             </div>
             <div className="space-y-4 text-center md:text-left">
               <h2 className="text-2xl font-bold text-slate-900">Hi, I'm Claudio.</h2>
@@ -60,18 +60,8 @@ export default function Home() {
             </p>
           </div>
 
-          <div className="relative aspect-video bg-slate-100 rounded-xl overflow-hidden shadow-lg border border-slate-200 group">
-            <div className="absolute inset-0 flex items-center justify-center bg-slate-50/50 group-hover:bg-transparent transition-colors">
-              <span className="bg-white/80 backdrop-blur px-4 py-2 rounded-full text-sm font-medium text-slate-500 border border-slate-200 shadow-sm">
-                SmartBridge Overview Interface
-              </span>
-            </div>
-            <Image
-              src="/music-software-interface-overview-clean-minimal.jpg"
-              alt="SmartBridge Overview"
-              fill
-              className="object-cover opacity-90 hover:opacity-100 transition-opacity duration-500"
-            />
+          <div className="relative aspect-video bg-slate-100 rounded-xl overflow-hidden shadow-lg border border-slate-200">
+            <Image src="/images/main.png" alt="SmartBridge Main Interface" fill className="object-cover" />
           </div>
         </section>
 
@@ -129,29 +119,45 @@ export default function Home() {
               </div>
             </div>
             <div className="order-1 md:order-2 relative aspect-[4/3] bg-slate-100 rounded-xl overflow-hidden shadow-md border border-slate-200">
-              <div className="absolute inset-0 flex items-center justify-center">
-                <span className="bg-white/80 backdrop-blur px-4 py-2 rounded-full text-sm font-medium text-slate-500 border border-slate-200 shadow-sm">
-                  Mixer Channels Interface
-                </span>
+              <Image src="/images/mixer.png" alt="SmartBridge Mixer" fill className="object-cover" />
+            </div>
+          </section>
+
+          <section className="grid md:grid-cols-3 gap-8 mt-16">
+            {/* DSP Effects */}
+            <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-100">
+              <div className="relative aspect-[4/3] bg-slate-100 rounded-lg overflow-hidden mb-4">
+                <Image src="/images/dsp.png" alt="DSP Effects Panel" fill className="object-cover" />
               </div>
-              <Image
-                src="/audio-mixer-software-interface-faders-knobs.jpg"
-                alt="SmartBridge Mixer"
-                fill
-                className="object-cover opacity-90"
-              />
+              <h4 className="text-lg font-semibold text-slate-900 mb-2">DSP Effects</h4>
+              <p className="text-slate-600 text-sm">In the mixer you can control all of the DSP effects.</p>
+            </div>
+
+            {/* Menu Picker */}
+            <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-100">
+              <div className="relative aspect-[4/3] bg-slate-100 rounded-lg overflow-hidden mb-4">
+                <Image src="/images/menupicker.png" alt="Voice Menu Picker" fill className="object-cover" />
+              </div>
+              <h4 className="text-lg font-semibold text-slate-900 mb-2">Menu Picker</h4>
+              <p className="text-slate-600 text-sm">
+                In the mixer you can quickly pick your voice and all of the premium packs you have installed.
+              </p>
+            </div>
+
+            {/* Search */}
+            <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-100">
+              <div className="relative aspect-[4/3] bg-slate-100 rounded-lg overflow-hidden mb-4">
+                <Image src="/images/search.png" alt="Voice Search with Autocomplete" fill className="object-cover" />
+              </div>
+              <h4 className="text-lg font-semibold text-slate-900 mb-2">Search</h4>
+              <p className="text-slate-600 text-sm">You can search, with autocomplete, all of the voices.</p>
             </div>
           </section>
 
           {/* Jam Session */}
           <section className="grid md:grid-cols-2 gap-12 items-center">
             <div className="relative aspect-[4/3] bg-slate-100 rounded-xl overflow-hidden shadow-md border border-slate-200">
-              <div className="absolute inset-0 flex items-center justify-center">
-                <span className="bg-white/80 backdrop-blur px-4 py-2 rounded-full text-sm font-medium text-slate-500 border border-slate-200 shadow-sm">
-                  Jam Session Interface
-                </span>
-              </div>
-              <Image src="/music-sequencer-timeline-chords-loop.jpg" alt="Jam Session" fill className="object-cover opacity-90" />
+              <Image src="/images/jam-20session.png" alt="Jam Session" fill className="object-cover" />
             </div>
             <div>
               <div className="flex items-center gap-3 mb-4">
@@ -246,24 +252,24 @@ export default function Home() {
               </div>
             </div>
             <div className="order-1 md:order-2 relative aspect-[4/3] bg-slate-100 rounded-xl overflow-hidden shadow-md border border-slate-200">
-              <div className="absolute inset-0 flex items-center justify-center">
-                <span className="bg-white/80 backdrop-blur px-4 py-2 rounded-full text-sm font-medium text-slate-500 border border-slate-200 shadow-sm">
-                  Jam Player Library Interface
-                </span>
-              </div>
-              <Image src="/music-library-list-songs-chords.jpg" alt="Jam Player" fill className="object-cover opacity-90" />
+              <Image src="/images/jamplayer.png" alt="Jam Player" fill className="object-cover" />
             </div>
           </section>
 
           {/* Chord Builder */}
           <section className="grid md:grid-cols-2 gap-12 items-center">
             <div className="relative aspect-[4/3] bg-slate-100 rounded-xl overflow-hidden shadow-md border border-slate-200">
-              <div className="absolute inset-0 flex items-center justify-center">
+              <div className="absolute inset-0 flex items-center justify-center bg-slate-50/50 group-hover:bg-transparent transition-colors">
                 <span className="bg-white/80 backdrop-blur px-4 py-2 rounded-full text-sm font-medium text-slate-500 border border-slate-200 shadow-sm">
                   Chord Builder Prototype
                 </span>
               </div>
-              <Image src="/music-theory-chords-circle-of-fifths-interface.jpg" alt="Chord Builder" fill className="object-cover opacity-90" />
+              <Image
+                src="/music-theory-chords-circle-of-fifths-interface.jpg"
+                alt="Chord Builder"
+                fill
+                className="object-cover opacity-90"
+              />
             </div>
             <div>
               <div className="flex items-center gap-3 mb-4">
@@ -347,12 +353,17 @@ export default function Home() {
               </div>
             </div>
             <div className="order-1 md:order-2 relative aspect-[4/3] bg-slate-100 rounded-xl overflow-hidden shadow-md border border-slate-200">
-              <div className="absolute inset-0 flex items-center justify-center">
+              <div className="absolute inset-0 flex items-center justify-center bg-slate-50/50 group-hover:bg-transparent transition-colors">
                 <span className="bg-white/80 backdrop-blur px-4 py-2 rounded-full text-sm font-medium text-slate-500 border border-slate-200 shadow-sm">
                   DAW Export Dialog Interface
                 </span>
               </div>
-              <Image src="/file-export-dialog-midi-drag-drop.jpg" alt="DAW Export" fill className="object-cover opacity-90" />
+              <Image
+                src="/file-export-dialog-midi-drag-drop.jpg"
+                alt="DAW Export"
+                fill
+                className="object-cover opacity-90"
+              />
             </div>
           </section>
 
