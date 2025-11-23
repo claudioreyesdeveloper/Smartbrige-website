@@ -47,8 +47,8 @@ export default function Home() {
                 </p>
                 <p className="pt-2 border-t border-slate-200">
                   If you're interested in SmartBridge, feel free to contact me at{" "}
-                  <a href="mailto:claudio.privategmail.com" className="text-amber-600 hover:text-amber-700 underline">
-                    claudio.privategmail.com
+                  <a href="mailto:claudio.private@gmail.com" className="text-amber-600 hover:text-amber-700 underline">
+                    claudio.private@gmail.com
                   </a>
                 </p>
               </div>
