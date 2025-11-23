@@ -1,4 +1,4 @@
-import { Music, Sliders, Library, Wand2, Share2, Laptop, Heart } from "lucide-react"
+import { Music, Sliders, Library, Wand2, Laptop, Heart, Download } from "lucide-react"
 import Image from "next/image"
 import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
@@ -320,56 +320,22 @@ export default function Home() {
           </section>
 
           {/* DAW Export */}
-          <section className="grid md:grid-cols-2 gap-12 items-center">
-            <div className="order-2 md:order-1">
+          <section className="container mx-auto px-6 max-w-4xl mb-24">
+            <div className="mb-12">
               <div className="flex items-center gap-3 mb-4">
-                <div className="p-2 bg-rose-50 rounded-lg text-rose-600">
-                  <Share2 className="w-6 h-6" />
+                <div className="p-3 bg-amber-100 rounded-xl">
+                  <Download className="w-6 h-6 text-amber-700" />
                 </div>
-                <h3 className="text-2xl font-bold text-slate-900">DAW Export</h3>
+                <h2 className="text-3xl font-bold text-slate-900">DAW Export</h2>
               </div>
-              <div className="space-y-6">
-                <div>
-                  <h4 className="text-sm font-semibold text-slate-900 uppercase tracking-wider mb-2">What it is</h4>
-                  <p className="text-slate-600">
-                    A simple way to send progression ideas and Jam Sessions into any DAW.
-                  </p>
-                </div>
-                <div>
-                  <h4 className="text-sm font-semibold text-slate-900 uppercase tracking-wider mb-2">Why it matters</h4>
-                  <ul className="space-y-2 text-slate-600">
-                    <li className="flex items-start gap-2">
-                      <span className="text-rose-400 mt-1">•</span>
-                      No complicated routing
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <span className="text-rose-400 mt-1">•</span>
-                      Cleanly labeled MIDI tracks
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <span className="text-rose-400 mt-1">•</span>
-                      Works with Cubase, Logic, Cakewalk, Reaper, Studio One, etc.
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <span className="text-rose-400 mt-1">•</span>
-                      Lets you start in SmartBridge and finish in your DAW
-                    </li>
-                  </ul>
-                </div>
-              </div>
+              <p className="text-lg text-slate-600 leading-relaxed">
+                When you're done building your session, drag it straight into your DAW timeline. Your chords, clips, and
+                settings transfer seamlessly, letting you keep working without interruption.
+              </p>
             </div>
-            <div className="order-1 md:order-2 relative aspect-[4/3] bg-slate-100 rounded-xl overflow-hidden shadow-md border border-slate-200">
-              <div className="absolute inset-0 flex items-center justify-center bg-slate-50/50 group-hover:bg-transparent transition-colors">
-                <span className="bg-white/80 backdrop-blur px-4 py-2 rounded-full text-sm font-medium text-slate-500 border border-slate-200 shadow-sm">
-                  DAW Export Dialog Interface
-                </span>
-              </div>
-              <Image
-                src="/file-export-dialog-midi-drag-drop.jpg"
-                alt="DAW Export"
-                fill
-                className="object-cover opacity-90"
-              />
+
+            <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+              <img src="/images/jamplayer.png" alt="DAW Export Interface" className="w-full h-auto" />
             </div>
           </section>
 
@@ -495,32 +461,6 @@ export default function Home() {
               <span className="px-4 py-2 bg-white border border-slate-200 rounded-full text-slate-600 text-sm">
                 No fixed schedule
               </span>
-            </div>
-          </div>
-        </section>
-
-        {/* Final Note on Cost */}
-        <section className="container mx-auto px-6 max-w-3xl mb-12">
-          <div className="border-t border-slate-200 pt-16">
-            <h3 className="text-xl font-bold text-slate-900 mb-6">A Note on Cost</h3>
-            <div className="prose prose-slate max-w-none text-slate-600">
-              <p>
-                SmartBridge was built over two months of concentrated solo development. Although it began as a personal
-                creative tool, it has grown into something others may find meaningful.
-              </p>
-              <p>
-                Because of the time and effort invested, I'm unable to release SmartBridge for free. At the same time,
-                this is not a commercial product with a company or support team behind it. I cannot offer full
-                professional support or service agreements.
-              </p>
-              <p>
-                If you choose to support SmartBridge by purchasing it, you're helping an independent musician/developer
-                continue improving a personal project. There is no business operation here — just one person sharing
-                something built with care.
-              </p>
-              <p className="font-medium text-slate-900 mt-6">
-                Thank you for understanding and for supporting indie creative work.
-              </p>
             </div>
           </div>
         </section>
