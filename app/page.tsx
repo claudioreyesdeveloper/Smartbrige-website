@@ -67,6 +67,12 @@ const features = [
 
 const supportingFeatures = [
   {
+    title: "Synthesizer V Integration",
+    image: "/images/vocal_generator.jpeg",
+    whatItIs: "SmartBridge connects vocal idea generation to a practical vocal production workflow through Synthesizer V integration.",
+    whyItMatters: "It helps turn musical and lyrical ideas into actual produced vocal parts instead of stopping at text or MIDI sketches."
+  },
+  {
     title: "Tyros DSP and Sound Control",
     image: "/images/tyros_dsp_effects.jpeg",
     whatItIs: "A dedicated view for DSP-related sound shaping and detailed Tyros control from the computer interface.",
@@ -122,10 +128,10 @@ export default function Home() {
                   From MIDI Phrase to Full Arrangement
                 </h1>
                 <p className="text-lg text-slate-600 leading-relaxed mb-5">
-                  SmartBridge connects your Yamaha keyboard with a complete songwriting workflow — chord-aware phrases, harmonization layers for brass, strings, and vocals, AI-assisted lyrics, and direct DAW export, all in one place.
+                  SmartBridge connects your Yamaha keyboard with a complete songwriting workflow — from chord-aware phrases through arrangement layers, vocals, lyrics, and Synthesizer V integration, all the way to DAW production.
                 </p>
                 <p className="text-base text-slate-500 leading-relaxed mb-8">
-                  Built by a musician, for musicians who want to move from idea to arrangement without switching tools.
+                  Built from real musician workflow needs, designed to solve practical songwriting and arrangement problems without switching tools.
                 </p>
                 <div className="flex flex-wrap gap-4">
                   <a 
@@ -305,12 +311,42 @@ export default function Home() {
           </div>
         </section>
 
+        {/* FROM PHRASE TO VOCAL PRODUCTION */}
+        <section className="py-20 lg:py-28 bg-gradient-to-b from-white to-stone-100">
+          <div className="container mx-auto px-6 max-w-3xl">
+            <div className="bg-white rounded-2xl border border-stone-200 p-10 lg:p-12 shadow-sm">
+              <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-6">From Phrase to Vocal Production</h2>
+              <p className="text-lg text-slate-600 leading-relaxed mb-8">
+                SmartBridge does not stop at MIDI phrases. It helps connect arrangement ideas, lyrics, vocal generation, and Synthesizer V workflow so musical sketches can move closer to finished production.
+              </p>
+              <div className="space-y-3">
+                <div className="flex gap-4">
+                  <div className="flex-shrink-0 w-5 h-5 rounded-full bg-amber-500 text-white flex items-center justify-center text-xs font-bold mt-1">✓</div>
+                  <p className="text-slate-600"><span className="font-medium text-slate-700">Phrase-aware vocal ideas</span> — Generate vocal melodies connected to your chord progression and song structure</p>
+                </div>
+                <div className="flex gap-4">
+                  <div className="flex-shrink-0 w-5 h-5 rounded-full bg-amber-500 text-white flex items-center justify-center text-xs font-bold mt-1">✓</div>
+                  <p className="text-slate-600"><span className="font-medium text-slate-700">Lyrics connected to the music</span> — Write and edit lyrics while hearing them against the arrangement</p>
+                </div>
+                <div className="flex gap-4">
+                  <div className="flex-shrink-0 w-5 h-5 rounded-full bg-amber-500 text-white flex items-center justify-center text-xs font-bold mt-1">✓</div>
+                  <p className="text-slate-600"><span className="font-medium text-slate-700">Backing vocals and choir layers</span> — Build multi-part vocal textures as part of your arrangement</p>
+                </div>
+                <div className="flex gap-4">
+                  <div className="flex-shrink-0 w-5 h-5 rounded-full bg-amber-500 text-white flex items-center justify-center text-xs font-bold mt-1">✓</div>
+                  <p className="text-slate-600"><span className="font-medium text-slate-700">Synthesizer V integration</span> — Move vocal sketches into Synthesizer V for production-ready vocal parts</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
         {/* SUPPORTING FEATURES */}
         <section className="py-20 lg:py-28 bg-stone-50">
           <div className="container mx-auto px-6 max-w-6xl">
-            <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-12">Advanced Workflow</h2>
+            <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-12">Complete Integration &amp; Advanced Workflow</h2>
 
-            <div className="grid md:grid-cols-3 gap-8">
+            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
               {supportingFeatures.map((feature, index) => (
                 <div 
                   key={index}
@@ -372,13 +408,13 @@ export default function Home() {
         <section className="py-20 lg:py-28 bg-gradient-to-b from-stone-100 to-stone-200">
           <div className="container mx-auto px-6 max-w-3xl text-center">
             <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-6 text-balance">
-              A complete workflow, not just a controller
+              Built from real musician workflow needs
             </h2>
             <p className="text-lg text-slate-600 mb-4 leading-relaxed">
-              SmartBridge started as a personal tool to solve a real problem: moving from a Yamaha keyboard into a proper arrangement without the friction of disconnected software.
+              SmartBridge solves a specific problem: the friction between keyboard-based idea generation and computer-based production. It connects your Yamaha keyboard to a complete arrangement workflow so you can move from musical sketch to finished production without switching tools.
             </p>
             <p className="text-base text-slate-500 mb-10 leading-relaxed">
-              If that sounds like your workflow, take a closer look at the features or reach out directly.
+              If this workflow matches how you work, explore the features or get in touch to learn more.
             </p>
             <div className="flex flex-wrap justify-center gap-4">
               <a 
