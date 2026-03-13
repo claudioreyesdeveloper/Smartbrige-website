@@ -1,549 +1,428 @@
-import { Music, Sliders, Library, Laptop, Heart, Download, Play, Database, Zap, FileMusic } from "lucide-react"
+"use client"
+
+import { useState } from "react"
 import Image from "next/image"
 import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
+import { ChevronRight, X, ArrowRight } from "lucide-react"
+
+const features = [
+  {
+    id: "tyros-mixer",
+    title: "Tyros Mixer",
+    image: "/images/tyros_mixer.jpeg",
+    whatItIs: "A full computer-based mixer and control interface for Yamaha Tyros. It gives you visual access to channel levels, pan, voice setup, sends, and other mix-related controls in one place.",
+    whyItMatters: "It lets you shape the keyboard sound faster and with better overview than working only from the hardware screen. This makes it easier to stay focused on arranging and performing instead of menu diving."
+  },
+  {
+    id: "motif-mixer",
+    title: "Motif Mixer",
+    image: "/images/motif_mixer.jpeg",
+    whatItIs: "A dedicated mixer and control view for Yamaha Motif integration. It helps manage parts, layers, and sound balance from SmartBridge in a more visual and connected way.",
+    whyItMatters: "It gives you quicker control over the Motif inside your wider setup, so you can treat it as part of the same creative workflow instead of a separate keyboard that slows you down."
+  },
+  {
+    id: "jam-player",
+    title: "Jam Player",
+    image: "/images/jam_player_tyros.jpeg",
+    whatItIs: "Jam Player is the place where chord progressions, song sections, and phrase-driven musical ideas come together. Instead of browsing disconnected clips, you work inside a musical context.",
+    whyItMatters: "It helps you hear ideas as part of a real song flow. That makes it easier to develop sections, test arrangements, and build something musical rather than collecting random MIDI fragments."
+  },
+  {
+    id: "jam-session",
+    title: "Jam Session",
+    image: "/images/jam_session.jpeg",
+    whatItIs: "Jam Session is designed for shaping larger song structures and working with sections over time. It supports progression-based playback and helps organize ideas into a fuller arrangement.",
+    whyItMatters: "It gives you a better path from sketch to song. Instead of stopping at a loop or one good phrase, you can start building a complete form with verses, choruses, and transitions."
+  },
+  {
+    id: "solo-generator",
+    title: "Solo Generator",
+    image: "/images/solo_generator.jpeg",
+    whatItIs: "The Solo Generator uses phrase-based material in a more intelligent way than a normal MIDI loop browser. It works inside the section and musical context of the song rather than treating phrases as isolated files.",
+    whyItMatters: "It helps you generate solos that feel more connected to the arrangement. That means less time searching through unrelated MIDI and more time shaping a lead line that actually fits the song."
+  },
+  {
+    id: "vocal-generator",
+    title: "Vocal Generator",
+    image: "/images/vocal_generator.jpeg",
+    whatItIs: "The Vocal Generator extends the phrase workflow into vocal writing. It gives you a way to create melodic vocal material that can become lead vocals, choirs, or backing layers.",
+    whyItMatters: "It helps turn a musical sketch into a more complete production idea. Instead of stopping with chords and instrument parts, you can start hearing how vocal lines may sit in the arrangement."
+  },
+  {
+    id: "lyrics",
+    title: "Lyrics Workflow",
+    image: "/images/lyrics.jpeg",
+    whatItIs: "The Lyrics workflow brings words into the same environment as chords, phrases, and vocal ideas. It supports the writing and editing process as part of the song-building workflow.",
+    whyItMatters: "It helps connect musical inspiration with lyric writing while the song is still alive in your ears. That makes it easier to move from instrumental ideas toward a complete song concept."
+  },
+  {
+    id: "riff-maker",
+    title: "Riff Maker / Motif Workflow",
+    image: "/images/riff_maker.jpeg",
+    whatItIs: "Riff Maker is focused on motif and riff creation around chord progressions. It helps you audition and shape repeating ideas that can become hooks, accompaniment patterns, or section material.",
+    whyItMatters: "It gives you a practical way to develop strong recurring musical ideas instead of relying only on static loops. That can make the arrangement feel more personal and composition-driven."
+  }
+]
+
+const supportingFeatures = [
+  {
+    title: "Tyros DSP and Sound Control",
+    image: "/images/tyros_dsp_effects.jpeg",
+    whatItIs: "A dedicated view for DSP-related sound shaping and detailed Tyros control from the computer interface.",
+    whyItMatters: "It makes it easier to refine sound character and polish the keyboard mix while staying inside the same working environment."
+  },
+  {
+    title: "Record Section Output",
+    image: "/images/record_section_motif.jpeg",
+    whatItIs: "A workflow for recording generated or performance-based material so it can move into the next production stage.",
+    whyItMatters: "It helps turn ideas into usable material quickly, which is important when you want to capture inspiration and continue building in the DAW."
+  },
+  {
+    title: "Settings and System Setup",
+    image: "/images/settings.jpeg",
+    whatItIs: "A central setup area for managing the SmartBridge environment and workflow options.",
+    whyItMatters: "It helps keep the system stable and organized so you can spend more time making music and less time troubleshooting your setup."
+  }
+]
+
+const galleryImages = [
+  { src: "/images/jam_player_motif.jpeg", caption: "Jam Player Motif View" },
+  { src: "/images/gallery-1.jpeg", caption: "Settings Configuration" },
+  { src: "/images/gallery-2.jpeg", caption: "Lyrics Editor" },
+  { src: "/images/gallery-3.jpeg", caption: "Jam Session Timeline" }
+]
 
 export default function Home() {
+  const [activeFeature, setActiveFeature] = useState(0)
+  const [lightboxImage, setLightboxImage] = useState<string | null>(null)
+
+  const differentiators = [
+    { title: "Beyond static MIDI loops", desc: "SmartBridge treats phrases as part of a song workflow, not just drag-and-drop content. Every idea lives inside a musical context — a chord progression, a section, a song — rather than sitting as an isolated file." },
+    { title: "Arrangement-aware workflow", desc: "It helps you build sections, structure, and musical development. Instead of collecting clips, you work toward a real song form with intros, verses, choruses, and transitions." },
+    { title: "Harmonization across multiple layers", desc: "The arrangement can grow to include brass, string, and vocal harmonization layers as part of the same process — not as an afterthought added in a separate tool." },
+    { title: "Lyrics and vocals connected to the music", desc: "SmartBridge does not stop at MIDI ideas. It can move toward words, vocal melodies, and vocal production — all while the chord progression and song sections stay in view." },
+    { title: "Yamaha keyboard connected to the DAW", desc: "It bridges the gap between hardware keyboard workflow and computer-based production. You stay in one environment instead of constantly switching between tools that do not talk to each other." }
+  ]
+
   return (
-    <div className="min-h-screen bg-[#faf9f6] text-slate-800 font-sans selection:bg-amber-100">
+    <div className="min-h-screen bg-stone-50 text-slate-800 font-sans">
       <Header />
 
-      <main className="pt-24 pb-20">
-        {/* Hero Section */}
-        <section className="container mx-auto px-6 max-w-4xl mb-24 text-center">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-50 text-amber-800 text-sm font-medium mb-6 border border-amber-100">
-            <Heart className="w-3 h-3 fill-current" />
-            <span>A Personal Creative Tool</span>
-          </div>
-          <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight text-slate-900 mb-6 leading-tight">
-            SmartBridge
-          </h1>
-          <p className="text-xl text-slate-600 leading-relaxed max-w-2xl mx-auto">
-            A personal creative tool designed for keyboard players who want a more inspiring musical workflow.
-          </p>
-        </section>
-
-        {/* Origin Story */}
-        <section className="container mx-auto px-6 max-w-4xl mb-32">
-          <div className="prose prose-lg max-w-none text-slate-600 space-y-6">
-            <p className="text-lg leading-relaxed">
-              SmartBridge was created by a single musician who wanted something that felt natural, intuitive, and
-              musical rather than technical. It did not begin as a commercial idea or a software product. It grew out of
-              a musician's desire to explore the full richness of content that the Tyros and Motif have, but which is
-              often locked behind technical barriers.
-            </p>
-            <p className="text-lg leading-relaxed">
-              The decision to share it with others comes from the simple hope that fellow musicians might find the same
-              spark of inspiration in it.
-            </p>
-          </div>
-        </section>
-
-        {/* About the Creator */}
-        <section className="container mx-auto px-6 max-w-4xl mb-32">
-          <div className="bg-white rounded-2xl p-8 md:p-12 shadow-sm border border-slate-100 flex flex-col md:flex-row gap-10 items-center">
-            <div className="w-40 h-40 md:w-48 md:h-48 shrink-0 rounded-full overflow-hidden border-4 border-amber-50 shadow-inner bg-slate-100 relative">
-              <Image src="/images/claudio.jpeg" alt="Claudio" fill className="object-cover" />
-            </div>
-            <div className="space-y-4 text-center md:text-left">
-              <div className="space-y-4 text-slate-600 leading-relaxed">
-                <p>
-                  This project started as a personal tool to explore sounds, chords, and Yamaha mixer control in a way
-                  that felt right. It grew naturally out of curiosity and musical needs.
+      <main className="pt-20">
+        {/* HERO SECTION */}
+        <section className="bg-gradient-to-b from-white to-stone-100 py-20 lg:py-28">
+          <div className="container mx-auto px-6 max-w-6xl">
+            <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+              <div className="order-2 lg:order-1">
+                <div className="inline-flex items-center gap-2 bg-amber-50 border border-amber-200 text-amber-700 text-sm font-medium px-3 py-1.5 rounded-full mb-6">
+                  For Yamaha Tyros &amp; Motif musicians
+                </div>
+                <h1 className="text-4xl md:text-5xl lg:text-[3.25rem] font-bold text-slate-900 mb-6 leading-[1.15] tracking-tight text-balance">
+                  From MIDI Phrase to Full Arrangement
+                </h1>
+                <p className="text-lg text-slate-600 leading-relaxed mb-5">
+                  SmartBridge connects your Yamaha keyboard with a complete songwriting workflow — chord-aware phrases, harmonization layers for brass, strings, and vocals, AI-assisted lyrics, and direct DAW export, all in one place.
                 </p>
-                <p>
-                  I'm sharing it now because I think other keyboard players might find the same value and inspiration in
-                  it that I have.
+                <p className="text-base text-slate-500 leading-relaxed mb-8">
+                  Built by a musician, for musicians who want to move from idea to arrangement without switching tools.
                 </p>
-                <p className="pt-4 border-t border-slate-200">
-                  If you're interested in SmartBridge, feel free to contact me at{" "}
-                  <a
-                    href="mailto:claudio.private@gmail.com"
-                    className="text-amber-600 hover:text-amber-700 underline font-medium"
+                <div className="flex flex-wrap gap-4">
+                  <a 
+                    href="#features" 
+                    className="inline-flex items-center gap-2 px-6 py-3 bg-amber-500 hover:bg-amber-600 text-white font-medium rounded-lg transition-all hover:shadow-lg hover:shadow-amber-500/25"
                   >
-                    claudio.private@gmail.com
+                    Explore the Features
+                    <ChevronRight className="w-4 h-4" />
                   </a>
-                </p>
+                  <a 
+                    href="mailto:claudio.private@gmail.com"
+                    className="inline-flex items-center gap-2 px-6 py-3 border-2 border-slate-300 text-slate-700 hover:border-slate-400 hover:bg-white font-medium rounded-lg transition-all"
+                  >
+                    Get in Touch
+                  </a>
+                </div>
+              </div>
+              <div className="order-1 lg:order-2">
+                <div 
+                  className="relative aspect-video bg-slate-200 rounded-2xl overflow-hidden shadow-2xl shadow-slate-300/50 cursor-pointer group"
+                  onClick={() => setLightboxImage("/images/jam_player_tyros.jpeg")}
+                >
+                  <Image
+                    src="/images/jam_player_tyros.jpeg"
+                    alt="Jam Player Tyros"
+                    fill
+                    className="object-cover transition-transform duration-500 group-hover:scale-105"
+                    priority
+                  />
+                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors" />
+                  <div className="absolute bottom-4 right-4 bg-white/90 backdrop-blur-sm px-3 py-1.5 rounded-full text-sm font-medium text-slate-700 opacity-0 group-hover:opacity-100 transition-opacity">
+                    Click to expand
+                  </div>
+                </div>
               </div>
             </div>
           </div>
         </section>
 
-        {/* Overview - What is SmartBridge */}
-        <section className="container mx-auto px-6 max-w-5xl mb-32">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-6">Overview</h2>
-            <p className="text-lg text-slate-600 max-w-3xl mx-auto leading-relaxed">
-              SmartBridge combines a Yamaha-focused mixer, chord tools, jam environments, and DAW export features into a
-              coherent creative ecosystem. It aims to remove friction from the creative process and make experimentation
-              enjoyable and immediate.
+        {/* WHY SMARTBRIDGE IS DIFFERENT */}
+        <section className="py-20 lg:py-24 bg-gradient-to-b from-stone-50 to-white">
+          <div className="container mx-auto px-6 max-w-6xl">
+            <div className="mb-12">
+              <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-4">Why SmartBridge Is Different</h2>
+              <p className="text-lg text-slate-500 max-w-2xl">Most keyboard software manages sounds or plays back loops. SmartBridge is built around the full creative process — from the first chord to the finished arrangement.</p>
+            </div>
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {differentiators.map((item, index) => (
+                <div key={index} className="bg-white rounded-xl border border-stone-200 p-6 shadow-sm">
+                  <div className="w-8 h-8 rounded-lg bg-amber-100 flex items-center justify-center mb-4">
+                    <span className="text-amber-600 font-bold text-sm">{index + 1}</span>
+                  </div>
+                  <h3 className="font-semibold text-slate-900 mb-2">{item.title}</h3>
+                  <p className="text-slate-500 text-sm leading-relaxed">{item.desc}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* CORE FEATURES - INTERACTIVE TAB SECTION */}
+        <section id="features" className="py-20 lg:py-28 bg-white">
+          <div className="container mx-auto px-6 max-w-6xl">
+            <div className="mb-12">
+              <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-4">Core Features</h2>
+              <p className="text-lg text-slate-500">Eight integrated modules for complete creative control</p>
+            </div>
+
+            {/* Feature Tabs */}
+            <div className="flex flex-wrap gap-2 mb-8 border-b border-slate-200 pb-4">
+              {features.map((feature, index) => (
+                <button
+                  key={feature.id}
+                  onClick={() => setActiveFeature(index)}
+                  className={`px-4 py-2 rounded-lg font-medium text-sm transition-all ${
+                    activeFeature === index 
+                      ? "bg-amber-500 text-white shadow-lg shadow-amber-500/25" 
+                      : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                  }`}
+                >
+                  {feature.title}
+                </button>
+              ))}
+            </div>
+
+            {/* Active Feature Display */}
+            <div className="grid lg:grid-cols-2 gap-12 items-start">
+              <div 
+                className="relative aspect-video bg-slate-200 rounded-2xl overflow-hidden shadow-xl cursor-pointer group"
+                onClick={() => setLightboxImage(features[activeFeature].image)}
+              >
+                <Image
+                  src={features[activeFeature].image}
+                  alt={features[activeFeature].title}
+                  fill
+                  className="object-cover transition-transform duration-500 group-hover:scale-105"
+                />
+                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors" />
+                <div className="absolute bottom-4 right-4 bg-white/90 backdrop-blur-sm px-3 py-1.5 rounded-full text-sm font-medium text-slate-700 opacity-0 group-hover:opacity-100 transition-opacity">
+                  Click to expand
+                </div>
+              </div>
+              <div>
+                <h3 className="text-2xl font-bold text-slate-900 mb-6">{features[activeFeature].title}</h3>
+                <div className="space-y-6">
+                  <div className="bg-stone-50 rounded-xl p-6 border border-stone-200">
+                    <h4 className="text-sm font-semibold text-amber-600 uppercase tracking-wide mb-3">What it is</h4>
+                    <p className="text-slate-600 leading-relaxed">{features[activeFeature].whatItIs}</p>
+                  </div>
+                  <div className="bg-stone-50 rounded-xl p-6 border border-stone-200">
+                    <h4 className="text-sm font-semibold text-amber-600 uppercase tracking-wide mb-3">Why it matters for you</h4>
+                    <p className="text-slate-600 leading-relaxed">{features[activeFeature].whyItMatters}</p>
+                  </div>
+                </div>
+                <div className="mt-6 flex gap-2">
+                  <button 
+                    onClick={() => setActiveFeature(prev => prev > 0 ? prev - 1 : features.length - 1)}
+                    className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-lg transition-colors"
+                  >
+                    Previous
+                  </button>
+                  <button 
+                    onClick={() => setActiveFeature(prev => prev < features.length - 1 ? prev + 1 : 0)}
+                    className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-lg transition-colors"
+                  >
+                    Next
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* CREATIVE FLOW */}
+        <section className="py-20 lg:py-28 bg-white">
+          <div className="container mx-auto px-6 max-w-6xl">
+            <div className="mb-12">
+              <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-4">A Connected Creative Flow</h2>
+              <p className="text-lg text-slate-500">SmartBridge helps you move from a musical idea to a fuller arrangement without jumping between disconnected tools</p>
+            </div>
+
+            <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+              <div className="space-y-0">
+                {[
+                  { step: 1, title: "Start with a progression or song section", desc: "Choose from curated chord progressions or create your own foundation" },
+                  { step: 2, title: "Explore phrases, riffs, solos, and arrangement layers", desc: "Generate and audition musical ideas that fit your progression" },
+                  { step: 3, title: "Add lyrics, vocals, and harmonization", desc: "Build out full arrangements with complete musical layers" },
+                  { step: 4, title: "Export into the DAW", desc: "Move your complete arrangements directly into production" }
+                ].map((item, index) => (
+                  <div key={item.step} className="flex gap-6 group">
+                    <div className="flex flex-col items-center">
+                      <div className="w-12 h-12 rounded-full bg-amber-500 text-white font-bold flex items-center justify-center text-lg shadow-lg shadow-amber-500/25 group-hover:scale-110 transition-transform">
+                        {item.step}
+                      </div>
+                      {index < 3 && <div className="w-0.5 h-16 bg-gradient-to-b from-amber-500 to-amber-200" />}
+                    </div>
+                    <div className="pb-8">
+                      <h3 className="text-lg font-semibold text-slate-900 mb-2">{item.title}</h3>
+                      <p className="text-slate-500">{item.desc}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <div 
+                className="relative aspect-[4/3] bg-slate-200 rounded-2xl overflow-hidden shadow-xl cursor-pointer group"
+                onClick={() => setLightboxImage("/images/riff_maker.jpeg")}
+              >
+                <Image
+                  src="/images/riff_maker.jpeg"
+                  alt="Creative Flow"
+                  fill
+                  className="object-cover transition-transform duration-500 group-hover:scale-105"
+                />
+                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors" />
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* SUPPORTING FEATURES */}
+        <section className="py-20 lg:py-28 bg-stone-50">
+          <div className="container mx-auto px-6 max-w-6xl">
+            <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-12">Advanced Workflow</h2>
+
+            <div className="grid md:grid-cols-3 gap-8">
+              {supportingFeatures.map((feature, index) => (
+                <div 
+                  key={index}
+                  className="bg-white rounded-xl overflow-hidden border border-stone-200 shadow-sm hover:shadow-lg transition-all duration-300 group"
+                >
+                  <div 
+                    className="relative aspect-video bg-slate-200 overflow-hidden cursor-pointer"
+                    onClick={() => setLightboxImage(feature.image)}
+                  >
+                    <Image
+                      src={feature.image}
+                      alt={feature.title}
+                      fill
+                      className="object-cover transition-transform duration-500 group-hover:scale-105"
+                    />
+                  </div>
+                  <div className="p-6">
+                    <h3 className="text-lg font-bold text-slate-900 mb-4">{feature.title}</h3>
+                    <div className="space-y-3 text-sm">
+                      <p className="text-slate-600"><span className="font-medium text-slate-700">What it is:</span> {feature.whatItIs}</p>
+                      <p className="text-slate-600"><span className="font-medium text-slate-700">Why it matters:</span> {feature.whyItMatters}</p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* SCREENSHOT GALLERY */}
+        <section className="py-20 lg:py-28 bg-white">
+          <div className="container mx-auto px-6 max-w-6xl">
+            <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-12">More Screens from SmartBridge</h2>
+
+            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+              {galleryImages.map((img, index) => (
+                <div 
+                  key={index}
+                  className="group cursor-pointer"
+                  onClick={() => setLightboxImage(img.src)}
+                >
+                  <div className="relative aspect-video bg-slate-200 rounded-xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300">
+                    <Image
+                      src={img.src}
+                      alt={img.caption}
+                      fill
+                      className="object-cover transition-transform duration-500 group-hover:scale-105"
+                    />
+                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors" />
+                  </div>
+                  <p className="mt-3 text-sm text-slate-500 text-center">{img.caption}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* FINAL CTA */}
+        <section className="py-20 lg:py-28 bg-gradient-to-b from-stone-100 to-stone-200">
+          <div className="container mx-auto px-6 max-w-3xl text-center">
+            <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-6 text-balance">
+              A complete workflow, not just a controller
+            </h2>
+            <p className="text-lg text-slate-600 mb-4 leading-relaxed">
+              SmartBridge started as a personal tool to solve a real problem: moving from a Yamaha keyboard into a proper arrangement without the friction of disconnected software.
             </p>
-          </div>
-
-          <div className="relative aspect-video bg-slate-100 rounded-xl overflow-hidden shadow-lg border border-slate-200">
-            <Image src="/images/main.png" alt="SmartBridge Main Interface" fill className="object-cover" />
-          </div>
-        </section>
-
-        {/* The Core Foundation */}
-        <section className="container mx-auto px-6 max-w-4xl mb-32">
-          <div className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-2xl p-8 md:p-12 border border-amber-100">
-            <div className="flex items-center gap-3 mb-6">
-              <div className="p-3 bg-white rounded-xl shadow-sm">
-                <Database className="w-6 h-6 text-amber-600" />
-              </div>
-              <h2 className="text-3xl font-bold text-slate-900">The Core of SmartBridge</h2>
-            </div>
-            <div className="space-y-4 text-slate-700 leading-relaxed">
-              <p>
-                At its foundation lies a large musical database: more than 700 chord progressions stored as songs, each
-                categorized by musical sections (intro, verse, pre-chorus, chorus, bridge, etc.) and stylistic families
-                such as rock, soul, and ballads.
-              </p>
-              <p>
-                These progressions are intentionally curated so they fit together and provide rich harmonic variations
-                suitable for each genre. This database powers Jam Player, Jam Session, and multiple creative workflows.
-              </p>
-            </div>
-          </div>
-        </section>
-
-        {/* Two Main Workflows */}
-        <section className="container mx-auto px-6 max-w-5xl mb-32">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-4">Two Main Musical Workflows</h2>
-            <p className="text-lg text-slate-600 max-w-2xl mx-auto">
-              SmartBridge supports two primary creative approaches, each designed for different musical needs.
+            <p className="text-base text-slate-500 mb-10 leading-relaxed">
+              If that sounds like your workflow, take a closer look at the features or reach out directly.
             </p>
-          </div>
-
-          {/* Workflow One */}
-          <div className="grid md:grid-cols-2 gap-12 items-center mb-20">
-            <div>
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 text-blue-700 text-sm font-medium mb-4">
-                Workflow One
-              </div>
-              <h3 className="text-2xl font-bold text-slate-900 mb-4">Improvisation & Exploration</h3>
-              <p className="text-slate-600 leading-relaxed mb-6">
-                Playing through chord progressions using Jam Player while improvising. The clear chord timeline enables
-                effortless following and musical exploration.
-              </p>
-              <ul className="space-y-3 text-slate-600">
-                <li className="flex items-start gap-2">
-                  <Play className="w-5 h-5 text-blue-500 shrink-0 mt-0.5" />
-                  <span>Browse and audition chord progressions instantly</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <Play className="w-5 h-5 text-blue-500 shrink-0 mt-0.5" />
-                  <span>Follow the timeline for effortless improvisation</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <Play className="w-5 h-5 text-blue-500 shrink-0 mt-0.5" />
-                  <span>Generate melodies and musical ideas on the fly</span>
-                </li>
-              </ul>
-            </div>
-            <div className="relative aspect-[4/3] bg-slate-100 rounded-xl overflow-hidden shadow-lg border border-blue-200">
-              <Image
-                src="/images/jamming-musician.jpg"
-                alt="Musician improvising with keyboard"
-                fill
-                className="object-cover"
-              />
+            <div className="flex flex-wrap justify-center gap-4">
+              <a 
+                href="#features" 
+                className="inline-flex items-center gap-2 px-8 py-4 bg-amber-500 hover:bg-amber-600 text-white font-medium rounded-lg transition-all hover:shadow-lg hover:shadow-amber-500/25"
+              >
+                See All Features
+                <ArrowRight className="w-4 h-4" />
+              </a>
+              <a 
+                href="mailto:claudio.private@gmail.com"
+                className="px-8 py-4 border-2 border-slate-300 text-slate-700 hover:border-slate-400 hover:bg-white font-medium rounded-lg transition-all"
+              >
+                Get in Touch
+              </a>
             </div>
           </div>
-
-          {/* Workflow Two */}
-          <div className="grid md:grid-cols-2 gap-12 items-center">
-            <div className="relative aspect-[4/3] bg-slate-100 rounded-xl overflow-hidden shadow-lg border border-purple-200 order-2 md:order-1">
-              <Image
-                src="/images/studio-musician.jpg"
-                alt="Musician recording in home studio"
-                fill
-                className="object-cover"
-              />
-            </div>
-            <div className="order-1 md:order-2">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-purple-50 text-purple-700 text-sm font-medium mb-4">
-                Workflow Two
-              </div>
-              <h3 className="text-2xl font-bold text-slate-900 mb-4">Recording & Production</h3>
-              <p className="text-slate-600 leading-relaxed mb-6">
-                Creating a mock-up by recording a performance section. SmartBridge captures keyboard MIDI (Tyros
-                channels 9–16, Motif channels 1–4) and stores it internally, allowing the musician to drag the recorded
-                material directly into a DAW for immediate production work.
-              </p>
-              <ul className="space-y-3 text-slate-600">
-                <li className="flex items-start gap-2">
-                  <FileMusic className="w-5 h-5 text-purple-500 shrink-0 mt-0.5" />
-                  <span>Record complete performances with full MIDI data</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <FileMusic className="w-5 h-5 text-purple-500 shrink-0 mt-0.5" />
-                  <span>Drag and drop directly into your DAW timeline</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <FileMusic className="w-5 h-5 text-purple-500 shrink-0 mt-0.5" />
-                  <span>Seamless transition from idea to production</span>
-                </li>
-              </ul>
-            </div>
-          </div>
-        </section>
-
-        {/* Motif Creative Tools */}
-        <section className="container mx-auto px-6 max-w-4xl mb-32">
-          <div className="bg-white rounded-2xl p-8 md:p-12 shadow-sm border border-slate-100">
-            <div className="flex items-center gap-3 mb-6">
-              <div className="p-3 bg-emerald-50 rounded-xl">
-                <Zap className="w-6 h-6 text-emerald-600" />
-              </div>
-              <h3 className="text-2xl font-bold text-slate-900">Creative Tools for Motif Arpeggios</h3>
-            </div>
-            <div className="space-y-6 text-slate-600 leading-relaxed">
-              <p>Beyond these workflows, SmartBridge includes creative tools for working with Motif arpeggios.</p>
-              <div className="grid md:grid-cols-2 gap-6">
-                <div className="bg-slate-50 rounded-xl p-6 border border-slate-100">
-                  <h4 className="font-semibold text-slate-900 mb-2">Beat Maker</h4>
-                  <p className="text-sm">
-                    Allows auditioning and recording drum arps, then dragging them directly into the DAW timeline.
-                  </p>
-                </div>
-                <div className="bg-slate-50 rounded-xl p-6 border border-slate-100">
-                  <h4 className="font-semibold text-slate-900 mb-2">Riff Maker</h4>
-                  <p className="text-sm">
-                    Lets you set specific chords for each bar of a multi-bar arp (for example, a four-bar bass arp),
-                    audition it, record it, and transfer it straight into the DAW.
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div className="mt-8 relative aspect-video bg-slate-100 rounded-xl overflow-hidden shadow-lg border border-slate-200">
-            <Image src="/images/yamaha-motif.jpg" alt="Yamaha Motif synthesizer" fill className="object-cover" />
-          </div>
-        </section>
-
-        {/* SmartBridge Mixer Module */}
-        <section className="container mx-auto px-6 max-w-5xl mb-32">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-4">The SmartBridge Mixer</h2>
-            <p className="text-lg text-slate-600 max-w-2xl mx-auto">
-              Full control of your Yamaha keyboard, perfectly synchronized and musician-friendly.
-            </p>
-          </div>
-
-          <div className="grid md:grid-cols-2 gap-12 items-center mb-12">
-            <div className="space-y-6">
-              <p className="text-slate-600 leading-relaxed">
-                SmartBridge offers a full 32-channel mixer for Yamaha Tyros-style keyboards. This mixer provides
-                bi-directional control so UI changes appear on the keyboard and keyboard changes appear in the UI.
-              </p>
-              <ul className="space-y-3 text-slate-600">
-                <li className="flex items-start gap-2">
-                  <span className="text-blue-400 mt-1">•</span>
-                  <span>Voice selection through dropdown menus or autocomplete search</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-blue-400 mt-1">•</span>
-                  <span>Cubase patch import for exact models and expansions</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-blue-400 mt-1">•</span>
-                  <span>Voice Copier that automatically preserves original insert effects</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-blue-400 mt-1">•</span>
-                  <span>Control of drums, bass, chord parts, pads, melody voices, and accompaniment channels</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-blue-400 mt-1">•</span>
-                  <span>Everything stays perfectly synchronized with the keyboard</span>
-                </li>
-              </ul>
-            </div>
-            <div className="relative aspect-[4/3] bg-slate-100 rounded-xl overflow-hidden shadow-lg border border-slate-200">
-              <Image src="/images/mixer.png" alt="SmartBridge Mixer" fill className="object-cover" />
-            </div>
-          </div>
-
-          {/* DSP Manager, Menu Picker, Search */}
-          <div className="grid md:grid-cols-3 gap-6">
-            <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-100">
-              <div className="relative aspect-[4/3] bg-slate-100 rounded-lg overflow-hidden mb-4">
-                <Image src="/images/dsp.png" alt="DSP Effects Manager" fill className="object-cover" />
-              </div>
-              <h4 className="text-lg font-semibold text-slate-900 mb-2">DSP Manager</h4>
-              <p className="text-slate-600 text-sm leading-relaxed">
-                Detailed control of insert effects. Assign effect types to DSP blocks and channels. SmartBridge
-                automatically applies the correct insert effects when a voice requires them. This behavior is also
-                bi-directional.
-              </p>
-            </div>
-
-            <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-100">
-              <div className="relative aspect-[4/3] bg-slate-100 rounded-lg overflow-hidden mb-4">
-                <Image src="/images/menupicker.png" alt="Voice Menu Picker" fill className="object-cover" />
-              </div>
-              <h4 className="text-lg font-semibold text-slate-900 mb-2">Voice Selection</h4>
-              <p className="text-slate-600 text-sm leading-relaxed">
-                Quickly pick voices from all available packs including premium packs you have installed. Navigate
-                through familiar categories that match your keyboard's organization.
-              </p>
-            </div>
-
-            <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-100">
-              <div className="relative aspect-[4/3] bg-slate-100 rounded-lg overflow-hidden mb-4">
-                <Image src="/images/search.png" alt="Voice Search with Autocomplete" fill className="object-cover" />
-              </div>
-              <h4 className="text-lg font-semibold text-slate-900 mb-2">Smart Search</h4>
-              <p className="text-slate-600 text-sm leading-relaxed">
-                Search all voices with autocomplete functionality. Find exactly what you need instantly without
-                navigating through menus.
-              </p>
-            </div>
-          </div>
-
-          <div className="mt-12 bg-slate-50 rounded-xl p-6 border border-slate-100">
-            <h4 className="font-semibold text-slate-900 mb-3">Motif Mixer</h4>
-            <p className="text-slate-600 text-sm leading-relaxed">
-              For Motif users, SmartBridge includes a streamlined mixer focused on ARPs and voices. It enables fast
-              voice swapping and arp filtering while keeping complexity out of the way. While deep programming is
-              available through official editors, SmartBridge focuses on speed and musical flow.
-            </p>
-          </div>
-        </section>
-
-        {/* Jam Session Module */}
-        <section className="container mx-auto px-6 max-w-5xl mb-32">
-          <div className="grid md:grid-cols-2 gap-12 items-center">
-            <div className="relative aspect-[4/3] bg-slate-100 rounded-xl overflow-hidden shadow-lg border border-slate-200">
-              <Image src="/images/jam-20session.png" alt="Jam Session" fill className="object-cover" />
-            </div>
-            <div>
-              <div className="flex items-center gap-3 mb-6">
-                <div className="p-3 bg-amber-50 rounded-xl">
-                  <Music className="w-6 h-6 text-amber-600" />
-                </div>
-                <h3 className="text-3xl font-bold text-slate-900">Jam Session</h3>
-              </div>
-              <p className="text-slate-600 leading-relaxed mb-6">
-                A flexible chord-clip looper with no hardware limitations. It supports unlimited clips, custom song
-                sections, looping, improvisation, songwriting, and experimentation with musical structure.
-              </p>
-              <ul className="space-y-3 text-slate-600">
-                <li className="flex items-start gap-2">
-                  <span className="text-amber-400 mt-1">•</span>
-                  <span>Unlimited clips</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-amber-400 mt-1">•</span>
-                  <span>Build intros, verses, choruses, and bridges</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-amber-400 mt-1">•</span>
-                  <span>Loop any part while playing over it</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-amber-400 mt-1">•</span>
-                  <span>Chords can be automatically extracted from played input or edited manually</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-amber-400 mt-1">•</span>
-                  <span>Chord editor supports advanced harmony, tensions, and slash chords</span>
-                </li>
-              </ul>
-            </div>
-          </div>
-        </section>
-
-        {/* Jam Player Module */}
-        <section className="container mx-auto px-6 max-w-5xl mb-32">
-          <div className="grid md:grid-cols-2 gap-12 items-center">
-            <div className="order-2 md:order-1">
-              <div className="flex items-center gap-3 mb-6">
-                <div className="p-3 bg-emerald-50 rounded-xl">
-                  <Library className="w-6 h-6 text-emerald-600" />
-                </div>
-                <h3 className="text-3xl font-bold text-slate-900">Jam Player</h3>
-              </div>
-              <p className="text-slate-600 leading-relaxed mb-6">
-                Provides a library of approximately 300 ready-made chord progressions. These progressions are
-                categorized in the same way as PSR, Tyros, and Genos instruments, making them immediately familiar and
-                practical.
-              </p>
-              <ul className="space-y-3 text-slate-600">
-                <li className="flex items-start gap-2">
-                  <span className="text-emerald-400 mt-1">•</span>
-                  <span>Quick inspiration and warm-ups</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-emerald-400 mt-1">•</span>
-                  <span>Melody creation and practice sessions</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-emerald-400 mt-1">•</span>
-                  <span>Tempo sync can follow the keyboard (Keyboard Master) or SmartBridge (SmartBridge Master)</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-emerald-400 mt-1">•</span>
-                  <span>Transpose freely and choose which MIDI channel drives the chord progression</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-emerald-400 mt-1">•</span>
-                  <span>Timeline uses A–D Style parts on Tyros and arp parts 1–5 on Motif</span>
-                </li>
-              </ul>
-            </div>
-            <div className="order-1 md:order-2 relative aspect-[4/3] bg-slate-100 rounded-xl overflow-hidden shadow-lg border border-slate-200">
-              <Image src="/images/jamplayer.png" alt="Jam Player" fill className="object-cover" />
-            </div>
-          </div>
-        </section>
-
-        {/* Standalone + Plugin */}
-        <section className="container mx-auto px-6 max-w-4xl mb-32">
-          <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl p-8 md:p-12 border border-blue-100">
-            <div className="text-center mb-8">
-              <div className="inline-flex p-3 bg-white rounded-xl shadow-sm mb-4">
-                <Laptop className="w-8 h-8 text-blue-600" />
-              </div>
-              <h3 className="text-2xl font-bold text-slate-900 mb-4">Standalone + Plugin</h3>
-              <p className="text-slate-600 leading-relaxed max-w-2xl mx-auto">
-                SmartBridge can run as a standalone application or as a VST/AU plugin inside a DAW. Standalone mode is
-                ideal for spontaneous jamming and quick inspiration. Plugin mode allows SmartBridge to operate as a
-                creative engine inside a DAW workflow, enabling a tight connection between musical exploration and
-                production tools.
-              </p>
-            </div>
-          </div>
-        </section>
-
-        {/* Creative Flow */}
-        <section className="container mx-auto px-6 max-w-5xl mb-32">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-4">The Creative Flow</h2>
-            <p className="text-lg text-slate-600 max-w-2xl mx-auto">Four stages from inspiration to production</p>
-          </div>
-
-          <div className="grid md:grid-cols-2 gap-8">
-            {/* Step 1 */}
-            <div className="bg-white rounded-xl p-8 shadow-sm border border-slate-100 relative">
-              <div className="absolute -top-4 -left-4 w-10 h-10 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 text-white flex items-center justify-center font-bold text-lg shadow-lg">
-                1
-              </div>
-              <div className="flex items-center gap-3 mb-4">
-                <div className="p-2 bg-amber-50 rounded-lg">
-                  <Music className="w-5 h-5 text-amber-600" />
-                </div>
-                <h4 className="text-xl font-semibold text-slate-900">Create Structure</h4>
-              </div>
-              <p className="text-slate-600">
-                Use Jam Session to build your musical structure with unlimited clips and sections.
-              </p>
-            </div>
-
-            {/* Step 2 */}
-            <div className="bg-white rounded-xl p-8 shadow-sm border border-slate-100 relative">
-              <div className="absolute -top-4 -left-4 w-10 h-10 rounded-full bg-gradient-to-br from-emerald-400 to-teal-500 text-white flex items-center justify-center font-bold text-lg shadow-lg">
-                2
-              </div>
-              <div className="flex items-center gap-3 mb-4">
-                <div className="p-2 bg-emerald-50 rounded-lg">
-                  <Library className="w-5 h-5 text-emerald-600" />
-                </div>
-                <h4 className="text-xl font-semibold text-slate-900">Discover Ideas</h4>
-              </div>
-              <p className="text-slate-600">
-                Browse Jam Player's library of 300+ progressions for instant inspiration.
-              </p>
-            </div>
-
-            {/* Step 3 */}
-            <div className="bg-white rounded-xl p-8 shadow-sm border border-slate-100 relative">
-              <div className="absolute -top-4 -left-4 w-10 h-10 rounded-full bg-gradient-to-br from-blue-400 to-indigo-500 text-white flex items-center justify-center font-bold text-lg shadow-lg">
-                3
-              </div>
-              <div className="flex items-center gap-3 mb-4">
-                <div className="p-2 bg-blue-50 rounded-lg">
-                  <Sliders className="w-5 h-5 text-blue-600" />
-                </div>
-                <h4 className="text-xl font-semibold text-slate-900">Shape Sound</h4>
-              </div>
-              <p className="text-slate-600">Use the Mixer and DSP controls to craft the perfect sonic palette.</p>
-            </div>
-
-            {/* Step 4 */}
-            <div className="bg-white rounded-xl p-8 shadow-sm border border-slate-100 relative">
-              <div className="absolute -top-4 -left-4 w-10 h-10 rounded-full bg-gradient-to-br from-purple-400 to-pink-500 text-white flex items-center justify-center font-bold text-lg shadow-lg">
-                4
-              </div>
-              <div className="flex items-center gap-3 mb-4">
-                <div className="p-2 bg-purple-50 rounded-lg">
-                  <Download className="w-5 h-5 text-purple-600" />
-                </div>
-                <h4 className="text-xl font-semibold text-slate-900">Export to DAW</h4>
-              </div>
-              <p className="text-slate-600">
-                Drag everything into your DAW to complete the arrangement and production.
-              </p>
-            </div>
-          </div>
-        </section>
-
-        {/* Philosophy */}
-        <section className="container mx-auto px-6 max-w-4xl mb-32">
-          <div className="bg-gradient-to-br from-slate-50 to-slate-100 rounded-2xl p-8 md:p-12 border border-slate-200 text-center">
-            <h2 className="text-3xl font-bold text-slate-900 mb-6">Philosophy</h2>
-            <p className="text-lg text-slate-700 leading-relaxed max-w-2xl mx-auto">
-              The philosophy behind SmartBridge is rooted in musical curiosity. Instead of navigating hardware menus and
-              technical layers, the musician can focus directly on creativity—finding progressions, shaping sound,
-              experimenting with structure, and refining inspiration.
-            </p>
-          </div>
-        </section>
-
-        {/* Technical Notes */}
-        <section className="container mx-auto px-6 max-w-4xl mb-32">
-          <h2 className="text-3xl font-bold text-slate-900 mb-8 text-center">Technical Notes</h2>
-          <div className="bg-white rounded-2xl p-8 md:p-10 shadow-sm border border-slate-100 space-y-6 text-slate-600 leading-relaxed">
-            <div>
-              <h4 className="font-semibold text-slate-900 mb-2">Data Storage</h4>
-              <p>SmartBridge stores content in a local database.</p>
-            </div>
-            <div>
-              <h4 className="font-semibold text-slate-900 mb-2">Voice Imports</h4>
-              <p>
-                Voice imports for PSR, Tyros, and Genos rely on Yamaha Cubase script patch files. Motif imports require
-                a CSV file containing voices, arps, and multis in a specific format.
-              </p>
-            </div>
-            <div>
-              <h4 className="font-semibold text-slate-900 mb-2">Compatibility</h4>
-              <p>Designed specifically for Yamaha PSR, Tyros, Genos, and Motif keyboards.</p>
-            </div>
-          </div>
-        </section>
-
-        {/* Future Direction */}
-        <section className="container mx-auto px-6 max-w-4xl mb-32">
-          <div className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-2xl p-8 md:p-12 border border-amber-100 text-center">
-            <h2 className="text-3xl font-bold text-slate-900 mb-6">Future Direction</h2>
-            <p className="text-lg text-slate-700 leading-relaxed max-w-2xl mx-auto">
-              SmartBridge is a personal passion project with an open-ended, gentle roadmap. It will evolve naturally
-              over time, without fixed schedules, as ideas and inspiration emerge. Future plans include deeper Jam
-              Session functionality and expanded mixer capabilities.
-            </p>
-          </div>
-        </section>
-
-        {/* Disclaimer */}
-        <section className="container mx-auto px-6 max-w-4xl mb-20">
-          <p className="text-center text-sm text-slate-500">SmartBridge is not affiliated with Yamaha Corporation.</p>
         </section>
       </main>
 
       <Footer />
+
+      {/* LIGHTBOX */}
+      {lightboxImage && (
+        <div 
+          className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center p-4 md:p-8 cursor-zoom-out"
+          onClick={() => setLightboxImage(null)}
+        >
+          <button 
+            className="absolute top-6 right-6 text-white/80 hover:text-white transition-colors"
+            onClick={() => setLightboxImage(null)}
+          >
+            <X className="w-8 h-8" />
+          </button>
+          <div className="relative w-full max-w-5xl aspect-video">
+            <Image
+              src={lightboxImage}
+              alt="Expanded view"
+              fill
+              className="object-contain"
+            />
+          </div>
+        </div>
+      )}
     </div>
   )
 }
