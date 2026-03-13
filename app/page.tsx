@@ -137,7 +137,7 @@ export default function Home() {
                     <ChevronRight className="w-4 h-4" />
                   </a>
                   <a 
-                    href="mailto:claudio@smartbridge.dev"
+                    href="mailto:claudio.private@gmail.com"
                     className="inline-flex items-center gap-2 px-6 py-3 border-2 border-slate-300 text-slate-700 hover:border-slate-400 hover:bg-white font-medium rounded-lg transition-all"
                   >
                     Get in Touch
@@ -403,7 +403,7 @@ export default function Home() {
                 <ArrowRight className="w-4 h-4" />
               </a>
               <a 
-                href="mailto:claudio@smartbridge.dev"
+                href="mailto:claudio.private@gmail.com"
                 className="px-8 py-4 border-2 border-slate-300 text-slate-700 hover:border-slate-400 hover:bg-white font-medium rounded-lg transition-all"
               >
                 Get in Touch

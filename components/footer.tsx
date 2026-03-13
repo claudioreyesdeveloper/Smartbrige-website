@@ -29,7 +29,7 @@ export function Footer() {
             <h4 className="font-semibold text-white mb-4">About</h4>
             <ul className="space-y-2 text-sm text-slate-400">
               <li><a href="#" className="hover:text-white transition-colors">About the Creator</a></li>
-              <li><a href="mailto:claudio@smartbridge.dev" className="hover:text-white transition-colors">Contact</a></li>
+              <li><a href="mailto:claudio.private@gmail.com" className="hover:text-white transition-colors">Contact</a></li>
               <li><a href="#" className="hover:text-white transition-colors">Roadmap</a></li>
             </ul>
           </div>
