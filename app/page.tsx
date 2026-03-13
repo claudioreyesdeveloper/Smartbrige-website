@@ -4,7 +4,7 @@ import { useState } from "react"
 import Image from "next/image"
 import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
-import { ChevronRight, X, Play, ArrowRight } from "lucide-react"
+import { ChevronRight, X, ArrowRight } from "lucide-react"
 
 const features = [
   {
@@ -116,27 +116,32 @@ export default function Home() {
           <div className="container mx-auto px-6 max-w-6xl">
             <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
               <div className="order-2 lg:order-1">
+                <div className="inline-flex items-center gap-2 bg-amber-50 border border-amber-200 text-amber-700 text-sm font-medium px-3 py-1.5 rounded-full mb-6">
+                  For Yamaha Tyros &amp; Motif musicians
+                </div>
                 <h1 className="text-4xl md:text-5xl lg:text-[3.25rem] font-bold text-slate-900 mb-6 leading-[1.15] tracking-tight text-balance">
                   From MIDI Phrase to Full Arrangement
                 </h1>
-                <p className="text-lg text-slate-600 leading-relaxed mb-6">
-                  SmartBridge combines Yamaha keyboard control, phrase-driven songwriting, harmonization for brass, strings, and vocals, lyrics generation, Synthesizer V workflow, and direct DAW export in one connected system.
+                <p className="text-lg text-slate-600 leading-relaxed mb-5">
+                  SmartBridge connects your Yamaha keyboard with a complete songwriting workflow — chord-aware phrases, harmonization layers for brass, strings, and vocals, AI-assisted lyrics, and direct DAW export, all in one place.
                 </p>
                 <p className="text-base text-slate-500 leading-relaxed mb-8">
-                  Instead of working with isolated MIDI clips, SmartBridge helps musicians build full arrangements with chord-aware phrases, vocal ideas, harmonization layers, and hardware-to-DAW workflow.
+                  Built by a musician, for musicians who want to move from idea to arrangement without switching tools.
                 </p>
                 <div className="flex flex-wrap gap-4">
                   <a 
                     href="#features" 
                     className="inline-flex items-center gap-2 px-6 py-3 bg-amber-500 hover:bg-amber-600 text-white font-medium rounded-lg transition-all hover:shadow-lg hover:shadow-amber-500/25"
                   >
-                    See Features
+                    Explore the Features
                     <ChevronRight className="w-4 h-4" />
                   </a>
-                  <button className="inline-flex items-center gap-2 px-6 py-3 border-2 border-slate-300 text-slate-700 hover:border-slate-400 hover:bg-white font-medium rounded-lg transition-all">
-                    <Play className="w-4 h-4" />
-                    Watch Demo
-                  </button>
+                  <a 
+                    href="mailto:claudio@smartbridge.dev"
+                    className="inline-flex items-center gap-2 px-6 py-3 border-2 border-slate-300 text-slate-700 hover:border-slate-400 hover:bg-white font-medium rounded-lg transition-all"
+                  >
+                    Get in Touch
+                  </a>
                 </div>
               </div>
               <div className="order-1 lg:order-2">
@@ -381,22 +386,28 @@ export default function Home() {
         <section className="py-20 lg:py-28 bg-gradient-to-b from-stone-100 to-stone-200">
           <div className="container mx-auto px-6 max-w-3xl text-center">
             <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-6 text-balance">
-              From keyboard control to full arrangement workflow
+              A complete workflow, not just a controller
             </h2>
-            <p className="text-lg text-slate-600 mb-10 leading-relaxed">
-              SmartBridge brings together Yamaha integration, phrase-based creativity, harmonization, lyrics, and vocal workflow in one connected system.
+            <p className="text-lg text-slate-600 mb-4 leading-relaxed">
+              SmartBridge started as a personal tool to solve a real problem: moving from a Yamaha keyboard into a proper arrangement without the friction of disconnected software.
+            </p>
+            <p className="text-base text-slate-500 mb-10 leading-relaxed">
+              If that sounds like your workflow, take a closer look at the features or reach out directly.
             </p>
             <div className="flex flex-wrap justify-center gap-4">
               <a 
                 href="#features" 
                 className="inline-flex items-center gap-2 px-8 py-4 bg-amber-500 hover:bg-amber-600 text-white font-medium rounded-lg transition-all hover:shadow-lg hover:shadow-amber-500/25"
               >
-                Explore SmartBridge
+                See All Features
                 <ArrowRight className="w-4 h-4" />
               </a>
-              <button className="px-8 py-4 border-2 border-slate-300 text-slate-700 hover:border-slate-400 hover:bg-white font-medium rounded-lg transition-all">
-                Request Access
-              </button>
+              <a 
+                href="mailto:claudio@smartbridge.dev"
+                className="px-8 py-4 border-2 border-slate-300 text-slate-700 hover:border-slate-400 hover:bg-white font-medium rounded-lg transition-all"
+              >
+                Get in Touch
+              </a>
             </div>
           </div>
         </section>
