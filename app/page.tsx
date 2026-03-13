@@ -96,14 +96,13 @@ const galleryImages = [
 export default function Home() {
   const [activeFeature, setActiveFeature] = useState(0)
   const [lightboxImage, setLightboxImage] = useState<string | null>(null)
-  const [expandedDiff, setExpandedDiff] = useState<number | null>(null)
 
   const differentiators = [
-    { title: "Beyond static MIDI loops", desc: "SmartBridge treats phrases as part of a song workflow, not just drag-and-drop content." },
-    { title: "Arrangement-aware workflow", desc: "It helps build sections, structure, and musical development rather than isolated clips." },
-    { title: "Harmonization across multiple layers", desc: "SmartBridge can grow into brass, strings, and vocal harmonization as part of the arrangement process." },
-    { title: "Lyrics and vocals connected to the music", desc: "It does not stop at MIDI ideas; it can move toward words and vocal production." },
-    { title: "Yamaha + DAW integration", desc: "It connects keyboard workflow with computer-based production in a practical way." }
+    { title: "Beyond static MIDI loops", desc: "SmartBridge treats phrases as part of a song workflow, not just drag-and-drop content. Every idea lives inside a musical context — a chord progression, a section, a song — rather than sitting as an isolated file." },
+    { title: "Arrangement-aware workflow", desc: "It helps you build sections, structure, and musical development. Instead of collecting clips, you work toward a real song form with intros, verses, choruses, and transitions." },
+    { title: "Harmonization across multiple layers", desc: "The arrangement can grow to include brass, string, and vocal harmonization layers as part of the same process — not as an afterthought added in a separate tool." },
+    { title: "Lyrics and vocals connected to the music", desc: "SmartBridge does not stop at MIDI ideas. It can move toward words, vocal melodies, and vocal production — all while the chord progression and song sections stay in view." },
+    { title: "Yamaha keyboard connected to the DAW", desc: "It bridges the gap between hardware keyboard workflow and computer-based production. You stay in one environment instead of constantly switching between tools that do not talk to each other." }
   ]
 
   return (
@@ -162,6 +161,27 @@ export default function Home() {
                   </div>
                 </div>
               </div>
+            </div>
+          </div>
+        </section>
+
+        {/* WHY SMARTBRIDGE IS DIFFERENT */}
+        <section className="py-20 lg:py-24 bg-gradient-to-b from-stone-50 to-white">
+          <div className="container mx-auto px-6 max-w-6xl">
+            <div className="mb-12">
+              <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-4">Why SmartBridge Is Different</h2>
+              <p className="text-lg text-slate-500 max-w-2xl">Most keyboard software manages sounds or plays back loops. SmartBridge is built around the full creative process — from the first chord to the finished arrangement.</p>
+            </div>
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {differentiators.map((item, index) => (
+                <div key={index} className="bg-white rounded-xl border border-stone-200 p-6 shadow-sm">
+                  <div className="w-8 h-8 rounded-lg bg-amber-100 flex items-center justify-center mb-4">
+                    <span className="text-amber-600 font-bold text-sm">{index + 1}</span>
+                  </div>
+                  <h3 className="font-semibold text-slate-900 mb-2">{item.title}</h3>
+                  <p className="text-slate-500 text-sm leading-relaxed">{item.desc}</p>
+                </div>
+              ))}
             </div>
           </div>
         </section>
@@ -235,40 +255,6 @@ export default function Home() {
                   </button>
                 </div>
               </div>
-            </div>
-          </div>
-        </section>
-
-        {/* WHY SMARTBRIDGE IS DIFFERENT - ACCORDION */}
-        <section className="py-20 lg:py-28 bg-gradient-to-b from-stone-100 to-white">
-          <div className="container mx-auto px-6 max-w-3xl">
-            <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-12 text-center">Why SmartBridge Is Different</h2>
-            <div className="space-y-4">
-              {differentiators.map((item, index) => (
-                <div 
-                  key={index}
-                  className="bg-white rounded-xl border border-stone-200 overflow-hidden shadow-sm hover:shadow-md transition-shadow"
-                >
-                  <button
-                    onClick={() => setExpandedDiff(expandedDiff === index ? null : index)}
-                    className="w-full px-6 py-5 flex items-center justify-between text-left"
-                  >
-                    <span className="font-semibold text-slate-900">{item.title}</span>
-                    <ChevronRight 
-                      className={`w-5 h-5 text-slate-400 transition-transform duration-300 ${
-                        expandedDiff === index ? "rotate-90" : ""
-                      }`} 
-                    />
-                  </button>
-                  <div 
-                    className={`overflow-hidden transition-all duration-300 ${
-                      expandedDiff === index ? "max-h-40 pb-5" : "max-h-0"
-                    }`}
-                  >
-                    <p className="px-6 text-slate-600 leading-relaxed">{item.desc}</p>
-                  </div>
-                </div>
-              ))}
             </div>
           </div>
         </section>
