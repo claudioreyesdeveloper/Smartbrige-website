@@ -1,33 +1,49 @@
+import Image from "next/image"
+import Link from "next/link"
+import { ArrowRight, Play } from "lucide-react"
+import { SITE } from "@/lib/site"
+
 export function Hero() {
   return (
-    <section className="relative pt-32 pb-20 px-4 min-h-[80vh] flex items-center bg-gradient-to-b from-background via-background to-muted/20">
-      {/* Subtle background image */}
-      <div className="absolute inset-0 z-0 opacity-10">
-        <div className="absolute inset-0 bg-gradient-to-b from-background via-background/60 to-background" />
-      </div>
-
-      <div className="container mx-auto relative z-10 max-w-4xl">
-        <div className="text-center space-y-8">
-          <h1 className="text-4xl md:text-6xl font-bold text-foreground leading-tight text-balance">SmartBridge</h1>
-
-          <p className="text-lg md:text-xl text-muted-foreground font-medium">
-            Control Environment for Yamaha PSR, Tyros, and Genos
-          </p>
-
-          <div className="max-w-3xl mx-auto space-y-6 text-base md:text-lg text-foreground/90 leading-relaxed">
-            <p className="text-pretty">
-              SmartBridge is the control environment I wished for when playing my PSR, Tyros, and Genos. It fuses the
-              precision of Yamaha's hardware with modern UI design, giving you full, fast control over performance,
-              sound, and mixing through an elegant, touch-ready interface.
+    <section className="gradient-hero section-block">
+      <div className="content-wrap">
+        <div className="hero-grid">
+          <div>
+            <p className="section-label" style={{ marginBottom: "1rem" }}>
+              For Tyros · Genos · PSR-SX · Motif musicians
             </p>
-
-            <p className="text-pretty">
-              Tired of digging through menus? SmartBridge is the dedicated web-based controller that finally gives you
-              full, instant access to your Yamaha arranger's voices and controls. Built with modern, high-performance
-              technology, it provides a responsive, stage-optimized UI that works seamlessly on your tablet or desktop.
-              It's the integrated toolkit designed to streamline your workflow for both live performance and studio
-              arrangement.
+            <h1 className="hero-title">From MIDI phrase to full arrangement</h1>
+            <p className="prose-muted mt-5" style={{ fontSize: "1.125rem", maxWidth: "32rem" }}>
+              SmartBridge connects your Yamaha keyboard to a complete songwriting workflow —
+              chord-aware phrases, arrangement layers, vocals, lyrics, and DAW production in one
+              environment.
             </p>
+            <div className="btn-row mt-8">
+              <Link href="/beta" className="btn-primary">
+                Request beta access
+                <ArrowRight size={16} />
+              </Link>
+              <a href={SITE.setupUrl} className="btn-secondary" target="_blank" rel="noopener noreferrer">
+                Download Setup
+              </a>
+            </div>
+            <p className="prose-muted mt-6" style={{ fontSize: "0.875rem" }}>
+              macOS (Apple Silicon) · Windows x64 · VST3 + Standalone · Invitation-only beta
+            </p>
+          </div>
+
+          <div className="hero-shot">
+            <div className="card-surface" style={{ overflow: "hidden" }}>
+              <Image
+                src="/images/jam-player-tyros.png"
+                alt="SmartBridge Jam Player — chord progression grid"
+                width={1200}
+                height={750}
+                style={{ width: "100%", objectFit: "cover" }}
+                priority
+              />
+            </div>
+            <div className="hero-shot-glow" />
           </div>
         </div>
       </div>

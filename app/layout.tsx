@@ -1,31 +1,40 @@
-import type React from "react"
 import type { Metadata } from "next"
-import { Inter, Montserrat, JetBrains_Mono } from "next/font/google"
-import { Suspense } from "react"
+import { DM_Sans, Instrument_Serif } from "next/font/google"
+import { SiteFooter } from "@/components/site-footer"
+import { SiteHeader } from "@/components/site-header"
+import { SITE } from "@/lib/site"
 import "./globals.css"
 
-const inter = Inter({
+const dmSans = DM_Sans({
   subsets: ["latin"],
-  variable: "--font-inter",
+  variable: "--font-dm-sans",
   display: "swap",
 })
 
-const montserrat = Montserrat({
+const instrumentSerif = Instrument_Serif({
   subsets: ["latin"],
-  variable: "--font-montserrat",
-  display: "swap",
-})
-
-const jetbrainsMono = JetBrains_Mono({
-  subsets: ["latin"],
-  variable: "--font-jetbrains-mono",
+  weight: "400",
+  variable: "--font-instrument-serif",
   display: "swap",
 })
 
 export const metadata: Metadata = {
-  title: "SmartBridge - Next-Gen Control Interface for Yamaha Keyboards",
-  description: "Take total command of your sound. Mix, compose, and perform with precision using SmartBridge.",
-  generator: "v0.app",
+  metadataBase: new URL(SITE.url),
+  title: {
+    default: "SmartBridge — Songwriting workflow for Yamaha keyboards",
+    template: "%s · SmartBridge",
+  },
+  description:
+    "From MIDI phrase to full arrangement. SmartBridge connects your Yamaha keyboard to chord-aware phrases, vocals, lyrics, and DAW production.",
+  openGraph: {
+    title: "SmartBridge — From phrase to full arrangement",
+    description:
+      "Arrangement workflow for Yamaha Tyros, Genos, PSR-SX, and Motif — phrases, vocals, lyrics, and Cubase integration.",
+    url: SITE.url,
+    siteName: "SmartBridge",
+    locale: "en_US",
+    type: "website",
+  },
 }
 
 export default function RootLayout({
@@ -34,11 +43,11 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en" className={`dark ${inter.variable} ${montserrat.variable} ${jetbrainsMono.variable}`}>
-      <body className="font-sans antialiased">
-        <div className="gradient-bg min-h-screen">
-          <Suspense fallback={null}>{children}</Suspense>
-        </div>
+    <html lang="en" className={`${dmSans.variable} ${instrumentSerif.variable}`}>
+      <body className="antialiased">
+        <SiteHeader />
+        <main>{children}</main>
+        <SiteFooter />
       </body>
     </html>
   )
