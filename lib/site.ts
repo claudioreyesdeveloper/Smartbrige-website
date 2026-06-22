@@ -149,7 +149,7 @@ export const FEATURE_MODULES: FeatureModule[] = [
     what:
       "Browse bass clips filtered by genre, section type, and feel. Audition an Intro bass line matched to your tempo, then drag it to Cubase or apply it to the section.",
     why:
-      "You hear bass parts that fit the chart before you search EZbass folders or write from scratch — and the match reason tells you why a clip was suggested.",
+      "You hear bass parts that fit the chart before you search bass folders or write from scratch — and the match reason tells you why a clip was suggested.",
   },
   {
     id: "drum-library",
