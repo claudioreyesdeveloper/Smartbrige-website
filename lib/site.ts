@@ -20,12 +20,12 @@ export const WORKFLOW_STEPS = [
   {
     step: "01",
     title: "Pick a song or progression",
-    body: "Choose a factory song, import a chord sheet, or build your own — every phrase you add stays tied to that harmony.",
+    body: "Choose a factory song (more then 600 are availabel in different styles), import a chord sheet, or build your own — every phrase you add stays tied to that harmony.",
   },
   {
     step: "02",
     title: "Layer bass, drums, guitar, brass",
-    body: "Audition phrases for each section of the chart. Hear bass, drums, rhythm guitar, and horns that follow your chords before you commit.",
+    body: "Audition phrases for each section of the chart. Hear bass, drums, rhythm guitar, and horns that follow your chords before you drag to you DAW.",
   },
   {
     step: "03",
@@ -34,6 +34,11 @@ export const WORKFLOW_STEPS = [
   },
   {
     step: "04",
+    title: "Create lyrics",
+    body: "Use the AI driven lyrics generator to create lyrics for you midi melody. and the text is adapted to you melody.",
+  },
+  {
+    step: "05",
     title: "Export or keep jamming",
     body: "Drag parts into Cubase, send melodies to Synthesizer V, or record new chord clips in Jam Session and loop them on the keyboard.",
   },
@@ -120,16 +125,6 @@ export const FEATURE_MODULES: FeatureModule[] = [
       "Load a factory or My Songs chart, see every chord in Intro and Verse on a grid, sync tempo and key with the keyboard, and pick the Latin style (or any category) that follows your chords.",
     why:
       "This is the home screen for writing: you hear the progression, the keyboard style follows, and every other tool (bass, drums, vocals) knows which section you’re in.",
-  },
-  {
-    id: "import-chord-sheet",
-    name: "Import Chord Sheet",
-    tag: "Play & arrange",
-    image: "/images/import-chord-sheet.png",
-    what:
-      "Paste ChordPro text or drop a .cho / .chopro file, set an optional BPM, preview the parsed chart, and save it straight into My Songs.",
-    why:
-      "If you already have chords in ChordPro format, you don’t retype them — the song becomes playable in Jam Player in one step.",
   },
   {
     id: "jam-session",
