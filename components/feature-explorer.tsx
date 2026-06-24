@@ -1,7 +1,7 @@
 "use client"
 
 import Image from "next/image"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { FEATURE_MODULES } from "@/lib/site"
 
 const TAGS = ["All", ...Array.from(new Set(FEATURE_MODULES.map((m) => m.tag)))]
@@ -13,6 +13,17 @@ function itemsForTag(tag: string) {
 export function FeatureExplorer() {
   const [filter, setFilter] = useState("All")
   const [active, setActive] = useState(FEATURE_MODULES[0].id)
+
+  useEffect(() => {
+    const requested = new URLSearchParams(window.location.search).get("feature")
+    if (!requested) return
+
+    const found = FEATURE_MODULES.find((item) => item.id === requested)
+    if (!found) return
+
+    setFilter("All")
+    setActive(found.id)
+  }, [])
 
   const filtered = itemsForTag(filter)
   const module = filtered.find((m) => m.id === active) ?? filtered[0] ?? FEATURE_MODULES[0]
@@ -54,7 +65,7 @@ export function FeatureExplorer() {
           ))}
         </ul>
 
-        <article className="card-surface" style={{ overflow: "hidden" }}>
+        <article id={module.id} className="card-surface" style={{ overflow: "hidden" }}>
           <div className="feature-detail-head">
             <p className="section-label">{module.tag}</p>
             <h3 className="section-title" style={{ fontSize: "1.5rem", marginTop: "0.5rem" }}>
@@ -77,6 +88,34 @@ export function FeatureExplorer() {
               <div>
                 <h4>Why it matters for you</h4>
                 <p className="prose-muted">{module.why}</p>
+              </div>
+              <div>
+                <h4>What you can do with it</h4>
+                <ul className="prose-muted" style={{ paddingLeft: "1.125rem", display: "grid", gap: "0.6rem" }}>
+                  {module.highlights.map((item) => (
+                    <li key={item}>{item}</li>
+                  ))}
+                </ul>
+              </div>
+              <div>
+                <h4>Watch it in Claudio’s demos</h4>
+                <div style={{ display: "grid", gap: "0.75rem" }}>
+                  {module.videos.map((video) => (
+                    <a
+                      key={video.url}
+                      href={video.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="card-surface"
+                      style={{ padding: "0.9rem 1rem", display: "block" }}
+                    >
+                      <span className="font-medium text-stone-100">{video.title}</span>
+                      {video.note ? (
+                        <span className="mt-1 block text-sm text-stone-400">{video.note}</span>
+                      ) : null}
+                    </a>
+                  ))}
+                </div>
               </div>
             </div>
           </div>

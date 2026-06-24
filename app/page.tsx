@@ -21,8 +21,9 @@ export default function HomePage() {
               <p className="section-label">Modules</p>
               <h2 className="section-title" style={{ marginTop: "0.75rem" }}>Every tool in one song</h2>
               <p className="prose-muted" style={{ marginTop: "1rem" }}>
-                Genos mixer, Jam Player, bass and drum libraries, rhythm guitar, brass, vocals,
-                solos, and Jam Session — sixteen workflows organized around how you actually write.
+                Jam Player, ChordPro import, mixer control, bass and drum libraries, rhythm guitar,
+                brass, vocals, lyrics, solos, and Jam Session — plus direct links to Claudio’s demo
+                videos for each workflow.
               </p>
             </div>
             <Link href="/features" className="btn-secondary">

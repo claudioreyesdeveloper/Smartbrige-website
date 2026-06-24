@@ -1,11 +1,12 @@
 import type { Metadata } from "next"
 import { FeatureExplorer } from "@/components/feature-explorer"
+import { VideoGuideGrid } from "@/components/video-guide-grid"
 import { CtaBand } from "@/components/cta-band"
 
 export const metadata: Metadata = {
   title: "Features",
   description:
-    "Genos Mixer, Jam Player, bass and drum libraries, vocals, solos, Jam Session, and Cubase export.",
+    "Genos Mixer, Jam Player, ChordPro import, bass and drum libraries, vocals, lyrics, solos, Jam Session, and linked SmartBridge demo videos.",
 }
 
 export default function FeaturesPage() {
@@ -17,13 +18,14 @@ export default function FeaturesPage() {
           <h1 className="section-title" style={{ marginTop: "0.75rem" }}>
             Everything in SmartBridge
           </h1>
-          <p className="prose-muted mt-4" style={{ maxWidth: "42rem" }}>
-            Each screen is a real part of SmartBridge 1.0. Pick a feature on the left, read what
-            it does, and see the screenshot from the app.
+          <p className="prose-muted mt-4" style={{ maxWidth: "48rem" }}>
+            Each screen below is a real part of SmartBridge. Pick a feature on the left, read what
+            it does, and jump straight to Claudio’s walkthroughs for the matching workflow.
           </p>
           <FeatureExplorer />
         </div>
       </div>
+      <VideoGuideGrid />
       <CtaBand
         title="Want the full picture?"
         body="Download SmartBridge Setup or request beta access to try every module on your keyboard."
