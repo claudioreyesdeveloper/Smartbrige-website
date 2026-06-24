@@ -22,8 +22,8 @@ export default function HomePage() {
               <h2 className="section-title" style={{ marginTop: "0.75rem" }}>Every tool in one song</h2>
               <p className="prose-muted" style={{ marginTop: "1rem" }}>
                 Jam Player, ChordPro import, mixer control, bass and drum libraries, rhythm guitar,
-                brass, vocals, lyrics, solos, and Jam Session — plus direct links to Claudio’s demo
-                videos for each workflow.
+                brass, vocals, lyrics, solos, and Jam Session — with fuller feature explanations and
+                direct links into Claudio’s actual YouTube demos for each workflow.
               </p>
             </div>
             <Link href="/features" className="btn-secondary">

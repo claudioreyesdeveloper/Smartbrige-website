@@ -78,12 +78,14 @@ export const PILLARS = [
 export type DemoVideo = {
   title: string
   url: string
+  youtubeId: string
   note?: string
 }
 
 const youtubeVideo = (id: string, title: string, note?: string): DemoVideo => ({
   title,
   url: `https://www.youtube.com/watch?v=${id}`,
+  youtubeId: id,
   ...(note ? { note } : {}),
 })
 

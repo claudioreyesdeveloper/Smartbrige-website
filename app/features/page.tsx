@@ -19,8 +19,9 @@ export default function FeaturesPage() {
             Everything in SmartBridge
           </h1>
           <p className="prose-muted mt-4" style={{ maxWidth: "48rem" }}>
-            Each screen below is a real part of SmartBridge. Pick a feature on the left, read what
-            it does, and jump straight to Claudio’s walkthroughs for the matching workflow.
+            Each screen below is a real part of SmartBridge. Pick a feature on the left to get a
+            fuller explanation of what it does, why it matters in the songwriting workflow, and
+            which Claudio demo videos show that feature in a real song build.
           </p>
           <FeatureExplorer />
         </div>
