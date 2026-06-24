@@ -6,7 +6,7 @@ import { SITE } from "@/lib/site"
 export const metadata: Metadata = {
   title: "About",
   description:
-    "SmartBridge is an independent project built from real musician workflow needs — connecting Yamaha keyboards to modern production.",
+    "SmartBridge is an independent, non-commercial project built from real musician workflow needs — connecting Yamaha keyboards to modern production.",
 }
 
 export default function AboutPage() {
@@ -24,37 +24,43 @@ export default function AboutPage() {
                 arrangements on the computer.
               </p>
               <p>
-                Loop libraries give you files. DAWs give you a blank timeline. The keyboard gives
-                you performance power — but the three rarely share the same musical context.
-                SmartBridge connects them: phrases stay inside chord progressions and song
-                sections, vocals and lyrics stay tied to the arrangement, and export paths lead
-                into Cubase and other DAWs without rebuilding everything from scratch.
+                SmartBridge is an independent project created by Claudio Reyes from his own
+                real-world songwriting and production workflow. It began as a personal tool — built
+                to connect Yamaha keyboards, musical ideas, arrangement work, vocals, and DAW
+                production in a more natural way.
               </p>
               <p>
-                It is an independent project by Claudio Reyes, developed alongside real songwriting
-                and arrangement sessions — not affiliated with Yamaha Corporation.
+                Over the past six months, it has grown into a substantial platform shaped through
+                daily studio use, testing, refinement, and a significant amount of custom
+                development. The current codebase reflects the depth of that work across keyboard
+                integration, arrangement tools, chord workflows, phrase generation, lyrics, vocals,
+                and production features.
+              </p>
+              <p>
+                SmartBridge is not a mass-market product and it is not affiliated with Yamaha
+                Corporation. It is a serious independent build, created with care, experience, and
+                long-term commitment. Claudio now wants to share it with other musicians who work
+                in a similar way and who can see the value of a tool developed from real musical
+                practice.
               </p>
             </div>
-            <a
-              href={`mailto:${SITE.email}`}
-              className="mt-8 inline-flex btn-secondary"
-            >
+            <a href={`mailto:${SITE.email}`} className="mt-8 inline-flex btn-secondary">
               Get in touch
             </a>
           </div>
 
           <div className="card-surface overflow-hidden">
             <Image
-              src="/images/genos-mixer.png"
-              alt="SmartBridge Genos Mixer — full keyboard mix on the computer"
+              src="/images/claudio-reyes-studio.jpg"
+              alt="Claudio Reyes in the studio working on SmartBridge"
               width={900}
-              height={560}
+              height={1200}
               className="w-full object-cover"
             />
             <div className="p-6 border-t border-[var(--color-border)]">
               <p className="text-sm text-stone-400">
-                Genos Mixer — balance Style and Song parts, DSP, and ensemble voices from one screen
-                while the song chart stays in view.
+                Claudio Reyes building SmartBridge from real keyboard, arranging, and production
+                sessions in his own studio.
               </p>
             </div>
           </div>
@@ -64,15 +70,15 @@ export default function AboutPage() {
           {[
             {
               title: "Musician-first",
-              body: "Designed around how Tyros and Motif players actually write — not generic DAW abstractions.",
+              body: "Designed around how Tyros, Genos, and Motif players actually write — not generic DAW abstractions.",
             },
             {
               title: "Arrangement-aware",
-              body: "Phrases, vocals, and lyrics share one song model instead of scattered files.",
+              body: "Phrases, vocals, lyrics, and chord sections share one connected song model instead of scattered files.",
             },
             {
-              title: "Production-ready",
-              body: "Cubase MIDI Remote, SynthV integration, and export paths built into Setup.",
+              title: "Independent",
+              body: "Built first for Claudio’s own personal use over about six months, then shared as a non-commercial passion project for other keyboard musicians.",
             },
           ].map((item) => (
             <div key={item.title} className="card-surface p-6">
@@ -80,6 +86,31 @@ export default function AboutPage() {
               <p className="mt-2 text-sm prose-muted">{item.body}</p>
             </div>
           ))}
+        </div>
+
+        <div className="mt-10">
+          <p className="section-label">Effort behind SmartBridge</p>
+          <h2 className="section-title mt-3" style={{ fontSize: "1.5rem" }}>Built over months, not weekends</h2>
+          <p className="prose-muted mt-4" style={{ maxWidth: "52rem" }}>
+            Based on the current SmartBridge source snapshot, the project already spans a large
+            amount of custom code across core logic, UI, keyboard integration, lyrics, Jam Player,
+            Jam Session, and production workflows.
+          </p>
+          <div className="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+            {[
+              { label: "Development time", value: "~6 months" },
+              { label: "Source files", value: "338" },
+              { label: "Total lines", value: "~166k" },
+            ].map((item) => (
+              <div key={item.label} className="card-surface p-6">
+                <p className="text-xs uppercase tracking-[0.24em] text-stone-500">{item.label}</p>
+                <p className="mt-3 text-3xl font-semibold text-stone-100">{item.value}</p>
+              </div>
+            ))}
+          </div>
+          <p className="mt-4 text-sm text-stone-500">
+            Source snapshot measured from the provided SmartBridge codebase: 158 C++ source files and 180 header files.
+          </p>
         </div>
       </div>
       <CtaBand />
