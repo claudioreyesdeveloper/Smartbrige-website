@@ -31,6 +31,13 @@ export type ParsedYamahaStyle = {
   originalBytes: Uint8Array
 }
 
+export type StyleSectionRange = {
+  id: string
+  label: string
+  startTick: number
+  endTick: number
+}
+
 const readU16 = (data: Uint8Array, offset: number) =>
   (data[offset] << 8) | data[offset + 1]
 const readU32 = (data: Uint8Array, offset: number) =>
@@ -180,11 +187,12 @@ function notesToEvents(
   repeatTicks: number,
   endTick: number,
   startingOrder: number,
+  rangeStart = 0,
 ): MidiEvent[] {
   const events: MidiEvent[] = []
   let order = startingOrder
   const cycle = Math.max(1, repeatTicks)
-  for (let offset = 0; offset < endTick; offset += cycle) {
+  for (let offset = rangeStart; offset < endTick; offset += cycle) {
     for (const note of notes) {
       const start = offset + note.tick
       if (start >= endTick) continue
@@ -211,6 +219,7 @@ export function replaceStyleLanes(
   replacements: {
     bass?: { notes: MidiNote[]; cycleTicks: number }
     drums?: { notes: MidiNote[]; cycleTicks: number }
+    range?: StyleSectionRange
   },
 ): Uint8Array {
   const tracks = style.tracks.map((track) => ({
@@ -231,6 +240,8 @@ export function replaceStyleLanes(
   const nativeStyleChannels = noteChannels.filter((channel) => channel >= 8).length
     > noteChannels.filter((channel) => channel < 8).length
   const channelBase = nativeStyleChannels ? 8 : 0
+  const rangeStart = Math.max(0, replacements.range?.startTick || 0)
+  const rangeEnd = Math.min(endTick, replacements.range?.endTick || endTick)
 
   const removeNotesOnChannels = (channels: number[]) => {
     tracks.forEach((track) => {
@@ -239,7 +250,9 @@ export function replaceStyleLanes(
         const channel = event.status & 0x0f
         return !(
           (kind === 0x80 || kind === 0x90) &&
-          channels.includes(channel)
+          channels.includes(channel) &&
+          event.tick >= rangeStart &&
+          event.tick < rangeEnd
         )
       })
     })
@@ -251,8 +264,9 @@ export function replaceStyleLanes(
       replacements.drums.notes,
       channelBase,
       replacements.drums.cycleTicks,
-      endTick,
+      rangeEnd,
       order,
+      rangeStart,
     )
     order += events.length
     target.events.push(...events)
@@ -263,8 +277,9 @@ export function replaceStyleLanes(
       replacements.bass.notes,
       channelBase + 2,
       replacements.bass.cycleTicks,
-      endTick,
+      rangeEnd,
       order,
+      rangeStart,
     )
     target.events.push(...events)
   }
@@ -278,6 +293,35 @@ export function replaceStyleLanes(
   })
   output.push(...style.yamahaTail)
   return Uint8Array.from(output)
+}
+
+export function extractStyleSections(style: ParsedYamahaStyle): StyleSectionRange[] {
+  const endTick = Math.max(...style.tracks.map((track) => track.endTick))
+  const markers = style.tracks
+    .flatMap((track) => track.events)
+    .filter((event) => event.status === 0xff && event.data[0] === 0x06)
+    .map((event) => {
+      const bytes = Uint8Array.from(event.data)
+      const [length, textStart] = readVlq(bytes, 1)
+      const label = new TextDecoder()
+        .decode(bytes.slice(textStart, textStart + length))
+        .replace(/\0/g, "")
+        .trim()
+      return { tick: event.tick, label }
+    })
+    .filter(({ label }) => /^(intro|main|fill|break|ending)/i.test(label))
+    .sort((a, b) => a.tick - b.tick)
+
+  if (!markers.length) {
+    return [{ id: "main-a", label: "Main A", startTick: 0, endTick }]
+  }
+
+  return markers.map((marker, index) => ({
+    id: `${marker.label.toLowerCase().replace(/[^a-z0-9]+/g, "-")}-${marker.tick}`,
+    label: marker.label,
+    startTick: marker.tick,
+    endTick: markers[index + 1]?.tick || endTick,
+  })).filter((section) => section.endTick > section.startTick)
 }
 
 export function patternToMidiNotes(
@@ -360,4 +404,33 @@ export function extractStylePreviewEvents(style: ParsedYamahaStyle): MidiPreview
         }),
     )
     .sort((a, b) => a.tick - b.tick || eventPriority(a) - eventPriority(b))
+}
+
+export function extractStyleSectionPreviewEvents(
+  style: ParsedYamahaStyle,
+  range: StyleSectionRange,
+  channels?: number[],
+): MidiPreviewEvent[] {
+  const events = extractStylePreviewEvents(style)
+  const onWantedChannel = (event: MidiPreviewEvent) =>
+    !channels || channels.includes(event.status & 0x0f)
+  const isVoiceSetup = (event: MidiPreviewEvent) => {
+    const kind = event.status & 0xf0
+    return kind === 0xc0 ||
+      (kind === 0xb0 && (event.data[0] === 0 || event.data[0] === 32))
+  }
+  const setup = new Map<string, MidiPreviewEvent>()
+  events.forEach((event) => {
+    if (!onWantedChannel(event) || event.tick > range.startTick || !isVoiceSetup(event)) return
+    const kind = event.status & 0xf0
+    const key = `${event.status & 0x0f}:${kind}:${kind === 0xb0 ? event.data[0] : 0}`
+    setup.set(key, { ...event, tick: range.startTick })
+  })
+  const body = events.filter((event) =>
+    onWantedChannel(event) &&
+    event.tick >= range.startTick &&
+    event.tick < range.endTick &&
+    !(event.tick === range.startTick && isVoiceSetup(event)),
+  )
+  return [...setup.values(), ...body].sort((a, b) => a.tick - b.tick)
 }

@@ -3,7 +3,13 @@
 import { Pause, Play, RotateCcw, Sparkles, Square } from "lucide-react"
 import { useEffect, useMemo, useRef, useState } from "react"
 import rawSongs from "@/data/demo/songs.json"
-import type { DemoSong, SongCategory, StyleCatalogEntry } from "@/lib/demo/types"
+import rawReharmonizations from "@/data/demo/reharmonizations.json"
+import type {
+  ChordEvent,
+  DemoSong,
+  SongCategory,
+  StyleCatalogEntry,
+} from "@/lib/demo/types"
 import {
   JamScheduler,
   type JamPlaybackState,
@@ -16,7 +22,40 @@ import {
   stylesForProfile,
 } from "@/lib/demo/yamaha/style-catalog"
 
-const songs = rawSongs as DemoSong[]
+const openingSectionLabels = [
+  "Verse",
+  "Pre-Chorus",
+  "Chorus",
+  "Verse 2",
+  "Pre-Chorus 2",
+  "Chorus 2",
+  "Bridge",
+  "Final Chorus",
+]
+const songs = (rawSongs as DemoSong[]).map((song) => ({
+  ...song,
+  sections: song.sections.map((section, index) => ({
+    ...section,
+    label: openingSectionLabels[index] || section.label,
+  })),
+}))
+const reharmonizations = rawReharmonizations as Record<
+  string,
+  { styles: Record<string, Record<string, ChordEvent[]>> }
+>
+
+function songWithReharmonization(song: DemoSong, style: string): DemoSong {
+  if (style === "Original") return song
+  const bySection = reharmonizations[song.id]?.styles[style]
+  if (!bySection) return song
+  return {
+    ...song,
+    sections: song.sections.map((section) => ({
+      ...section,
+      chords: bySection[section.id] || section.chords,
+    })),
+  }
+}
 const categories: SongCategory[] = [
   "Pop",
   "Rock",
@@ -51,7 +90,7 @@ function SongTimeline({
   return (
     <div className="song-timeline" aria-label={`${song.title} arrangement timeline`}>
       <div className={`timeline-intro${playback.beat < introBeats && playback.playing ? " is-active" : ""}`}>
-        <span>INTRO 1</span>
+        <span>INTRO</span>
         <strong>Automatic keyboard intro</strong>
         <small>{beatsPerBar}/4 · Main A armed</small>
       </div>
@@ -140,6 +179,7 @@ export function JamPlayerDemo() {
   const [styleCategory, setStyleCategory] = useState("All")
   const [styleSearch, setStyleSearch] = useState("")
   const [styleKey, setStyleKey] = useState("")
+  const [reharmStyle, setReharmStyle] = useState("Original")
   const [playback, setPlayback] = useState(initialPlayback)
   const [notice, setNotice] = useState("")
   const [engagements, setEngagements] = useState(0)
@@ -149,7 +189,15 @@ export function JamPlayerDemo() {
     () => songs.filter((song) => song.category === category),
     [category],
   )
-  const song = songs.find((candidate) => candidate.id === songId) || visibleSongs[0]
+  const originalSong = songs.find((candidate) => candidate.id === songId) || visibleSongs[0]
+  const song = useMemo(
+    () => songWithReharmonization(originalSong, reharmStyle),
+    [originalSong, reharmStyle],
+  )
+  const reharmStyles = useMemo(
+    () => ["Original", ...Object.keys(reharmonizations[originalSong.id]?.styles || {})],
+    [originalSong.id],
+  )
   const availableStyles = useMemo(
     () => midi.profile ? stylesForProfile(midi.profile) : [],
     [midi.profile],
@@ -170,10 +218,8 @@ export function JamPlayerDemo() {
     availableStyles.find((style) => entryKey(style) === styleKey) ||
     availableStyles.find((style) => style.name === "EasyPop") ||
     availableStyles[0]
-  const catalogOptions =
-    selectedStyle && !filteredStyles.some((style) => entryKey(style) === entryKey(selectedStyle))
-      ? [selectedStyle, ...filteredStyles]
-      : filteredStyles
+  const selectedStyleVisible = selectedStyle &&
+    filteredStyles.some((style) => entryKey(style) === entryKey(selectedStyle))
 
   useEffect(() => {
     scheduler.current = new JamScheduler(session, setPlayback)
@@ -185,6 +231,8 @@ export function JamPlayerDemo() {
       setSongId(visibleSongs[0].id)
     }
   }, [songId, visibleSongs])
+
+  useEffect(() => setReharmStyle("Original"), [songId])
 
   useEffect(() => {
     const first = availableStyles.find((style) => style.name === "EasyPop") || availableStyles[0]
@@ -211,11 +259,28 @@ export function JamPlayerDemo() {
 
   const changeStyle = (next: StyleCatalogEntry) => {
     setStyleKey(entryKey(next))
-    if (midi.profile && playback.playing) {
+    setStyleSearch(next.name)
+    if (midi.profile) {
       scheduler.current?.changeStyle(styleMappingForEntry(midi.profile, next))
-      setNotice(`Same arrangement, now playing ${next.name} on ${midi.profile.displayName}.`)
+      setNotice(
+        playback.playing
+          ? `Same arrangement, now playing ${next.name} on ${midi.profile.displayName}.`
+          : `${next.name} selected on your ${midi.profile.displayName}.`,
+      )
       setEngagements((value) => value + 1)
     }
+  }
+
+  const changeReharmonization = (next: string) => {
+    const nextSong = songWithReharmonization(originalSong, next)
+    setReharmStyle(next)
+    scheduler.current?.changeHarmony(nextSong)
+    setNotice(
+      next === "Original"
+        ? "Original chords restored."
+        : `${next} reharmonization selected.`,
+    )
+    setEngagements((value) => value + 1)
   }
 
   return (
@@ -316,15 +381,39 @@ export function JamPlayerDemo() {
             <div>
               <span className="demo-eyebrow">Transform the keyboard</span>
               <strong>Choose any factory style on your {midi.profile?.displayName}.</strong>
+              <label className="reharm-control">
+                <span>Reharmonization</span>
+                <select
+                  value={reharmStyle}
+                  aria-label="Reharmonization"
+                  onChange={(event) => changeReharmonization(event.target.value)}
+                >
+                  {reharmStyles.map((style) => <option key={style}>{style}</option>)}
+                </select>
+              </label>
             </div>
             <div className="style-catalog-controls">
               <input
                 type="search"
+                list="yamaha-style-suggestions"
                 value={styleSearch}
                 placeholder={`Search ${availableStyles.length} styles`}
                 aria-label="Search styles"
-                onChange={(event) => setStyleSearch(event.target.value)}
+                autoComplete="off"
+                onChange={(event) => {
+                  const value = event.target.value
+                  setStyleSearch(value)
+                  const exact = availableStyles.find(
+                    (style) => style.name.toLowerCase() === value.trim().toLowerCase(),
+                  )
+                  if (exact) changeStyle(exact)
+                }}
               />
+              <datalist id="yamaha-style-suggestions">
+                {filteredStyles.map((style) => (
+                  <option key={entryKey(style)} value={style.name}>{style.category}</option>
+                ))}
+              </datalist>
               <select
                 value={styleCategory}
                 aria-label="Style category"
@@ -333,14 +422,17 @@ export function JamPlayerDemo() {
                 {styleCategories.map((item) => <option key={item}>{item}</option>)}
               </select>
               <select
-                value={selectedStyle ? entryKey(selectedStyle) : ""}
+                value={selectedStyleVisible && selectedStyle ? entryKey(selectedStyle) : ""}
                 aria-label="Yamaha style"
                 onChange={(event) => {
                   const next = availableStyles.find((style) => entryKey(style) === event.target.value)
                   if (next) changeStyle(next)
                 }}
               >
-                {catalogOptions.map((style) => (
+                <option value="" disabled>
+                  {filteredStyles.length ? "Choose a matching style" : "No matching styles"}
+                </option>
+                {filteredStyles.map((style) => (
                   <option key={entryKey(style)} value={entryKey(style)}>
                     {style.name}{style.bpm ? ` · ${style.bpm} BPM` : ""}
                   </option>

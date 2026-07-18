@@ -54,10 +54,11 @@ export function buildJamSchedule(song: DemoSong, anticipationMs = 85): Scheduled
 
     section.chords.forEach((chord, chordIndex) => {
       const beat = sectionStart + chord.beat
+      const firstChordOfSong = sectionIndex === 0 && chordIndex === 0
       events.push({
         id: `chord-${section.id}-${chordIndex}`,
         beat,
-        dispatchBeat: Math.max(sectionStart, beat - anticipationBeats),
+        dispatchBeat: firstChordOfSong ? beat : Math.max(0, beat - anticipationBeats),
         type: "chord",
         chord: chord.name,
         section,
@@ -134,8 +135,8 @@ export class JamScheduler {
       totalBeats,
       currentChord: "",
       upcomingChord: "",
-      currentSection: this.startBeat < song.timeSignature[0] ? "Intro 1" : "",
-      arrangerState: "Intro 1",
+      currentSection: this.startBeat < song.timeSignature[0] ? "Intro" : "",
+      arrangerState: "Intro",
     }
 
     // Match desktop LocalMidiConnector: style/arranger SysEx → both ports;
@@ -168,8 +169,34 @@ export class JamScheduler {
   }
 
   changeStyle(style: StyleWireMapping) {
-    if (!this.playing) return
     this.session.sendBoth(styleSelectCommand(style))
+  }
+
+  changeHarmony(song: DemoSong) {
+    if (!this.playing) return
+    const beat = this.currentBeat(song)
+    this.events = buildJamSchedule(song)
+    this.sent.clear()
+    this.events.forEach((event) => {
+      if (event.dispatchBeat <= beat) this.sent.add(event.id)
+    })
+
+    const activeChord = [...this.events]
+      .filter((event) => event.type === "chord" && event.beat <= beat)
+      .at(-1)
+    const upcomingChord = this.events.find(
+      (event) => event.type === "chord" && event.beat > beat,
+    )
+    if (activeChord?.chord) this.sendChord(activeChord.chord)
+    this.state = {
+      ...this.state,
+      currentChord: activeChord?.chord || "",
+      upcomingChord: upcomingChord?.chord || "",
+    }
+    this.onState(this.state)
+
+    if (this.timer) clearInterval(this.timer)
+    this.timer = setInterval(() => this.tick(song), 10)
   }
 
   private currentBeat(song: DemoSong) {
@@ -208,7 +235,7 @@ export class JamScheduler {
       upcomingChord: upcomingChord?.chord || "",
       currentSection:
         beat < song.timeSignature[0]
-          ? "Intro 1"
+          ? "Intro"
           : activeSection?.section?.label || this.state.currentSection,
     }
     this.onState(this.state)

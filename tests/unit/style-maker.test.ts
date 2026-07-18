@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest"
 import {
   extractStylePreviewEvents,
+  extractStyleSections,
   parseYamahaStyle,
   patternToMidiNotes,
   replaceStyleLanes,
@@ -90,6 +91,33 @@ describe("Yamaha style editing", () => {
     expect(noteOns.some((event) => (event.status & 0x0f) === 8 && event.data[0] === 45)).toBe(true)
     expect(noteOns.some((event) => (event.status & 0x0f) === 10 && event.data[0] === 45)).toBe(true)
     expect(noteOns.some((event) => (event.status & 0x0f) < 8 && event.data[0] === 45)).toBe(false)
+  })
+
+  it("replaces only the selected Yamaha style section", () => {
+    const track = [
+      0, 0xff, 0x06, 6, ...ascii("Main A"),
+      0, 0x92, 40, 90, 96, 0x82, 40, 0,
+      0, 0xff, 0x06, 6, ...ascii("Main B"),
+      0, 0x92, 43, 90, 96, 0x82, 43, 0,
+      0, 0xff, 0x2f, 0,
+    ]
+    const donor = parseYamahaStyle(Uint8Array.from([
+      ...ascii("MThd"), 0, 0, 0, 6, 0, 0, 0, 1, 0, 96,
+      ...ascii("MTrk"), ...u32(track.length), ...track,
+    ]))
+    const sections = extractStyleSections(donor)
+    expect(sections.map((section) => section.label)).toEqual(["Main A", "Main B"])
+    const notes = patternToMidiNotes([[0, 50, 0.5, 100]], donor.ticksPerQuarter)
+    const output = parseYamahaStyle(replaceStyleLanes(donor, {
+      bass: { notes, cycleTicks: donor.ticksPerQuarter * 4 },
+      range: sections[1],
+    }))
+    const noteOns = output.tracks[0].events.filter(
+      (event) => (event.status & 0xf0) === 0x90 && event.data[1] > 0,
+    )
+    expect(noteOns.some((event) => event.tick === 0 && event.data[0] === 40)).toBe(true)
+    expect(noteOns.some((event) => event.tick === 96 && event.data[0] === 43)).toBe(false)
+    expect(noteOns.some((event) => event.tick === 96 && event.data[0] === 50)).toBe(true)
   })
 
   it("generates the verified YRGN/SLOT/STYL registration layout", () => {

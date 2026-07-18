@@ -164,6 +164,8 @@ describe("complete Jam Player catalog and schedule", () => {
 
   it("anticipates chords without moving section commands early", () => {
     const schedule = buildJamSchedule(catalog[0], 85)
+    const firstChord = schedule.find((event) => event.type === "chord")
+    expect(firstChord?.dispatchBeat).toBe(firstChord?.beat)
     const anticipated = schedule.find(
       (event) => event.type === "chord" && event.beat > event.section!.chords[0].beat + 4,
     )

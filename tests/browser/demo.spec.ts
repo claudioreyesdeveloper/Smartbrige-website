@@ -11,10 +11,13 @@ const u32 = (value: number) => [
 
 function stylePreviewFixture() {
   const track = [
+    0, 0xff, 0x06, 6, ...ascii("Main A"),
     0, 0xb0, 0, 127, 0, 0xb0, 32, 0, 0, 0xc0, 0,
     0, 0xb2, 0, 0, 0, 0xb2, 32, 0, 0, 0xc2, 33,
     0, 0x90, 36, 100, 0, 0x92, 40, 90, 0, 0x93, 60, 80,
     96, 0x80, 36, 0, 0, 0x82, 40, 0, 0, 0x83, 60, 0,
+    0, 0xff, 0x06, 6, ...ascii("Main B"),
+    0, 0x90, 38, 100, 0, 0x92, 43, 90, 96, 0x80, 38, 0, 0, 0x82, 43, 0,
     0, 0xff, 0x2f, 0,
   ]
   const tail = [...ascii("CASM"), 0, 0, 0, 4, 1, 2, 3, 4]
@@ -116,6 +119,38 @@ test("Jam Player exposes two complete 4/4 songs per category and mocked Web MIDI
   await expect(page.locator(".song-list button")).toHaveCount(2)
   await expect(page.getByPlaceholder("Search 796 styles")).toBeVisible()
   await expect(page.getByRole("button", { name: "Play arrangement" })).toBeVisible()
+  await expect(page.locator(".timeline-section header strong").nth(0)).toHaveText("Verse")
+  await expect(page.locator(".timeline-section header strong").nth(1)).toHaveText("Pre-Chorus")
+  await expect(page.locator(".timeline-section header strong").nth(2)).toHaveText("Chorus")
+
+  await page.evaluate(() => {
+    (window as unknown as { __midiSends: unknown[] }).__midiSends = []
+  })
+  await page.getByRole("combobox", { name: "Yamaha style" }).selectOption({ index: 1 })
+  const styleSends = await page.evaluate(() =>
+    (window as unknown as { __midiSends: { data: number[] }[] }).__midiSends,
+  )
+  expect(styleSends.some(({ data }) =>
+    data.slice(0, 11).join(",") === "240,67,115,1,81,5,0,3,4,0,0",
+  )).toBe(true)
+
+  await page.evaluate(() => {
+    (window as unknown as { __midiSends: unknown[] }).__midiSends = []
+  })
+  await page.getByLabel("Search styles").fill("JazzFunk")
+  await expect(page.locator(".style-catalog-controls > span")).toHaveText("JazzFunk")
+  const autocompleteSends = await page.evaluate(() =>
+    (window as unknown as { __midiSends: { data: number[] }[] }).__midiSends,
+  )
+  expect(autocompleteSends.some(({ data }) =>
+    data.slice(0, 11).join(",") === "240,67,115,1,81,5,0,3,4,0,0",
+  )).toBe(true)
+
+  const firstChord = page.locator(".timeline-chord").first()
+  const originalChord = await firstChord.textContent()
+  await page.getByRole("combobox", { name: "Reharmonization" }).selectOption("Basic")
+  await expect(page.getByText("Basic reharmonization selected.")).toBeVisible()
+  expect(await firstChord.textContent()).not.toBe(originalChord)
 })
 
 test("Style Maker clearly requires a user donor file", async ({ page }, testInfo) => {
@@ -142,10 +177,23 @@ test("Style Maker previews voices and channels 9-16 on Port 2", async ({
     mimeType: "application/octet-stream",
     buffer: Buffer.from(stylePreviewFixture()),
   })
+  const sectionPicker = page.getByRole("combobox", { name: "Style Maker section" })
+  await expect(sectionPicker.locator("option")).toHaveCount(2)
+  await sectionPicker.selectOption({ label: "Main B" })
+  await expect(page.getByRole("button", { name: /Start/ })).toHaveCount(2)
+
+  await page.locator(".lane-editor").first().getByRole("button", { name: /Deep Pocket/ }).dblclick()
+  await page.waitForTimeout(100)
+  let sends = await page.evaluate(() =>
+    (window as unknown as { __midiSends: { port: string; data: number[] }[] }).__midiSends,
+  )
+  expect(sends.some(({ port, data }) => port.endsWith("Port 2") && data[0] === 0x9a)).toBe(true)
+  await page.locator(".lane-editor").first().getByRole("button", { name: /Stop/ }).click()
+
   await page.getByRole("button", { name: /AFTER/ }).click()
   await page.waitForTimeout(100)
 
-  const sends = await page.evaluate(() =>
+  sends = await page.evaluate(() =>
     (window as unknown as { __midiSends: { port: string; data: number[] }[] }).__midiSends,
   )
   expect(sends.some(({ port, data }) =>

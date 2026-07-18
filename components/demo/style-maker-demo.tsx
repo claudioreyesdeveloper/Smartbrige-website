@@ -17,12 +17,14 @@ import { DemoShell } from "@/components/demo/demo-shell"
 import { FeedbackPrompt } from "@/components/demo/feedback-prompt"
 import {
   extractMidiNotes,
-  extractStylePreviewEvents,
+  extractStyleSectionPreviewEvents,
+  extractStyleSections,
   parseYamahaStyle,
   patternToMidiNotes,
   replaceStyleLanes,
   type MidiNote,
   type ParsedYamahaStyle,
+  type StyleSectionRange,
 } from "@/lib/demo/style-midi"
 import { StylePreviewPlayer } from "@/lib/demo/style-preview"
 import { MusicsoftTransfer } from "@/lib/demo/yamaha/musicsoft-transfer"
@@ -42,6 +44,25 @@ type LaneSource = {
   notes: MidiNote[]
   cycleTicks: number
   custom?: boolean
+}
+
+function laneSourceFor(
+  id: string,
+  parts: Part[],
+  custom: LaneSource | null,
+  donor: ParsedYamahaStyle | null,
+): LaneSource | null {
+  if (!donor) return null
+  if (id === "custom") return custom
+  const part = parts.find((candidate) => candidate.id === id)
+  return part
+    ? {
+        id: part.id,
+        name: part.name,
+        notes: patternToMidiNotes(part.notes, donor.ticksPerQuarter),
+        cycleTicks: part.bars * 4 * donor.ticksPerQuarter,
+      }
+    : null
 }
 
 const bassParts = partCatalog.bass as Part[]
@@ -64,11 +85,14 @@ export function StyleMakerDemo() {
   const [donor, setDonor] = useState<ParsedYamahaStyle | null>(null)
   const [bassId, setBassId] = useState(bassParts[0].id)
   const [drumsId, setDrumsId] = useState(drumParts[0].id)
+  const [sectionId, setSectionId] = useState("")
   const [customBass, setCustomBass] = useState<LaneSource | null>(null)
   const [customDrums, setCustomDrums] = useState<LaneSource | null>(null)
   const [modified, setModified] = useState<Uint8Array | null>(null)
   const [notice, setNotice] = useState("")
-  const [previewing, setPreviewing] = useState<"original" | "modified" | null>(null)
+  const [previewing, setPreviewing] = useState<
+    "original" | "modified" | "bass" | "drums" | null
+  >(null)
   const [transfer, setTransfer] = useState<TransferProgress | null>(null)
   const [transferComplete, setTransferComplete] = useState("")
   const [engagements, setEngagements] = useState(0)
@@ -80,32 +104,21 @@ export function StyleMakerDemo() {
   }, [session])
 
   const bass = useMemo<LaneSource | null>(() => {
-    if (!donor) return null
-    if (bassId === "custom") return customBass
-    const part = bassParts.find((candidate) => candidate.id === bassId)
-    return part
-      ? {
-          id: part.id,
-          name: part.name,
-          notes: patternToMidiNotes(part.notes, donor.ticksPerQuarter),
-          cycleTicks: part.bars * 4 * donor.ticksPerQuarter,
-        }
-      : null
+    return laneSourceFor(bassId, bassParts, customBass, donor)
   }, [bassId, customBass, donor])
 
   const drums = useMemo<LaneSource | null>(() => {
-    if (!donor) return null
-    if (drumsId === "custom") return customDrums
-    const part = drumParts.find((candidate) => candidate.id === drumsId)
-    return part
-      ? {
-          id: part.id,
-          name: part.name,
-          notes: patternToMidiNotes(part.notes, donor.ticksPerQuarter),
-          cycleTicks: part.bars * 4 * donor.ticksPerQuarter,
-        }
-      : null
+    return laneSourceFor(drumsId, drumParts, customDrums, donor)
   }, [customDrums, donor, drumsId])
+
+  const styleSections = useMemo(
+    () => donor ? extractStyleSections(donor) : [],
+    [donor],
+  )
+  const selectedSection = useMemo<StyleSectionRange | null>(
+    () => styleSections.find((section) => section.id === sectionId) || styleSections[0] || null,
+    [sectionId, styleSections],
+  )
 
   useEffect(() => {
     if (!donor || !bass || !drums) {
@@ -113,12 +126,16 @@ export function StyleMakerDemo() {
       return
     }
     try {
-      setModified(replaceStyleLanes(donor, { bass, drums }))
+      setModified(replaceStyleLanes(donor, {
+        bass,
+        drums,
+        range: selectedSection || undefined,
+      }))
       setNotice("")
     } catch (error) {
       setNotice(error instanceof Error ? error.message : "Could not render the modified style.")
     }
-  }, [bass, donor, drums])
+  }, [bass, donor, drums, selectedSection])
 
   const uploadDonor = async (file: File) => {
     try {
@@ -129,6 +146,7 @@ export function StyleMakerDemo() {
       }
       setDonorFile(file)
       setDonor(parsed)
+      setSectionId(extractStyleSections(parsed)[0]?.id || "")
       setNotice("")
       setEngagements((value) => value + 1)
     } catch (error) {
@@ -172,10 +190,48 @@ export function StyleMakerDemo() {
       setNotice("Connect the Yamaha keyboard to audition through its sounds.")
       return
     }
-    if (!donor || (version === "modified" && !modified)) return
+    if (!donor || !selectedSection || (version === "modified" && !modified)) return
     const parsed = version === "original" ? donor : parseYamahaStyle(modified!)
-    preview.current?.play(extractStylePreviewEvents(parsed), parsed.ticksPerQuarter, 120)
+    preview.current?.play(
+      extractStyleSectionPreviewEvents(parsed, selectedSection),
+      parsed.ticksPerQuarter,
+      120,
+    )
     setPreviewing(version)
+    setEngagements((value) => value + 1)
+  }
+
+  const playLane = (lane: "bass" | "drums", requestedId?: string) => {
+    if (!midi.connected || !donor || !selectedSection) {
+      setNotice("Connect the Yamaha keyboard and choose a donor style first.")
+      return
+    }
+    const auditionBass = laneSourceFor(
+      lane === "bass" && requestedId ? requestedId : bassId,
+      bassParts,
+      customBass,
+      donor,
+    )
+    const auditionDrums = laneSourceFor(
+      lane === "drums" && requestedId ? requestedId : drumsId,
+      drumParts,
+      customDrums,
+      donor,
+    )
+    if (!auditionBass || !auditionDrums) return
+    const rendered = replaceStyleLanes(donor, {
+      bass: auditionBass,
+      drums: auditionDrums,
+      range: selectedSection,
+    })
+    const parsed = parseYamahaStyle(rendered)
+    const channel = lane === "bass" ? 10 : 8
+    preview.current?.play(
+      extractStyleSectionPreviewEvents(parsed, selectedSection, [channel]),
+      parsed.ticksPerQuarter,
+      120,
+    )
+    setPreviewing(lane)
     setEngagements((value) => value + 1)
   }
 
@@ -273,6 +329,21 @@ export function StyleMakerDemo() {
                 <strong>{donorFile?.name}</strong>
                 <span>{donor.tracks.length} MIDI track{donor.tracks.length === 1 ? "" : "s"} · CASM/OTS/MDB tail preserved ({donor.yamahaTail.length.toLocaleString()} bytes)</span>
               </div>
+              <label className="style-section-picker">
+                <span>Section</span>
+                <select
+                  value={selectedSection?.id || ""}
+                  aria-label="Style Maker section"
+                  onChange={(event) => {
+                    stopPreview()
+                    setSectionId(event.target.value)
+                  }}
+                >
+                  {styleSections.map((section) => (
+                    <option key={section.id} value={section.id}>{section.label}</option>
+                  ))}
+                </select>
+              </label>
               <label className="replace-file">
                 Choose another
                 <input type="file" accept=".sty,.prs,.sst" onChange={(event) => event.target.files?.[0] && uploadDonor(event.target.files[0])} />
@@ -283,30 +354,46 @@ export function StyleMakerDemo() {
               <section className="lane-editor">
                 <header>
                   <div><span>BASS</span><strong>{bass?.name}</strong></div>
+                  <div className="lane-audition-controls">
+                    <button type="button" onClick={() => playLane("bass")}>
+                      <Play size={13} fill="currentColor" /> Start
+                    </button>
+                    <button type="button" onClick={stopPreview} disabled={previewing !== "bass"}>
+                      <Square size={12} fill="currentColor" /> Stop
+                    </button>
+                  </div>
                   <label className="midi-upload"><Upload size={14} /> Your MIDI<input type="file" accept=".mid,.midi" onChange={(event) => event.target.files?.[0] && uploadLane(event.target.files[0], "bass")} /></label>
                 </header>
                 <div className="part-carousel">
                   {bassParts.map((part) => (
-                    <button key={part.id} type="button" className={part.id === bassId ? "is-active" : ""} onClick={() => { setBassId(part.id); setEngagements((value) => value + 1) }}>
+                    <button key={part.id} type="button" className={part.id === bassId ? "is-active" : ""} title="Double-click to audition" onDoubleClick={() => playLane("bass", part.id)} onClick={() => { setBassId(part.id); setEngagements((value) => value + 1) }}>
                       <span>{part.genre}</span><strong>{part.name}</strong><RhythmGlyph part={part} active={part.id === bassId} />
                     </button>
                   ))}
-                  {customBass && <button type="button" className={bassId === "custom" ? "is-active" : ""} onClick={() => setBassId("custom")}><span>Your MIDI</span><strong>{customBass.name}</strong></button>}
+                  {customBass && <button type="button" title="Double-click to audition" className={bassId === "custom" ? "is-active" : ""} onDoubleClick={() => playLane("bass", "custom")} onClick={() => setBassId("custom")}><span>Your MIDI</span><strong>{customBass.name}</strong></button>}
                 </div>
               </section>
 
               <section className="lane-editor">
                 <header>
                   <div><span>DRUMS</span><strong>{drums?.name}</strong></div>
+                  <div className="lane-audition-controls">
+                    <button type="button" onClick={() => playLane("drums")}>
+                      <Play size={13} fill="currentColor" /> Start
+                    </button>
+                    <button type="button" onClick={stopPreview} disabled={previewing !== "drums"}>
+                      <Square size={12} fill="currentColor" /> Stop
+                    </button>
+                  </div>
                   <label className="midi-upload"><Upload size={14} /> Your MIDI<input type="file" accept=".mid,.midi" onChange={(event) => event.target.files?.[0] && uploadLane(event.target.files[0], "drums")} /></label>
                 </header>
                 <div className="part-carousel">
                   {drumParts.map((part) => (
-                    <button key={part.id} type="button" className={part.id === drumsId ? "is-active" : ""} onClick={() => { setDrumsId(part.id); setEngagements((value) => value + 1) }}>
+                    <button key={part.id} type="button" className={part.id === drumsId ? "is-active" : ""} title="Double-click to audition" onDoubleClick={() => playLane("drums", part.id)} onClick={() => { setDrumsId(part.id); setEngagements((value) => value + 1) }}>
                       <span>{part.genre}</span><strong>{part.name}</strong><RhythmGlyph part={part} active={part.id === drumsId} />
                     </button>
                   ))}
-                  {customDrums && <button type="button" className={drumsId === "custom" ? "is-active" : ""} onClick={() => setDrumsId("custom")}><span>Your MIDI</span><strong>{customDrums.name}</strong></button>}
+                  {customDrums && <button type="button" title="Double-click to audition" className={drumsId === "custom" ? "is-active" : ""} onDoubleClick={() => playLane("drums", "custom")} onClick={() => setDrumsId("custom")}><span>Your MIDI</span><strong>{customDrums.name}</strong></button>}
                 </div>
               </section>
             </div>

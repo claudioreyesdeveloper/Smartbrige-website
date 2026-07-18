@@ -1392,6 +1392,27 @@ body:has(.demo-station) .site-footer {
   text-align: right;
 }
 
+.reharm-control {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  margin-top: 0.45rem;
+  color: #91aabd;
+  font-size: 0.68rem;
+  font-weight: 800;
+}
+
+.reharm-control select {
+  min-height: 2.2rem;
+  min-width: 9rem;
+  padding: 0 0.65rem;
+  border: 1px solid #315671;
+  border-radius: 7px;
+  background: #091d2d;
+  color: #e8f5fc;
+  font: inherit;
+}
+
 .song-timeline {
   display: grid;
   gap: 0.65rem;
@@ -1688,6 +1709,23 @@ body:has(.demo-station) .site-footer {
   font-size: 0.8rem;
 }
 
+.style-section-picker {
+  display: grid;
+  gap: 0.2rem;
+  min-width: 9rem;
+}
+
+.style-section-picker select {
+  min-height: 2.25rem;
+  padding: 0 0.6rem;
+  border: 1px solid #315671;
+  border-radius: 6px;
+  background: #091d2d;
+  color: #e8f5fc;
+  font: inherit;
+  font-size: 0.7rem;
+}
+
 .replace-file,
 .midi-upload {
   color: #8fcfff;
@@ -1729,6 +1767,28 @@ body:has(.demo-station) .site-footer {
 
 .lane-editor header strong {
   font-size: 0.77rem;
+}
+
+.lane-audition-controls {
+  margin-left: auto;
+}
+
+.lane-audition-controls button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.28rem;
+  min-height: 1.9rem;
+  padding: 0 0.55rem;
+  border: 1px solid #315671;
+  border-radius: 5px;
+  background: #0b2538;
+  color: #dff4ff;
+  font-size: 0.62rem;
+  font-weight: 800;
+}
+
+.lane-audition-controls button:disabled {
+  opacity: 0.4;
 }
 
 .midi-upload {
