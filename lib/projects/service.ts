@@ -232,6 +232,7 @@ export class ProjectService {
       revisionId: this.idFactory(),
       projectId: project.id,
       version: currentRevision.version + 1,
+      expectedVersion: currentRevision.version,
       document,
       createdByUserId: userId,
       title,

@@ -4,8 +4,13 @@ import { blobReferences, projectRevisions, projects } from "@/lib/db/schema"
 import {
   cloneProjectDocument,
   migrateProjectDocument,
-  type ProjectDocument,
 } from "@/lib/projects/document"
+import {
+  buildAtomicAppendRevisionQuery,
+  buildAtomicCreateProjectQuery,
+  DrizzleAtomicProjectQueryExecutor,
+  type AtomicProjectQueryExecutor,
+} from "@/lib/projects/atomic-queries"
 import type {
   AppendRevisionInput,
   BlobReferenceRow,
@@ -53,40 +58,60 @@ function mapBlob(row: typeof blobReferences.$inferSelect): BlobReferenceRow {
   }
 }
 
+function isUniqueViolation(error: unknown): boolean {
+  return (
+    typeof error === "object" &&
+    error !== null &&
+    "code" in error &&
+    error.code === "23505"
+  )
+}
+
 export class NeonProjectStore implements ProjectStore {
-  constructor(private readonly db: AppDatabase = getDb()) {}
+  private readonly atomicExecutor: AtomicProjectQueryExecutor
+
+  constructor(
+    private readonly db: AppDatabase = getDb(),
+    atomicExecutor?: AtomicProjectQueryExecutor,
+  ) {
+    this.atomicExecutor =
+      atomicExecutor ?? new DrizzleAtomicProjectQueryExecutor(db)
+  }
 
   async insertProjectWithInitialRevision(input: CreateProjectInput): Promise<ProjectWithRevision> {
-    await this.db.insert(projects).values({
-      id: input.id,
-      userId: input.userId,
-      title: input.title,
-      currentRevisionId: null,
-      createdAt: input.createdAt,
-      updatedAt: input.createdAt,
-      deletedAt: null,
-    })
-
-    await this.db.insert(projectRevisions).values({
-      id: input.revisionId,
-      projectId: input.id,
-      version: 1,
-      document: cloneProjectDocument(input.document),
-      createdByUserId: input.userId,
-      createdAt: input.createdAt,
-    })
-
-    await this.db
-      .update(projects)
-      .set({ currentRevisionId: input.revisionId, updatedAt: input.createdAt })
-      .where(eq(projects.id, input.id))
-
-    const project = await this.getProject(input.id)
-    const revision = await this.getRevision(input.revisionId)
-    if (!project || !revision) {
-      throw new Error("Failed to create project revision")
+    const result = await this.atomicExecutor.execute(
+      buildAtomicCreateProjectQuery(input),
+    )
+    if (result.rows.length !== 1) {
+      throw new Error("Project creation conflict.")
     }
-    return { project, revision }
+    const mutation = result.rows[0]
+    if (
+      mutation.projectId !== input.id ||
+      mutation.revisionId !== input.revisionId
+    ) {
+      throw new Error("Atomic project creation returned unexpected identifiers.")
+    }
+
+    return {
+      project: {
+        id: input.id,
+        userId: input.userId,
+        title: input.title,
+        currentRevisionId: input.revisionId,
+        createdAt: new Date(mutation.projectCreatedAt),
+        updatedAt: new Date(input.createdAt),
+        deletedAt: null,
+      },
+      revision: {
+        id: input.revisionId,
+        projectId: input.id,
+        version: 1,
+        document: cloneProjectDocument(input.document),
+        createdByUserId: input.userId,
+        createdAt: new Date(input.createdAt),
+      },
+    }
   }
 
   async listProjectsForUser(userId: string): Promise<ProjectRow[]> {
@@ -138,46 +163,51 @@ export class NeonProjectStore implements ProjectStore {
   }
 
   async appendRevisionIfCurrent(input: AppendRevisionInput): Promise<ProjectWithRevision | null> {
-    const current = await this.getProject(input.projectId)
-    if (!current || current.deletedAt !== null) return null
-    if (current.currentRevisionId !== input.expectedRevisionId) return null
+    if (input.version !== input.expectedVersion + 1) {
+      return null
+    }
 
+    let result
     try {
-      await this.db.insert(projectRevisions).values({
+      result = await this.atomicExecutor.execute(
+        buildAtomicAppendRevisionQuery(input),
+      )
+    } catch (error) {
+      if (isUniqueViolation(error)) {
+        return null
+      }
+      throw error
+    }
+    if (result.rows.length !== 1) {
+      return null
+    }
+    const mutation = result.rows[0]
+    if (
+      mutation.projectId !== input.projectId ||
+      mutation.revisionId !== input.revisionId
+    ) {
+      throw new Error("Atomic project save returned unexpected identifiers.")
+    }
+
+    return {
+      project: {
+        id: input.projectId,
+        userId: input.createdByUserId,
+        title: input.title,
+        currentRevisionId: input.revisionId,
+        createdAt: new Date(mutation.projectCreatedAt),
+        updatedAt: input.createdAt,
+        deletedAt: null,
+      },
+      revision: {
         id: input.revisionId,
         projectId: input.projectId,
         version: input.version,
-        document: cloneProjectDocument(input.document) as ProjectDocument,
+        document: cloneProjectDocument(input.document),
         createdByUserId: input.createdByUserId,
-        createdAt: input.createdAt,
-      })
-    } catch {
-      return null
+        createdAt: new Date(input.createdAt),
+      },
     }
-
-    const updated = await this.db
-      .update(projects)
-      .set({
-        title: input.title,
-        currentRevisionId: input.revisionId,
-        updatedAt: input.createdAt,
-      })
-      .where(
-        and(
-          eq(projects.id, input.projectId),
-          eq(projects.currentRevisionId, input.expectedRevisionId),
-          isNull(projects.deletedAt),
-        ),
-      )
-      .returning()
-
-    if (updated.length === 0) {
-      return null
-    }
-
-    const revision = await this.getRevision(input.revisionId)
-    if (!revision) return null
-    return { project: mapProject(updated[0]), revision }
   }
 
   async softDeleteProject(projectId: string, userId: string, deletedAt: Date): Promise<boolean> {

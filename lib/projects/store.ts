@@ -44,6 +44,7 @@ export type AppendRevisionInput = {
   revisionId: string
   projectId: string
   version: number
+  expectedVersion: number
   document: ProjectDocument
   createdByUserId: string
   title: string
