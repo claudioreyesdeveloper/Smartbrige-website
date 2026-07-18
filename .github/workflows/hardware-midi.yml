@@ -1,0 +1,58 @@
+name: Physical MIDI (manual)
+
+# Opt-in hardware verification only. Never runs on pull_request/push.
+#
+# Requires a self-hosted runner labelled "smartbridge-hardware" with:
+#   - Chrome/Chromium with Web MIDI + SysEx permissions for localhost
+#   - A supported Yamaha keyboard connected over USB
+#
+# Hosted GitHub runners cannot access physical MIDI devices. Do not remove
+# the runs-on label gate or add ordinary push/PR triggers.
+
+on:
+  workflow_dispatch:
+    inputs:
+      hardware_model:
+        description: Yamaha model button label (e.g. Genos2, Tyros5)
+        required: false
+        default: Genos2
+        type: string
+
+jobs:
+  physical-yamaha:
+    runs-on: [self-hosted, smartbridge-hardware]
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+
+      - name: Clean install
+        run: npm ci
+
+      - name: Install Playwright Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Physical Web MIDI acceptance test
+        env:
+          CI: "true"
+          SMARTBRIDGE_HARDWARE_TEST: "1"
+          SMARTBRIDGE_HARDWARE_MODEL: ${{ inputs.hardware_model }}
+        run: npx playwright test tests/browser/hardware.spec.ts --project=desktop
+
+      - name: Upload Playwright artifacts
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: hardware-midi-failure-${{ github.run_id }}
+          path: |
+            playwright-report/
+            test-results/
+          if-no-files-found: ignore
+          retention-days: 30

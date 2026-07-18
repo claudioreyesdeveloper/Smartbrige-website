@@ -1,0 +1,108 @@
+name: Website CI
+
+# Standard hosted CI for the SmartBridge marketing site and browser demos.
+# Covers clean install, TypeScript, Vitest, production Next build, and
+# Playwright mocked-Web-MIDI browser tests (demo.spec.ts only).
+#
+# Physical Yamaha hardware tests (hardware.spec.ts) are intentionally excluded.
+# They require SMARTBRIDGE_HARDWARE_TEST=1 and a self-hosted runner with a
+# connected keyboard — see hardware-midi.yml (workflow_dispatch only).
+#
+# Desktop parity (A05 fixture export + C++ golden tests) is NOT invoked here:
+# UNKNOWN — claudioreyesdeveloper/SmartBridge-Plugin is a private repository.
+# This workflow's GITHUB_TOKEN cannot check out or build that repo without an
+# embedded cross-repo PAT/org secret, which Wave 1 A07 excludes. I01 should
+# wire parity once desktop CI publishes versioned fixture artifacts publicly
+# or via an approved org-level secret outside this task's scope.
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+concurrency:
+  group: website-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    name: Install, typecheck, unit tests, build
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+
+      - name: Clean install
+        run: npm ci
+
+      - name: TypeScript check
+        run: npm run lint
+
+      - name: Vitest
+        run: npm test
+
+      - name: Production Next.js build
+        run: npm run build
+
+      - name: Upload Next build log on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: next-build-log-${{ github.run_id }}
+          path: |
+            .next/trace
+          if-no-files-found: ignore
+          retention-days: 14
+
+  playwright-mocked-midi:
+    name: Playwright mocked Web MIDI
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    needs: verify
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+
+      - name: Clean install
+        run: npm ci
+
+      - name: Install Playwright Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Mocked-MIDI browser tests
+        env:
+          CI: "true"
+        run: npx playwright test tests/browser/demo.spec.ts
+
+      - name: Upload Playwright HTML report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report-${{ github.run_id }}
+          path: playwright-report/
+          if-no-files-found: ignore
+          retention-days: 14
+
+      - name: Upload Playwright traces and screenshots
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-test-results-${{ github.run_id }}
+          path: test-results/
+          if-no-files-found: ignore
+          retention-days: 14
