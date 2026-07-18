@@ -26,7 +26,7 @@ function buildState(options: FakeConnectionOptions): JamConnectionState {
     guidance = `${displayName} connected. You can prepare and play arrangements.`
   }
 
-  return { browserSupported, connected, model, displayName, guidance }
+  return { browserSupported, secure: true, connected, model, displayName, guidance }
 }
 
 export function createFakeConnectionClient(

@@ -7,6 +7,13 @@
   --paid-jam-panel: rgba(6, 18, 29, 0.72);
   --paid-jam-accent: #4db8ff;
   color: var(--paid-jam-ink);
+  min-width: 0;
+  max-width: none;
+  overflow-x: clip;
+}
+
+.paid-jam.app-shell-workspace {
+  max-width: none;
 }
 
 .paid-jam-lead {
@@ -271,6 +278,7 @@
   display: grid;
   gap: 1rem;
   align-content: start;
+  min-width: 0;
 }
 
 .paid-jam-song-header {
@@ -279,6 +287,7 @@
   justify-content: space-between;
   gap: 1rem;
   align-items: flex-start;
+  order: -1;
 }
 
 .paid-jam-eyebrow {
@@ -337,10 +346,29 @@
   border-radius: 0.75rem;
   border: 1px solid var(--paid-jam-line);
   background: rgba(10, 30, 46, 0.75);
+  order: -2;
+  border-left: 4px solid #6b8294;
+}
+
+.paid-jam-connection.is-connected {
+  border-color: rgba(52, 211, 153, 0.42);
+  border-left-color: #34d399;
+  background: rgba(8, 48, 48, 0.55);
 }
 
 .paid-jam-connection strong {
+  display: block;
   font-size: 1.05rem;
+}
+
+.paid-jam-step-label {
+  display: block;
+  margin-bottom: 0.2rem;
+  color: #a8c0d4;
+  font-size: 0.82rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
 }
 
 .paid-jam-connection p {
@@ -370,9 +398,64 @@
   align-items: end;
 }
 
+.paid-jam-transform-panel,
+.paid-jam-performance-panel {
+  padding: 1.1rem;
+  border: 1px solid var(--paid-jam-line);
+  border-radius: 0.85rem;
+  background: rgba(7, 22, 35, 0.72);
+}
+
+.paid-jam-transform-panel {
+  order: 1;
+}
+
+.paid-jam-performance-panel {
+  border-color: rgba(77, 184, 255, 0.28);
+  background: linear-gradient(135deg, rgba(12, 42, 63, 0.82), rgba(6, 22, 35, 0.78));
+  order: 2;
+}
+
+.paid-jam-performance-panel.is-playing {
+  border-color: rgba(52, 211, 153, 0.55);
+  box-shadow: 0 0 0 1px rgba(52, 211, 153, 0.12);
+}
+
+.paid-jam-workflow-heading {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 0.85rem;
+  align-items: start;
+  margin-bottom: 1rem;
+}
+
+.paid-jam-workflow-heading > span {
+  padding: 0.35rem 0.55rem;
+  border-radius: 999px;
+  background: rgba(77, 184, 255, 0.14);
+  color: #bfe6ff;
+  font-size: 0.85rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.paid-jam-workflow-heading h3 {
+  margin: 0;
+  font-size: 1.12rem;
+}
+
+.paid-jam-workflow-heading p,
+.paid-jam-reharm p {
+  margin: 0.25rem 0 0;
+  color: var(--paid-jam-muted);
+  font-size: 0.95rem;
+  line-height: 1.45;
+}
+
 .paid-jam-controls .paid-jam-field {
   padding: 0;
   min-width: 7rem;
+  max-width: 100%;
 }
 
 .paid-jam-field-grow {
@@ -403,8 +486,8 @@
 }
 
 .paid-jam-transport-main {
-  min-height: 3.25rem;
-  min-width: 12rem;
+  min-height: 3.75rem;
+  min-width: 14rem;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -414,7 +497,7 @@
   border-radius: 0.75rem;
   background: linear-gradient(180deg, #3aa4e8, #2178b8);
   color: #04131f;
-  font-size: 1.1rem;
+  font-size: 1.15rem;
   font-weight: 800;
 }
 
@@ -446,8 +529,8 @@
 }
 
 .paid-jam-readout span {
-  min-width: 5.5rem;
-  padding: 0.45rem 0.65rem;
+  min-width: 6.5rem;
+  padding: 0.55rem 0.75rem;
   border-radius: 0.5rem;
   background: rgba(9, 29, 45, 0.9);
   border: 1px solid var(--paid-jam-line);
@@ -456,13 +539,13 @@
 
 .paid-jam-readout small {
   color: #9eb6ca;
-  font-size: 0.7rem;
+  font-size: 0.78rem;
   text-transform: uppercase;
   letter-spacing: 0.08em;
 }
 
 .paid-jam-readout strong {
-  font-size: 1.05rem;
+  font-size: 1.12rem;
 }
 
 .paid-jam-reharm {
@@ -474,6 +557,8 @@
   border-radius: 0.75rem;
   border: 1px solid var(--paid-jam-line);
   background: rgba(10, 30, 46, 0.55);
+  margin-top: 0.25rem;
+  order: 7;
 }
 
 .paid-jam-reharm > div {
@@ -499,6 +584,7 @@
 .paid-jam-project-title {
   padding: 0;
   max-width: 28rem;
+  order: 8;
 }
 
 .paid-jam-status {
@@ -508,6 +594,7 @@
   border: 1px solid rgba(69, 163, 228, 0.24);
   color: #d7ebf8;
   font-size: 1rem;
+  order: 3;
 }
 
 .paid-jam-muted {
@@ -522,6 +609,7 @@
   margin: 0;
   color: #9eb6ca;
   font-size: 0.92rem;
+  order: 6;
 }
 
 .paid-jam-spin {
@@ -538,6 +626,9 @@
 .paid-jam-timeline {
   display: grid;
   gap: 0.7rem;
+  min-width: 0;
+  padding: 0.15rem 0;
+  order: 5;
 }
 
 .paid-jam-section {
@@ -600,7 +691,7 @@
   color: #b4cce0;
   border-radius: 0.35rem;
   background: rgba(10, 25, 39, 0.65);
-  font-size: 0.72rem;
+  font-size: 0.8rem;
   font-weight: 650;
 }
 
@@ -620,7 +711,7 @@
   display: grid;
   grid-template-rows: repeat(4, 1fr);
   color: #8eacc2;
-  font-size: 0.62rem;
+  font-size: 0.72rem;
 }
 
 .paid-jam-bar-numbers span {
@@ -661,7 +752,7 @@
   background: color-mix(in srgb, var(--section-accent) 28%, #0b2233);
   border: 1px solid color-mix(in srgb, var(--section-accent) 45%, transparent);
   color: #f2fbff;
-  font-size: 0.92rem;
+  font-size: 1rem;
   font-weight: 750;
   white-space: nowrap;
   overflow: hidden;
@@ -693,6 +784,14 @@
     border-bottom: 1px solid var(--paid-jam-line);
   }
 
+  .paid-jam-category-tabs {
+    grid-template-columns: repeat(auto-fit, minmax(7rem, 1fr));
+  }
+
+  .paid-jam-song-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .paid-jam-connection {
     grid-template-columns: auto 1fr;
   }
@@ -704,5 +803,73 @@
   .paid-jam-readout {
     margin-left: 0;
     width: 100%;
+  }
+}
+
+@media (max-width: 640px) {
+  .paid-jam-stage {
+    padding: 1rem 0.8rem 1.25rem;
+  }
+
+  .paid-jam-song-list {
+    grid-template-columns: 1fr;
+  }
+
+  .paid-jam-connection {
+    grid-template-columns: 1fr;
+  }
+
+  .paid-jam-connection > svg {
+    display: none;
+  }
+
+  .paid-jam-connection button {
+    grid-column: auto;
+    width: 100%;
+    justify-content: center;
+  }
+
+  .paid-jam-workflow-heading {
+    grid-template-columns: 1fr;
+  }
+
+  .paid-jam-controls,
+  .paid-jam-transport,
+  .paid-jam-reharm {
+    align-items: stretch;
+  }
+
+  .paid-jam-controls .paid-jam-field,
+  .paid-jam-field-grow,
+  .paid-jam-transport-main,
+  .paid-jam-reharm .paid-jam-field,
+  .paid-jam-reharm > button {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .paid-jam-readout {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .paid-jam-readout span {
+    min-width: 0;
+  }
+
+  .paid-jam-section header {
+    align-items: flex-start;
+    flex-direction: column;
+    justify-content: center;
+    gap: 0.35rem;
+    padding: 0.6rem 0.8rem;
+  }
+
+  .paid-jam-section-meta {
+    flex-wrap: wrap;
+  }
+
+  .paid-jam-row {
+    grid-template-columns: 1.5rem minmax(0, 1fr);
   }
 }

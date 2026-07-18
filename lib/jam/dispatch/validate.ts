@@ -58,6 +58,18 @@ function integer(
   return value
 }
 
+function positiveNumber(value: unknown, path: string, max: number): number {
+  if (
+    typeof value !== "number" ||
+    !Number.isFinite(value) ||
+    value <= 0 ||
+    value > max
+  ) {
+    fail("malformed_display", `${path} must be a positive number up to ${max}.`)
+  }
+  return value
+}
+
 function text(value: unknown, path: string, max: number, pattern?: RegExp): string {
   if (
     typeof value !== "string" ||
@@ -221,7 +233,7 @@ function parseChord(value: unknown, index: number): DisplayChord {
   return {
     symbol: text(value.symbol, `${path}.symbol`, PLAN_LIMITS.maxChordNameLength),
     startBar: integer(value.startBar, `${path}.startBar`, 0, 10_000),
-    durationBars: integer(value.durationBars, `${path}.durationBars`, 1, 256),
+    durationBars: positiveNumber(value.durationBars, `${path}.durationBars`, 256),
   }
 }
 

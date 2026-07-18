@@ -59,12 +59,30 @@ describe("project document schema", () => {
       lyrics: { text: "hello world", syllables: [{ text: "hel", noteIndex: 0, tick: 0 }] },
       mixer: { channels: [{ part: 1, volume: 100, mute: false }] },
       blobs: [{ blobReferenceId: "blob-1", purpose: "render", label: "section-a" }],
+      jam: {
+        factorySongStableId: "factory_song:night-drive",
+        styleStableId: "style:genos:42",
+        model: "genos",
+        loop: true,
+        generationId: "gen_1",
+        candidateId: "cand_1",
+        selectedChordsBySection: {
+          "sec-a": [{ symbol: "Am9", startBeat: 0, durationBeats: 4 }],
+        },
+      },
     })
 
     expect(document.song.sections).toHaveLength(1)
     expect(document.bass?.sourceId).toBe("bass-clip-1")
     expect(document.solos?.[0]?.selected).toBe(true)
     expect(document.blobs?.[0]?.purpose).toBe("render")
+    expect(document.jam).toMatchObject({
+      factorySongStableId: "factory_song:night-drive",
+      styleStableId: "style:genos:42",
+      model: "genos",
+      loop: true,
+      candidateId: "cand_1",
+    })
   })
 
   it("migrates older unversioned / flat project documents", () => {
@@ -103,6 +121,18 @@ describe("project document schema", () => {
         },
       }),
     ).toThrow(/style part/)
+    expect(() =>
+      parseAndValidateProjectDocument({
+        schemaVersion: 1,
+        song: { title: "x", tempo: 120, key: "C", sections: [] },
+        jam: {
+          factorySongStableId: "factory_song:x",
+          styleStableId: "style:x",
+          model: "unsupported",
+          loop: false,
+        },
+      }),
+    ).toThrow(/supported Yamaha model/)
   })
 
   it("rejects oversized payloads", () => {

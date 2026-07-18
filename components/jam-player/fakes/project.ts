@@ -42,10 +42,12 @@ export function createFakeProjectSession(
         key: "C",
         tempo: 112,
         styleId: "style-easypop",
+        model: "genos",
         loop: false,
         generationId: null,
         candidateId: null,
         chordsBySection: null,
+        song: null,
       }
       projects.set(record.id, record)
       saveState = "saved"

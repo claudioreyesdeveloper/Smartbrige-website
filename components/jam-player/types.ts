@@ -1,7 +1,6 @@
-/**
- * Typed contracts for the paid Jam Player UI.
- * Real A15/A16/A18 modules replace these fakes at I03 — UI depends only on these surfaces.
- */
+import type { PreparedPerformancePlan } from "@/lib/jam/dispatch"
+
+export type { PreparedPerformancePlan } from "@/lib/jam/dispatch"
 
 export type YamahaModelId = "genos" | "genos2" | "tyros4" | "tyros5"
 
@@ -52,60 +51,14 @@ export type JamStyleSummary = {
   bpm: number
 }
 
-export type DispatchTarget = "port1" | "port2" | "both"
-
-export type DispatchEvent = {
-  atMs: number
-  target: DispatchTarget
-  bytes: number[]
-}
-
-export type DispatchPlanSlice = {
-  durationMs: number
-  events: DispatchEvent[]
-  pauseSafe?: boolean
-}
-
-export type DisplayTimelineChord = {
-  atMs: number
-  name: string
-}
-
-export type DisplayTimelineSection = {
-  id: string
-  label: string
-  startMs: number
-  endMs: number
-  chords?: DisplayTimelineChord[]
-}
-
-/** UI-only timeline metadata from a prepared plan. Never used for MIDI decisions. */
-export type DisplayTimeline = {
-  sections: DisplayTimelineSection[]
-  tempoBpm?: number
-  key?: string
-  timeSignature?: readonly [number, number]
-}
-
-/**
- * Opaque server-precomputed performance plan (A16 shape).
- * Contains no arranger / anticipation / reharmonization logic.
- */
-export type PreparedPerformancePlan = {
-  planId: string
-  engineVersion: string
-  expiresAt: string
-  display: DisplayTimeline
-  full: DispatchPlanSlice
-  sections: Record<string, DispatchPlanSlice>
-}
-
 export type JamPrepareRequest = {
+  projectId: string
   model: YamahaModelId
   song: JamSong
   key: string
   tempo: number
   styleId: string
+  styleNumber: number
   loop: boolean
   /** Opaque selected reharmonization candidate, if any. */
   candidateId?: string | null
@@ -121,6 +74,7 @@ export type ReharmonizeCandidate = {
 }
 
 export type JamReharmonizeRequest = {
+  projectId: string
   model: YamahaModelId
   song: JamSong
   key: string
@@ -174,7 +128,6 @@ export type DispatchStatus =
   | "idle"
   | "ready"
   | "playing"
-  | "paused"
   | "stopped"
   | "completed"
   | "error"
@@ -208,12 +161,15 @@ export type JamProjectRecord = {
   key: string
   tempo: number
   styleId: string
+  model: YamahaModelId
   loop: boolean
   /** Opaque ids kept for reopen — never shown as recipes/seeds. */
   generationId: string | null
   candidateId: string | null
   /** Display chords when a candidate is applied. */
   chordsBySection: Record<string, DisplayChord[]> | null
+  /** Exact user-visible song sections/chords persisted in the project JSON. */
+  song: JamSong | null
 }
 
 export type JamProjectSaveState = "clean" | "dirty" | "saving" | "saved" | "error"
@@ -231,6 +187,7 @@ export type JamProjectSession = {
 
 export type JamConnectionState = {
   browserSupported: boolean
+  secure: boolean
   connected: boolean
   model: YamahaModelId | null
   displayName: string | null

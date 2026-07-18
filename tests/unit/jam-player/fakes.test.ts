@@ -27,6 +27,7 @@ describe("Jam Player fake adapters", () => {
   it("returns only display chords and opaque ids from reharmonize", async () => {
     const engine = createFakeEngineClient({ latencyMs: 0 })
     const response = await engine.reharmonize({
+      projectId: "proj_1",
       model: "genos",
       song: FIXTURE_SONGS[0],
       key: "C",
@@ -48,19 +49,21 @@ describe("Jam Player fake adapters", () => {
   it("prepare plans expose opaque plan ids and dispatch events only", async () => {
     const engine = createFakeEngineClient({ latencyMs: 0 })
     const plan = await engine.prepare({
+      projectId: "proj_1",
       model: "genos",
       song: FIXTURE_SONGS[0],
       key: "C",
       tempo: 112,
       styleId: "style-easypop",
+      styleNumber: 12,
       loop: false,
     })
 
     expect(plan.planId).toMatch(/^plan_/)
-    expect(plan.full.events[0]).toMatchObject({
+    expect(plan.dispatch.fullSong[0]).toMatchObject({
       atMs: expect.any(Number),
       target: "port1",
-      bytes: expect.any(Array),
+      bytes: expect.any(String),
     })
     const blob = JSON.stringify(plan)
     for (const word of ["seed", "recipe", "sourcePhrase", "anticipation"]) {

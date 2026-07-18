@@ -50,6 +50,16 @@ export type ProjectSong = {
   sections: ProjectSection[]
 }
 
+export type ProjectJamState = {
+  factorySongStableId: string
+  styleStableId: string
+  model: "genos" | "genos2" | "tyros4" | "tyros5"
+  loop: boolean
+  generationId?: string
+  candidateId?: string
+  selectedChordsBySection?: Record<string, ProjectChord[]>
+}
+
 /** Reproducible generation recipe; engines are not implemented here. */
 export type ProjectRecipe = {
   sourceId: string
@@ -111,6 +121,7 @@ export type ProjectDocumentV1 = {
   lyrics?: ProjectLyrics
   mixer?: ProjectMixerState
   blobs?: ProjectBlobRef[]
+  jam?: ProjectJamState
 }
 
 export type ProjectDocument = ProjectDocumentV1
@@ -127,6 +138,12 @@ const STYLE_PARTS = new Set<ProjectStylePart>([
 ])
 
 const BLOB_PURPOSES = new Set<ProjectBlobPurpose>(["render", "upload", "factory"])
+const YAMAHA_MODELS = new Set<ProjectJamState["model"]>([
+  "genos",
+  "genos2",
+  "tyros4",
+  "tyros5",
+])
 
 function isPlainObject(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value)
@@ -396,6 +413,45 @@ function parseBlobRef(raw: unknown, label: string): ProjectBlobRef {
   return ref
 }
 
+function parseJamState(raw: unknown): ProjectJamState | undefined {
+  if (raw === undefined || raw === null) return undefined
+  if (!isPlainObject(raw)) {
+    throw new ProjectError("validation", "jam must be an object.")
+  }
+  if (typeof raw.model !== "string" || !YAMAHA_MODELS.has(raw.model as ProjectJamState["model"])) {
+    throw new ProjectError("validation", "jam.model is not a supported Yamaha model.")
+  }
+  const jam: ProjectJamState = {
+    factorySongStableId: assertString(raw.factorySongStableId, "jam.factorySongStableId", 128),
+    styleStableId: assertString(raw.styleStableId, "jam.styleStableId", 128),
+    model: raw.model as ProjectJamState["model"],
+    loop: assertBoolean(raw.loop, "jam.loop"),
+  }
+  const generationId = assertOptionalString(raw.generationId, "jam.generationId", 128)
+  const candidateId = assertOptionalString(raw.candidateId, "jam.candidateId", 128)
+  if (generationId) jam.generationId = generationId
+  if (candidateId) jam.candidateId = candidateId
+  if (raw.selectedChordsBySection !== undefined) {
+    if (!isPlainObject(raw.selectedChordsBySection)) {
+      throw new ProjectError("validation", "jam.selectedChordsBySection must be an object.")
+    }
+    const entries = Object.entries(raw.selectedChordsBySection)
+    if (entries.length > PROJECT_SECTIONS_MAX) {
+      throw new ProjectError(
+        "validation",
+        `jam.selectedChordsBySection exceeds maximum of ${PROJECT_SECTIONS_MAX} sections.`,
+      )
+    }
+    jam.selectedChordsBySection = Object.fromEntries(
+      entries.map(([sectionId, chords]) => [
+        assertString(sectionId, "jam.selectedChordsBySection key", 128),
+        parseChords(chords, `jam.selectedChordsBySection.${sectionId}`),
+      ]),
+    )
+  }
+  return jam
+}
+
 function parseSong(raw: unknown, label: string): ProjectSong {
   if (!isPlainObject(raw)) {
     throw new ProjectError("validation", `${label} must be an object.`)
@@ -458,6 +514,9 @@ function parseDocumentV1(raw: Record<string, unknown>): ProjectDocumentV1 {
     document.blobs = raw.blobs.map((item, index) => parseBlobRef(item, `blobs[${index}]`))
   }
 
+  const jam = parseJamState(raw.jam)
+  if (jam !== undefined) document.jam = jam
+
   return document
 }
 
@@ -513,6 +572,7 @@ export function migrateProjectDocument(raw: unknown): ProjectDocument {
   if (raw.lyrics !== undefined) migrated.lyrics = raw.lyrics
   if (raw.mixer !== undefined) migrated.mixer = raw.mixer
   if (raw.blobs !== undefined) migrated.blobs = raw.blobs
+  if (raw.jam !== undefined) migrated.jam = raw.jam
 
   return parseDocumentV1(migrated)
 }

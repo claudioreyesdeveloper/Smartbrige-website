@@ -28,10 +28,10 @@ function songDurationMs(song: JamSong, tempo: number): number {
   return Math.round(beats * msPerBeat(tempo))
 }
 
-function opaqueBytes(seed: number): number[] {
-  // Harmless Note On / Off pair — opaque schedule content only.
+function opaqueBytes(seed: number): string {
+  // Harmless canonical-base64 Note On message for test fixtures only.
   const note = 48 + (seed % 12)
-  return [0x90, note, 1, 0x80, note, 0]
+  return btoa(String.fromCharCode(0x90, note, 1))
 }
 
 function buildPlan(
@@ -40,10 +40,12 @@ function buildPlan(
 ): PreparedPerformancePlan {
   const { song, tempo, key } = request
   const beatMs = msPerBeat(tempo)
-  const sections: PreparedPerformancePlan["sections"] = {}
+  const sections: PreparedPerformancePlan["dispatch"]["sections"] = {}
   const displaySections: PreparedPerformancePlan["display"]["sections"] = []
+  const displayChords: PreparedPerformancePlan["display"]["chords"] = []
   let cursorMs = 0
-  const fullEvents: PreparedPerformancePlan["full"]["events"] = []
+  let cursorBar = 0
+  const fullEvents: PreparedPerformancePlan["dispatch"]["fullSong"] = []
 
   song.sections.forEach((section, sectionIndex) => {
     const sectionBeats = section.bars * song.timeSignature[0]
@@ -61,11 +63,7 @@ function buildPlan(
         bytes: opaqueBytes(sectionIndex + 20),
       },
     ]
-    sections[section.id] = {
-      durationMs: endMs - startMs,
-      events,
-      pauseSafe: false,
-    }
+    sections[section.id] = events
     fullEvents.push({
       atMs: startMs,
       target: "port1",
@@ -73,33 +71,36 @@ function buildPlan(
     })
     displaySections.push({
       id: section.id,
-      label: section.label,
-      startMs,
-      endMs,
-      chords: section.chords.map((chord) => ({
-        atMs: startMs + Math.round(chord.beat * beatMs),
-        name: chord.name,
-      })),
+      name: section.label,
+      startBar: cursorBar,
+      barCount: section.bars,
     })
+    displayChords.push(
+      ...section.chords.map((chord) => ({
+        symbol: chord.name,
+        startBar: cursorBar + Math.floor(chord.beat / song.timeSignature[0]),
+        durationBars: Math.max(1, Math.ceil(chord.duration / song.timeSignature[0])),
+      })),
+    )
     cursorMs = endMs
+    cursorBar += section.bars
   })
 
   return {
     planId,
-    engineVersion: "fake-1.0.0",
     expiresAt: new Date(Date.now() + 15 * 60_000).toISOString(),
     display: {
       sections: displaySections,
+      chords: displayChords,
+      durationMs: songDurationMs(song, tempo),
       tempoBpm: tempo,
       key,
-      timeSignature: song.timeSignature,
+      timeSignature: {
+        numerator: song.timeSignature[0],
+        denominator: song.timeSignature[1] as 1 | 2 | 4 | 8 | 16,
+      },
     },
-    full: {
-      durationMs: songDurationMs(song, tempo),
-      events: fullEvents,
-      pauseSafe: false,
-    },
-    sections,
+    dispatch: { fullSong: fullEvents, sections },
   }
 }
 

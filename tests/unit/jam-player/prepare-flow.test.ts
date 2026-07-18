@@ -16,11 +16,13 @@ describe("prepareAndPlay", () => {
       engine,
       dispatcher,
       request: {
+        projectId: "proj_1",
         model: "genos",
         song,
         key: song.key,
         tempo: song.tempo,
         styleId: "style-easypop",
+        styleNumber: 12,
         loop: false,
       },
       selection: { mode: "full" },
@@ -28,6 +30,8 @@ describe("prepareAndPlay", () => {
 
     expect(result.ok).toBe(true)
     if (!result.ok) return
+    expect(result.plan).not.toBeNull()
+    if (!result.plan) return
     expect(engine.prepareCount).toBe(1)
     expect(dispatcher.loadedPlan?.planId).toBe(result.plan.planId)
     expect(dispatcher.playCount).toBe(1)
@@ -40,11 +44,13 @@ describe("prepareAndPlay", () => {
     const dispatcher = createFakePlanDispatcher({ intervalMs: 10_000 })
     const song = FIXTURE_SONGS[0]
     const request = {
+      projectId: "proj_1",
       model: "genos" as const,
       song,
       key: song.key,
       tempo: song.tempo,
       styleId: "style-easypop",
+      styleNumber: 12,
       loop: false,
     }
 
@@ -87,11 +93,13 @@ describe("prepareAndPlay", () => {
       engine,
       dispatcher,
       request: {
+        projectId: "proj_1",
         model: "genos",
         song,
         key: song.key,
         tempo: song.tempo,
         styleId: "style-easypop",
+        styleNumber: 12,
         loop: false,
       },
       selection: { mode: "full" },

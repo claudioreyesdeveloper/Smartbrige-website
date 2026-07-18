@@ -47,7 +47,7 @@ test("canceling one service does not hide another active service", async ({ page
   await expect(page.getByRole("heading", { name: "Jam Player" })).toBeVisible()
   await expect(page.getByRole("heading", { name: "Genos Mixer" })).toBeVisible()
   await page.goto("/app/jam-player")
-  await expect(page.getByText(/This module shell is ready/)).toBeVisible()
+  await expect(page.getByText(/Choose a song, connect your Yamaha/i)).toBeVisible()
   await page.goto("/app/genos-mixer")
   await expect(page.getByText(/This module shell is ready/)).toBeVisible()
 })

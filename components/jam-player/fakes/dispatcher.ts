@@ -35,32 +35,31 @@ function chordAt(
       ? plan.display.sections.filter((s) => s.id === selection.sectionId)
       : plan.display.sections
 
-  let offset = 0
+  const msPerBar =
+    (60_000 / plan.display.tempoBpm) *
+    plan.display.timeSignature.numerator *
+    (4 / plan.display.timeSignature.denominator)
   for (const section of sections) {
-    const duration = section.endMs - section.startMs
-    const local = selection?.mode === "section" ? positionMs : positionMs - section.startMs
+    const startMs = section.startBar * msPerBar
+    const duration = section.barCount * msPerBar
     const inSection =
       selection?.mode === "section"
         ? positionMs >= 0 && positionMs < duration
-        : positionMs >= section.startMs && positionMs < section.endMs
+        : positionMs >= startMs && positionMs < startMs + duration
 
-    if (!inSection) {
-      offset += duration
-      continue
-    }
+    if (!inSection) continue
 
-    const chords = section.chords ?? []
-    let chord = chords[0]?.name ?? ""
-    for (const entry of chords) {
-      const at = selection?.mode === "section" ? entry.atMs - section.startMs : entry.atMs
-      if (at <= (selection?.mode === "section" ? positionMs : positionMs)) {
-        chord = entry.name
+    const absoluteBar =
+      section.startBar + (selection?.mode === "section" ? positionMs : positionMs - startMs) / msPerBar
+    let chord = ""
+    for (const entry of plan.display.chords) {
+      if (entry.startBar <= absoluteBar) {
+        chord = entry.symbol
       }
     }
-    return { chord, sectionLabel: section.label }
+    return { chord, sectionLabel: section.name }
   }
 
-  void offset
   return { chord: "", sectionLabel: "" }
 }
 
@@ -87,8 +86,12 @@ export function createFakePlanDispatcher(
 
   const resolveDuration = (selection: DispatchSelection): number => {
     if (!plan) return 0
-    if (selection.mode === "full") return plan.full.durationMs
-    return plan.sections[selection.sectionId]?.durationMs ?? 0
+    if (selection.mode === "full") return plan.display.durationMs
+    const section = plan.display.sections.find((item) => item.id === selection.sectionId)
+    if (!section) return 0
+    const beatsPerBar =
+      plan.display.timeSignature.numerator * (4 / plan.display.timeSignature.denominator)
+    return section.barCount * beatsPerBar * (60_000 / plan.display.tempoBpm)
   }
 
   const api = {
@@ -103,7 +106,7 @@ export function createFakePlanDispatcher(
         ...idleState(),
         status: "ready",
         planId: next.planId,
-        durationMs: next.full.durationMs,
+        durationMs: next.display.durationMs,
       }
       emit()
     },
@@ -118,7 +121,7 @@ export function createFakePlanDispatcher(
         emit()
         return
       }
-      if (selection.mode === "section" && !plan.sections[selection.sectionId]) {
+      if (selection.mode === "section" && !plan.dispatch.sections[selection.sectionId]) {
         state = {
           ...state,
           status: "error",
@@ -189,7 +192,7 @@ export function createFakePlanDispatcher(
         ...idleState(),
         status: plan ? "ready" : "idle",
         planId: plan?.planId ?? null,
-        durationMs: plan?.full.durationMs ?? 0,
+        durationMs: plan?.display.durationMs ?? 0,
       }
       emit()
     },

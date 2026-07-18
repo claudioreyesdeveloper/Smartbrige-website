@@ -8,7 +8,7 @@ import type {
 import { JamEngineError } from "./types"
 
 export type PrepareAndPlayResult =
-  | { ok: true; plan: PreparedPerformancePlan }
+  | { ok: true; plan: PreparedPerformancePlan | null }
   | { ok: false; code: string; message: string }
 
 /**
@@ -39,18 +39,9 @@ export async function prepareAndPlay(options: {
 
     if (alreadyLoaded) {
       dispatcher.play(selection)
-      // Return a minimal opaque plan handle for callers that only need planId.
-      const state = dispatcher.getState()
       return {
         ok: true,
-        plan: existingPlan ?? {
-          planId: state.planId!,
-          engineVersion: "cached",
-          expiresAt: new Date(Date.now() + 60_000).toISOString(),
-          display: { sections: [] },
-          full: { durationMs: state.durationMs, events: [] },
-          sections: {},
-        },
+        plan: existingPlan,
       }
     }
 

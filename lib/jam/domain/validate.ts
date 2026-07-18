@@ -79,6 +79,23 @@ function assertInt(
   return value
 }
 
+function assertNumber(
+  value: unknown,
+  path: string,
+  options: { minExclusive?: number; max: number },
+): number {
+  if (typeof value !== "number" || !Number.isFinite(value)) {
+    fail(`${path} must be a finite number`)
+  }
+  if (
+    value <= (options.minExclusive ?? Number.NEGATIVE_INFINITY) ||
+    value > options.max
+  ) {
+    fail(`${path} out of range`)
+  }
+  return value
+}
+
 function parseOpaqueId(value: unknown, path: string): string {
   return assertString(value, path, {
     max: MAX_OPAQUE_ID_LENGTH,
@@ -99,7 +116,10 @@ function parseDisplayChord(value: unknown, path: string, strict = true): Display
   return {
     symbol: assertString(value.symbol, `${path}.symbol`, { max: MAX_CHORD_SYMBOL_LENGTH }),
     startBar: assertInt(value.startBar, `${path}.startBar`, { min: 0, max: 10_000 }),
-    durationBars: assertInt(value.durationBars, `${path}.durationBars`, { min: 1, max: 256 }),
+    durationBars: assertNumber(value.durationBars, `${path}.durationBars`, {
+      minExclusive: 0,
+      max: 256,
+    }),
   }
 }
 
@@ -264,11 +284,17 @@ function parseDispatchEvent(value: unknown, path: string): DispatchEvent {
     max: MAX_BYTES_FIELD_CHARS,
     pattern: STANDARD_BASE64_PATTERN,
   })
-  const decoded = Buffer.from(bytes, "base64")
+  let decoded: string
+  try {
+    decoded = atob(bytes)
+  } catch {
+    fail(`${path}.bytes must be canonical standard base64`)
+  }
+  const canonical = btoa(decoded)
   if (
     decoded.length < 1 ||
     decoded.length > MAX_DISPATCH_EVENT_BYTES ||
-    decoded.toString("base64") !== bytes
+    canonical !== bytes
   ) {
     fail(`${path}.bytes must be canonical standard base64 with 1-${MAX_DISPATCH_EVENT_BYTES} decoded bytes`)
   }

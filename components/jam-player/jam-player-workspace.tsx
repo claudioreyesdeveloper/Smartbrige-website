@@ -2,7 +2,6 @@
 
 import {
   LoaderCircle,
-  Pause,
   Play,
   RefreshCw,
   Save,
@@ -11,8 +10,7 @@ import {
   Usb,
 } from "lucide-react"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
-import { createFakeJamAdapters } from "./fakes"
-import { KEY_OPTIONS } from "./fakes/fixtures"
+import { createProductionJamAdapters } from "./production"
 import { prepareAndPlay } from "./prepare-flow"
 import { SongTimeline } from "./song-timeline"
 import type {
@@ -31,6 +29,10 @@ import "./jam-player.css"
 type JamPlayerWorkspaceProps = {
   adapters?: JamPlayerAdapters
 }
+
+const KEY_OPTIONS = [
+  "C", "C#", "Db", "D", "Eb", "E", "F", "F#", "Gb", "G", "Ab", "A", "Bb", "B",
+] as const
 
 const SAVE_LABELS: Record<string, string> = {
   clean: "All changes saved",
@@ -68,7 +70,7 @@ function idlePlayback(): DispatchPlaybackState {
 }
 
 export function JamPlayerWorkspace({ adapters: injected }: JamPlayerWorkspaceProps) {
-  const adaptersRef = useRef(injected ?? createFakeJamAdapters())
+  const adaptersRef = useRef(injected ?? createProductionJamAdapters())
   const adapters = adaptersRef.current
   const loopGuardRef = useRef(false)
 
@@ -163,6 +165,46 @@ export function JamPlayerWorkspace({ adapters: injected }: JamPlayerWorkspacePro
     setPlanFingerprint(null)
   }, [adapters.projects])
 
+  const ensureOwnedProject = useCallback(async (): Promise<string> => {
+    if (projectId) return projectId
+    if (!displaySong) throw new Error("Load a song before creating a project.")
+
+    const created = await adapters.projects.create(
+      projectTitle || displaySong.title || "Jam Project",
+    )
+    const saved = await adapters.projects.save({
+      ...created,
+      title: projectTitle || displaySong.title,
+      songId: displaySong.id,
+      key,
+      tempo,
+      styleId,
+      model: connection.model ?? "genos",
+      loop,
+      generationId,
+      candidateId,
+      chordsBySection,
+      song: displaySong,
+    })
+    setProjectId(saved.id)
+    setProjectTitle(saved.title)
+    setProjects(await adapters.projects.list())
+    return saved.id
+  }, [
+    adapters.projects,
+    candidateId,
+    chordsBySection,
+    connection.model,
+    displaySong,
+    generationId,
+    key,
+    loop,
+    projectId,
+    projectTitle,
+    styleId,
+    tempo,
+  ])
+
   useEffect(() => adapters.connection.subscribe(setConnection), [adapters.connection])
   useEffect(() => adapters.dispatcher.subscribe(setPlayback), [adapters.dispatcher])
   useEffect(
@@ -224,7 +266,7 @@ export function JamPlayerWorkspace({ adapters: injected }: JamPlayerWorkspacePro
       if (cancelled) return
       setStyles(list)
       setStyleId((current) => {
-        if (current) return current
+        if (current && list.some((style) => style.id === current)) return current
         const easy = list.find((s) => s.name === "EasyPop") ?? list[0]
         if (easy) setStyleSearch(easy.name)
         return easy?.id ?? ""
@@ -261,13 +303,29 @@ export function JamPlayerWorkspace({ adapters: injected }: JamPlayerWorkspacePro
         setErrorMessage("Load a song and choose a style before playing.")
         return
       }
+      if (!selectedStyle) {
+        setErrorMessage("Choose a Yamaha style before playing.")
+        return
+      }
+
+      let ownedProjectId: string
+      try {
+        ownedProjectId = await ensureOwnedProject()
+      } catch (error) {
+        setErrorMessage(
+          error instanceof Error ? error.message : "Create a project before playing.",
+        )
+        return
+      }
 
       const request = {
+        projectId: ownedProjectId,
         model: connection.model,
         song: displaySong,
         key,
         tempo,
         styleId,
+        styleNumber: selectedStyle.styleNumber,
         loop,
         candidateId,
         generationId,
@@ -318,9 +376,11 @@ export function JamPlayerWorkspace({ adapters: injected }: JamPlayerWorkspacePro
       displaySong,
       fingerprint,
       generationId,
+      ensureOwnedProject,
       key,
       loop,
       planMatchesRequest,
+      selectedStyle,
       styleId,
       tempo,
     ],
@@ -370,12 +430,22 @@ export function JamPlayerWorkspace({ adapters: injected }: JamPlayerWorkspacePro
       setErrorMessage("Load a song and connect a keyboard before reharmonizing.")
       return
     }
+    let ownedProjectId: string
+    try {
+      ownedProjectId = await ensureOwnedProject()
+    } catch (error) {
+      setErrorMessage(
+        error instanceof Error ? error.message : "Create a project before reharmonizing.",
+      )
+      return
+    }
     setReharmonizing(true)
     setErrorMessage("")
     setQuotaMessage("")
     setStatusMessage("Requesting chord candidates…")
     try {
       const response = await adapters.engine.reharmonize({
+        projectId: ownedProjectId,
         model: connection.model,
         song: displaySong,
         key,
@@ -426,10 +496,12 @@ export function JamPlayerWorkspace({ adapters: injected }: JamPlayerWorkspacePro
           key,
           tempo,
           styleId,
+          model: connection.model ?? "genos",
           loop,
           generationId,
           candidateId,
           chordsBySection,
+          song: displaySong,
         })
       } else {
         const created = await adapters.projects.create(projectTitle || song.title)
@@ -439,10 +511,12 @@ export function JamPlayerWorkspace({ adapters: injected }: JamPlayerWorkspacePro
           key,
           tempo,
           styleId,
+          model: connection.model ?? "genos",
           loop,
           generationId,
           candidateId,
           chordsBySection,
+          song: displaySong,
         })
         setProjectId(record.id)
       }
@@ -500,9 +574,8 @@ export function JamPlayerWorkspace({ adapters: injected }: JamPlayerWorkspacePro
   return (
     <div className="paid-jam app-shell-workspace">
       <p className="paid-jam-lead">
-        Three steps: choose a song, connect your Yamaha keyboard, then play.
-        Arrangements are prepared before playback — nothing musical is invented in this
-        screen.
+        Choose a song, connect your Yamaha, shape the arrangement, then play from the
+        timeline.
       </p>
 
       {!connection.browserSupported && (
@@ -654,9 +727,14 @@ export function JamPlayerWorkspace({ adapters: injected }: JamPlayerWorkspacePro
             </div>
           </header>
 
-          <div className="paid-jam-connection" role="status">
+          <div
+            className={`paid-jam-connection${connection.connected ? " is-connected" : ""}`}
+            role="status"
+            aria-label="Keyboard connection"
+          >
             <Usb size={20} aria-hidden="true" />
             <div>
+              <span className="paid-jam-step-label">1 · Keyboard connection</span>
               <strong>
                 {connection.connected
                   ? connection.displayName
@@ -673,7 +751,18 @@ export function JamPlayerWorkspace({ adapters: injected }: JamPlayerWorkspacePro
             </button>
           </div>
 
-          <div className="paid-jam-controls" aria-label="Arrangement controls">
+          <section
+            className="paid-jam-transform-panel"
+            aria-labelledby="paid-jam-transform-title"
+          >
+            <div className="paid-jam-workflow-heading">
+              <span>2 · Shape the arrangement</span>
+              <div>
+                <h3 id="paid-jam-transform-title">Choose the musical feel</h3>
+                <p>Keep the song structure and hear it with a Yamaha factory style.</p>
+              </div>
+            </div>
+            <div className="paid-jam-controls" aria-label="Arrangement controls">
             <label className="paid-jam-field">
               <span>Key</span>
               <select
@@ -787,9 +876,21 @@ export function JamPlayerWorkspace({ adapters: injected }: JamPlayerWorkspacePro
               />
               <span>Loop full song</span>
             </label>
-          </div>
+            </div>
+          </section>
 
-          <div className="paid-jam-transport">
+          <section
+            className={`paid-jam-performance-panel${playing ? " is-playing" : ""}`}
+            aria-labelledby="paid-jam-performance-title"
+          >
+            <div className="paid-jam-workflow-heading">
+              <span>3 · Play</span>
+              <div>
+                <h3 id="paid-jam-performance-title">Play the full song or one section</h3>
+                <p>Double-click a section below, or focus it and press Enter.</p>
+              </div>
+            </div>
+            <div className="paid-jam-transport">
             <button
               className="paid-jam-transport-main"
               type="button"
@@ -802,19 +903,11 @@ export function JamPlayerWorkspace({ adapters: injected }: JamPlayerWorkspacePro
               {preparing ? (
                 <LoaderCircle className="paid-jam-spin" size={22} aria-hidden="true" />
               ) : playing ? (
-                <Pause size={22} aria-hidden="true" />
+                <Square size={22} fill="currentColor" aria-hidden="true" />
               ) : (
                 <Play size={22} fill="currentColor" aria-hidden="true" />
               )}
               {preparing ? "Preparing…" : playing ? "Stop" : "Play arrangement"}
-            </button>
-            <button
-              className="paid-jam-transport-stop"
-              type="button"
-              onClick={stopPlayback}
-              disabled={!playing && playback.status !== "paused"}
-            >
-              <Square size={17} fill="currentColor" aria-hidden="true" /> Stop
             </button>
             <div className="paid-jam-readout" aria-live="polite">
               <span>
@@ -830,22 +923,24 @@ export function JamPlayerWorkspace({ adapters: injected }: JamPlayerWorkspacePro
                 <strong>{planMatchesRequest ? "Ready" : "Needs prepare"}</strong>
               </span>
             </div>
-          </div>
+            </div>
+          </section>
 
           <div className="paid-jam-reharm">
             <div>
-              <span className="paid-jam-eyebrow">Reharmonization</span>
-              <strong>Try different chords — pick a candidate you like.</strong>
+              <span className="paid-jam-eyebrow">Optional musical variation</span>
+              <strong>Would you like to hear another chord color?</strong>
+              <p>Ask for a few safe choices, then compare them with the original chords.</p>
             </div>
             <button
               type="button"
               onClick={() => void runReharmonize()}
               disabled={busy || !song}
             >
-              {reharmonizing ? "Requesting…" : "Get candidates"}
+              {reharmonizing ? "Finding choices…" : "Suggest chord choices"}
             </button>
             <label className="paid-jam-field">
-              <span>Candidate</span>
+              <span>Chord choice</span>
               <select
                 value={candidateId ?? ""}
                 aria-label="Reharmonization candidate"
