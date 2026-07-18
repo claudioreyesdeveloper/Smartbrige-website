@@ -72,15 +72,10 @@ export async function assertCanUploadAsset(input: {
   userHasEntitlement: (userId: string, serviceKey: ServiceKey) => Promise<boolean>
 }): Promise<void> {
   if (input.purpose === "factory") {
-    if (!input.serviceKey) {
-      throw new StorageError("validation", "Factory assets require a serviceKey.")
-    }
-    assertServiceIsPurchasable(input.serviceKey)
-    const allowed = await input.userHasEntitlement(input.userId, input.serviceKey)
-    if (!allowed) {
-      throw new StorageError("forbidden", `Service entitlement required: ${input.serviceKey}`)
-    }
-    return
+    throw new StorageError(
+      "forbidden",
+      "Factory assets cannot be written through the user storage service.",
+    )
   }
 
   if (input.purpose === "render") {

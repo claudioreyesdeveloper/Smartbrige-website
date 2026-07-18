@@ -43,6 +43,12 @@ export function createStorageService(deps: StorageServiceDeps) {
   const readTtlMs = deps.readTtlMs ?? SHORT_LIVED_READ_TTL_MS
 
   async function uploadAsset(input: UploadAssetInput): Promise<UploadAssetResult> {
+    if (input.purpose === "factory") {
+      throw new StorageError(
+        "forbidden",
+        "Factory assets cannot be written through the user storage service.",
+      )
+    }
     assertPurposeAllowsServiceKey(input.purpose, input.serviceKey)
     const filename = sanitizeFilename(input.filename)
     const assetKind = resolveAssetKind(filename, input.contentType)
@@ -58,23 +64,14 @@ export function createStorageService(deps: StorageServiceDeps) {
       userHasEntitlement: deps.auth.userHasEntitlement,
     })
 
-    const storageKey = buildStorageKey(
-      input.purpose === "factory"
-        ? {
-            kind: "factory",
-            serviceKey: input.serviceKey!,
-            checksumSha256,
-            assetKind,
-          }
-        : {
-            kind: "user",
-            purpose: input.purpose,
-            userId: input.userId,
-            projectId: input.projectId ?? null,
-            checksumSha256,
-            assetKind,
-          },
-    )
+    const storageKey = buildStorageKey({
+      kind: "user",
+      purpose: input.purpose,
+      userId: input.userId,
+      projectId: input.projectId ?? null,
+      checksumSha256,
+      assetKind,
+    })
 
     const existingByKey = await deps.references.findByStorageKey(storageKey)
     if (existingByKey) {
@@ -88,24 +85,13 @@ export function createStorageService(deps: StorageServiceDeps) {
       return { reference: existingByKey, deduplicated: true }
     }
 
-    if (input.purpose === "factory") {
-      const existingFactory = await deps.references.findByChecksumAndPurpose(
-        checksumSha256,
-        "factory",
-      )
-      if (existingFactory) {
-        await assertCanAccessBlobReference(input.userId, existingFactory, deps.auth)
-        return { reference: existingFactory, deduplicated: true }
-      }
-    } else {
-      const existingUser = await deps.references.findByUserAndChecksum(
-        input.userId,
-        checksumSha256,
-        input.purpose,
-      )
-      if (existingUser) {
-        return { reference: existingUser, deduplicated: true }
-      }
+    const existingUser = await deps.references.findByUserAndChecksum(
+      input.userId,
+      checksumSha256,
+      input.purpose,
+    )
+    if (existingUser) {
+      return { reference: existingUser, deduplicated: true }
     }
 
     try {

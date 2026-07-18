@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server"
 import { requireSessionUserId } from "@/lib/auth"
-import { isServiceKey, type ServiceKey } from "@/lib/services/catalog"
 import { getStorageService } from "@/lib/storage/runtime"
 import type { BlobPurpose } from "@/lib/storage"
 import { StorageError } from "@/lib/storage/errors"
@@ -8,11 +7,16 @@ import { storageErrorResponse, toUploadBody } from "@/lib/storage/http"
 
 export const runtime = "nodejs"
 
-const PURPOSES = new Set<BlobPurpose>(["render", "upload", "factory"])
+const PURPOSES = new Set<BlobPurpose>(["render", "upload"])
 
 function parsePurpose(value: FormDataEntryValue | null): BlobPurpose {
   if (typeof value !== "string" || !PURPOSES.has(value as BlobPurpose)) {
-    throw new StorageError("validation", "purpose must be render, upload, or factory.")
+    throw new StorageError(
+      value === "factory" ? "forbidden" : "validation",
+      value === "factory"
+        ? "Factory assets cannot be written through user-facing routes."
+        : "purpose must be render or upload.",
+    )
   }
   return value as BlobPurpose
 }
@@ -36,15 +40,6 @@ export async function POST(request: Request) {
     const projectId =
       typeof projectIdValue === "string" && projectIdValue.length > 0 ? projectIdValue : null
 
-    const serviceKeyValue = form.get("serviceKey")
-    let serviceKey: ServiceKey | undefined
-    if (typeof serviceKeyValue === "string" && serviceKeyValue.length > 0) {
-      if (!isServiceKey(serviceKeyValue)) {
-        throw new StorageError("validation", "serviceKey is invalid.")
-      }
-      serviceKey = serviceKeyValue
-    }
-
     const body = toUploadBody(await file.arrayBuffer())
     const result = await getStorageService().uploadAsset({
       userId,
@@ -54,7 +49,6 @@ export async function POST(request: Request) {
       body,
       checksumSha256,
       projectId,
-      serviceKey,
     })
 
     return NextResponse.json({

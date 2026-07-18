@@ -6,6 +6,7 @@ import {
   assertAuthorizationNotExpired,
   assertPrivateBlobDeliveryAvailable,
   buildAttachmentContentDisposition,
+  createFactoryAssetCatalogWriter,
   createStorageService,
   MAX_ASSET_BYTES,
   StorageError,
@@ -131,7 +132,7 @@ describe("storage service", () => {
     })
   })
 
-  it("denies factory download without matching entitlement", async () => {
+  it("denies factory writes by non-entitled authenticated users", async () => {
     const { service } = createService({ entitlements: [] })
     const body = midiBody("factory")
     await expect(
@@ -147,22 +148,22 @@ describe("storage service", () => {
     ).rejects.toMatchObject({ code: "forbidden" })
   })
 
-  it("denies future style-maker factory access", async () => {
-    const { service } = createService({ entitlements: ["style-maker"] })
-    const body = midiBody("style")
+  it("denies factory writes by entitled authenticated users", async () => {
+    const { service } = createService({ entitlements: ["bass-drums"] })
+    const body = midiBody("entitled-factory")
     await expect(
       service.uploadAsset({
         userId: "user-a",
         purpose: "factory",
-        filename: "style.mid",
+        filename: "factory.mid",
         contentType: "audio/midi",
         body,
         checksumSha256: sha256(body),
-        serviceKey: "style-maker",
+        serviceKey: "bass-drums",
       }),
     ).rejects.toMatchObject({
       code: "forbidden",
-      message: expect.stringContaining("style-maker"),
+      message: expect.stringContaining("user storage service"),
     })
   })
 
@@ -276,26 +277,24 @@ describe("storage service", () => {
     })
   })
 
-  it("issues short-lived authorized downloads for entitled factory assets", async () => {
-    const { service, blobs } = createService({ entitlements: ["bass-drums"] })
-    const body = midiBody("factory-ok")
-    const uploaded = await service.uploadAsset({
-      userId: "user-a",
-      purpose: "factory",
+  it("allows A11 catalog writes only through the distinct injected writer", async () => {
+    const blobs = createMemoryBlobStore()
+    const references = createMemoryReferenceStore()
+    const writer = createFactoryAssetCatalogWriter(blobs)
+    const body = midiBody("catalog-writer")
+    const checksumSha256 = sha256(body)
+
+    const written = await writer.writeFactoryAsset({
+      serviceKey: "bass-drums",
       filename: "factory.mid",
       contentType: "audio/midi",
       body,
-      checksumSha256: sha256(body),
-      serviceKey: "bass-drums",
+      checksumSha256,
     })
 
-    const download = await service.authorizeDownload("user-a", uploaded.reference.id)
-    expect(download.presignedUrl).toContain("sig=test")
-    expect(download.contentDisposition).toBe(
-      `attachment; filename="${uploaded.reference.checksumSha256}.mid"`,
-    )
-    expect(blobs.issued).toHaveLength(1)
-    expect(download.expiresAt.getTime()).toBeGreaterThan(Date.parse("2026-07-18T10:00:00.000Z"))
+    expect(written.storageKey).toBe(`factory/bass-drums/${checksumSha256}.mid`)
+    expect(blobs.objects.has(written.storageKey)).toBe(true)
+    expect(references.rows.size).toBe(0)
   })
 
   it("deletes owned assets and cleans up an account", async () => {
@@ -331,9 +330,28 @@ describe("storage service", () => {
       body: midiBody("cleanup2"),
       checksumSha256: sha256(midiBody("cleanup2")),
     })
+    const factoryBody = midiBody("factory-preserved")
+    const factoryChecksum = sha256(factoryBody)
+    const factoryKey = `factory/bass-drums/${factoryChecksum}.mid`
+    blobs.objects.set(factoryKey, { body: factoryBody, contentType: "audio/midi" })
+    references.rows.set("factory-preserved", {
+      id: "factory-preserved",
+      // Even a legacy/importer row associated with this account must survive user cleanup.
+      userId: "user-a",
+      projectId: null,
+      storageKey: factoryKey,
+      contentType: "audio/midi",
+      byteSize: factoryBody.byteLength,
+      checksumSha256: factoryChecksum,
+      purpose: "factory",
+      createdAt: new Date(),
+    })
+
     const cleaned = await service.cleanupAccountAssets("user-a")
     expect(cleaned.deleted).toBe(1)
     expect(references.rows.has(again.reference.id)).toBe(false)
+    expect(references.rows.has("factory-preserved")).toBe(true)
+    expect(blobs.objects.has(factoryKey)).toBe(true)
   })
 
   it("prevents content-disposition injection and path traversal filenames", () => {

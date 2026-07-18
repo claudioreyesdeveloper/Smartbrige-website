@@ -5,6 +5,13 @@ export {
 } from "@/lib/storage/config"
 export { StorageError, isStorageError } from "@/lib/storage/errors"
 export { createStorageService } from "@/lib/storage/service"
+export {
+  createFactoryAssetCatalogWriter,
+  type FactoryAssetCatalogWriter,
+  type FactoryAssetWriteInput,
+  type FactoryAssetWriteResult,
+  type FactoryBlobWriterPort,
+} from "@/lib/storage/factory-writer"
 export { createVercelBlobStore } from "@/lib/storage/vercel-blob"
 export { createDrizzleBlobReferenceStore } from "@/lib/storage/repository"
 export { buildAttachmentContentDisposition } from "@/lib/storage/content-disposition"
