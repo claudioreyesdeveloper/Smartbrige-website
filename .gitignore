@@ -4,3 +4,6 @@ out
 .DS_Store
 *.pem
 .env*.local
+test-results
+playwright-report
+*.tsbuildinfo

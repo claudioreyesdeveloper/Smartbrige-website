@@ -1,0 +1,6345 @@
+[
+  {
+    "id": "eff88a81-4ed5-4d63-b0f4-9846dce89452",
+    "title": "Groove 3",
+    "subtitle": "Original SmartBridge Pop arrangement",
+    "category": "Pop",
+    "tempo": 100,
+    "timeSignature": [
+      4,
+      4
+    ],
+    "key": "C",
+    "accent": "#38bdf8",
+    "sections": [
+      {
+        "id": "eff88a81-361475",
+        "label": "Section A",
+        "bars": 8,
+        "variation": "A",
+        "transition": "fill",
+        "chords": [
+          {
+            "beat": 0.0,
+            "duration": 1.875,
+            "name": "Gmaj9"
+          },
+          {
+            "beat": 1.875,
+            "duration": 2.0,
+            "name": "Fmaj9"
+          },
+          {
+            "beat": 3.875,
+            "duration": 4.125,
+            "name": "Cmaj9/A"
+          },
+          {
+            "beat": 8.0,
+            "duration": 2.0,
+            "name": "Gmaj9"
+          },
+          {
+            "beat": 10.0,
+            "duration": 2.0,
+            "name": "Fmaj9"
+          },
+          {
+            "beat": 12.0,
+            "duration": 2.75,
+            "name": "Emaj9"
+          },
+          {
+            "beat": 14.75,
+            "duration": 1.25,
+            "name": "Gm9/G#"
+          },
+          {
+            "beat": 16.0,
+            "duration": 1.75,
+            "name": "Cmaj9/G"
+          },
+          {
+            "beat": 17.75,
+            "duration": 2.0,
+            "name": "Fmaj9"
+          },
+          {
+            "beat": 19.75,
+            "duration": 4.25,
+            "name": "Dm9"
+          },
+          {
+            "beat": 24.0,
+            "duration": 1.75,
+            "name": "Cmaj9/G"
+          },
+          {
+            "beat": 25.75,
+            "duration": 2.0,
+            "name": "Fmaj9"
+          },
+          {
+            "beat": 27.75,
+            "duration": 2.25,
+            "name": "A#maj9/E"
+          },
+          {
+            "beat": 30.0,
+            "duration": 1.999896,
+            "name": "A#maj9/G#"
+          }
+        ]
+      },
+      {
+        "id": "eff88a81-361476",
+        "label": "Section B",
+        "bars": 8,
+        "variation": "B",
+        "transition": "fill",
+        "chords": [
+          {
+            "beat": 0.0,
+            "duration": 4.0,
+            "name": "Am9"
+          },
+          {
+            "beat": 4.0,
+            "duration": 4.0,
+            "name": "Dmaj9/F#"
+          },
+          {
+            "beat": 8.0,
+            "duration": 3.0,
+            "name": "Fmaj9"
+          },
+          {
+            "beat": 11.0,
+            "duration": 1.0,
+            "name": "Gmaj9"
+          },
+          {
+            "beat": 12.0,
+            "duration": 4.0,
+            "name": "Am9"
+          },
+          {
+            "beat": 16.0,
+            "duration": 4.0,
+            "name": "Cmaj9/G"
+          },
+          {
+            "beat": 20.0,
+            "duration": 3.0,
+            "name": "Dmaj9/F#"
+          },
+          {
+            "beat": 23.0,
+            "duration": 1.0,
+            "name": "Dmaj9/F#"
+          },
+          {
+            "beat": 24.0,
+            "duration": 3.0,
+            "name": "Fmaj9"
+          },
+          {
+            "beat": 27.0,
+            "duration": 1.0,
+            "name": "Gmaj9"
+          },
+          {
+            "beat": 28.0,
+            "duration": 3.999896,
+            "name": "Am9/E"
+          }
+        ]
+      },
+      {
+        "id": "eff88a81-361477",
+        "label": "Intro",
+        "bars": 8,
+        "variation": "C",
+        "transition": "fill",
+        "chords": [
+          {
+            "beat": 0.0,
+            "duration": 1.75,
+            "name": "Gmaj9"
+          },
+          {
+            "beat": 1.75,
+            "duration": 2.0,
+            "name": "Fmaj9"
+          },
+          {
+            "beat": 3.75,
+            "duration": 2.5,
+            "name": "Fmaj9/D"
+          },
+          {
+            "beat": 6.25,
+            "duration": 1.75,
+            "name": "Cmaj9/A"
+          },
+          {
+            "beat": 8.0,
+            "duration": 1.75,
+            "name": "Gmaj9"
+          },
+          {
+            "beat": 9.75,
+            "duration": 2.0,
+            "name": "Fmaj9"
+          },
+          {
+            "beat": 11.75,
+            "duration": 3.25,
+            "name": "Fmaj9/D"
+          },
+          {
+            "beat": 15.0,
+            "duration": 1.0,
+            "name": "Cmaj9/G#"
+          },
+          {
+            "beat": 16.0,
+            "duration": 1.75,
+            "name": "Gmaj9"
+          },
+          {
+            "beat": 17.75,
+            "duration": 2.0,
+            "name": "Fmaj9"
+          },
+          {
+            "beat": 19.75,
+            "duration": 4.25,
+            "name": "Dm9"
+          },
+          {
+            "beat": 24.0,
+            "duration": 1.75,
+            "name": "Am9/E"
+          },
+          {
+            "beat": 25.75,
+            "duration": 2.0,
+            "name": "Fmaj9"
+          },
+          {
+            "beat": 27.75,
+            "duration": 3.25,
+            "name": "Fmaj9/D"
+          },
+          {
+            "beat": 31.0,
+            "duration": 0.999896,
+            "name": "Cmaj9/G#"
+          }
+        ]
+      },
+      {
+        "id": "eff88a81-361478",
+        "label": "Section C",
+        "bars": 8,
+        "variation": "D",
+        "transition": "fill",
+        "chords": [
+          {
+            "beat": 0.0,
+            "duration": 4.0,
+            "name": "Dm9"
+          },
+          {
+            "beat": 4.0,
+            "duration": 4.0,
+            "name": "Amaj9/C#"
+          },
+          {
+            "beat": 8.0,
+            "duration": 4.0,
+            "name": "Fmaj9/C"
+          },
+          {
+            "beat": 12.0,
+            "duration": 4.0,
+            "name": "Gmaj9/B"
+          },
+          {
+            "beat": 16.0,
+            "duration": 2.0,
+            "name": "A#maj9/A"
+          },
+          {
+            "beat": 18.0,
+            "duration": 2.0,
+            "name": "Gm9"
+          },
+          {
+            "beat": 20.0,
+            "duration": 3.0,
+            "name": "Dm9"
+          },
+          {
+            "beat": 23.0,
+            "duration": 1.0,
+            "name": "Dm9/A"
+          },
+          {
+            "beat": 24.0,
+            "duration": 3.0,
+            "name": "Fmaj9/A"
+          },
+          {
+            "beat": 27.0,
+            "duration": 1.0,
+            "name": "Am9"
+          },
+          {
+            "beat": 28.0,
+            "duration": 3.999896,
+            "name": "Am9/G#"
+          }
+        ]
+      },
+      {
+        "id": "eff88a81-361479",
+        "label": "Section D",
+        "bars": 8,
+        "variation": "A",
+        "transition": "fill",
+        "chords": [
+          {
+            "beat": 0.0,
+            "duration": 1.75,
+            "name": "Gmaj9"
+          },
+          {
+            "beat": 1.75,
+            "duration": 2.125,
+            "name": "Bm9/F#"
+          },
+          {
+            "beat": 3.875,
+            "duration": 1.875,
+            "name": "Em9"
+          },
+          {
+            "beat": 5.75,
+            "duration": 2.25,
+            "name": "Am9"
+          },
+          {
+            "beat": 8.0,
+            "duration": 1.75,
+            "name": "Gmaj9"
+          },
+          {
+            "beat": 9.75,
+            "duration": 2.25,
+            "name": "Dmaj9/F#"
+          },
+          {
+            "beat": 12.0,
+            "duration": 0.75,
+            "name": "Fmaj9/A"
+          },
+          {
+            "beat": 12.75,
+            "duration": 3.25,
+            "name": "Emaj9/G#"
+          },
+          {
+            "beat": 16.0,
+            "duration": 1.75,
+            "name": "Gmaj9"
+          },
+          {
+            "beat": 17.75,
+            "duration": 2.125,
+            "name": "Dmaj9/F#"
+          },
+          {
+            "beat": 19.875,
+            "duration": 1.875,
+            "name": "Em9"
+          },
+          {
+            "beat": 21.75,
+            "duration": 2.25,
+            "name": "Fmaj9"
+          },
+          {
+            "beat": 24.0,
+            "duration": 1.875,
+            "name": "Cmaj9/E"
+          },
+          {
+            "beat": 25.875,
+            "duration": 2.125,
+            "name": "Bm9/F#"
+          },
+          {
+            "beat": 28.0,
+            "duration": 0.75,
+            "name": "Cm9/A"
+          },
+          {
+            "beat": 28.75,
+            "duration": 3.249896,
+            "name": "Gmaj9/G#"
+          }
+        ]
+      },
+      {
+        "id": "eff88a81-361480",
+        "label": "Section E",
+        "bars": 8,
+        "variation": "B",
+        "transition": "fill",
+        "chords": [
+          {
+            "beat": 0.0,
+            "duration": 2.0,
+            "name": "Dm9"
+          },
+          {
+            "beat": 2.0,
+            "duration": 2.0,
+            "name": "Cmaj9/E"
+          },
+          {
+            "beat": 4.0,
+            "duration": 2.0,
+            "name": "Fmaj9"
+          },
+          {
+            "beat": 6.0,
+            "duration": 2.0,
+            "name": "Gmaj9"
+          },
+          {
+            "beat": 8.0,
+            "duration": 2.0,
+            "name": "G#maj9"
+          },
+          {
+            "beat": 10.0,
+            "duration": 2.0,
+            "name": "Am9"
+          },
+          {
+            "beat": 12.0,
+            "duration": 1.75,
+            "name": "Am9"
+          },
+          {
+            "beat": 13.75,
+            "duration": 1.0,
+            "name": "Dm9/G"
+          },
+          {
+            "beat": 14.75,
+            "duration": 1.25,
+            "name": "Fmaj9"
+          },
+          {
+            "beat": 16.0,
+            "duration": 2.0,
+            "name": "Dm9"
+          },
+          {
+            "beat": 18.0,
+            "duration": 2.0,
+            "name": "Cmaj9/E"
+          },
+          {
+            "beat": 20.0,
+            "duration": 2.0,
+            "name": "Fmaj9"
+          },
+          {
+            "beat": 22.0,
+            "duration": 2.0,
+            "name": "Fmaj9"
+          },
+          {
+            "beat": 24.0,
+            "duration": 1.75,
+            "name": "Fmaj9"
+          },
+          {
+            "beat": 25.75,
+            "duration": 2.25,
+            "name": "Em9"
+          },
+          {
+            "beat": 28.0,
+            "duration": 2.0,
+            "name": "Am9"
+          },
+          {
+            "beat": 30.0,
+            "duration": 1.0,
+            "name": "Fmaj9"
+          },
+          {
+            "beat": 31.0,
+            "duration": 0.999896,
+            "name": "Em9"
+          }
+        ]
+      },
+      {
+        "id": "eff88a81-361481",
+        "label": "Section F",
+        "bars": 8,
+        "variation": "C",
+        "chords": [
+          {
+            "beat": 0.0,
+            "duration": 1.75,
+            "name": "Cmaj9/G"
+          },
+          {
+            "beat": 1.75,
+            "duration": 2.0,
+            "name": "Dmaj9/F#"
+          },
+          {
+            "beat": 3.75,
+            "duration": 4.25,
+            "name": "Am9"
+          },
+          {
+            "beat": 8.0,
+            "duration": 1.75,
+            "name": "Dm9"
+          },
+          {
+            "beat": 9.75,
+            "duration": 2.0,
+            "name": "Cmaj9/F"
+          },
+          {
+            "beat": 11.75,
+            "duration": 4.25,
+            "name": "Dmaj9/G#"
+          },
+          {
+            "beat": 16.0,
+            "duration": 1.75,
+            "name": "Cmaj9/G"
+          },
+          {
+            "beat": 17.75,
+            "duration": 2.0,
+            "name": "Dmaj9/F#"
+          },
+          {
+            "beat": 19.75,
+            "duration": 4.25,
+            "name": "Am9"
+          },
+          {
+            "beat": 24.0,
+            "duration": 1.75,
+            "name": "Dm9"
+          },
+          {
+            "beat": 25.75,
+            "duration": 2.0,
+            "name": "Gmaj9/F"
+          },
+          {
+            "beat": 27.75,
+            "duration": 4.249896,
+            "name": "Emaj9"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "afda1eef-316b-47c3-bca0-4259914cc2c3",
+    "title": "Torrent",
+    "subtitle": "Original SmartBridge Pop arrangement",
+    "category": "Pop",
+    "tempo": 120,
+    "timeSignature": [
+      4,
+      4
+    ],
+    "key": "C",
+    "accent": "#22d3ee",
+    "sections": [
+      {
+        "id": "afda1eef-361482",
+        "label": "Section A",
+        "bars": 8,
+        "variation": "A",
+        "transition": "fill",
+        "chords": [
+          {
+            "beat": 0.0,
+            "duration": 4.0,
+            "name": "G#maj9"
+          },
+          {
+            "beat": 4.0,
+            "duration": 1.5,
+            "name": "G#maj9/G"
+          },
+          {
+            "beat": 5.5,
+            "duration": 2.5,
+            "name": "G#maj9"
+          },
+          {
+            "beat": 8.0,
+            "duration": 4.0,
+            "name": "Gmaj9"
+          },
+          {
+            "beat": 12.0,
+            "duration": 4.0,
+            "name": "Gmaj9/F"
+          },
+          {
+            "beat": 16.0,
+            "duration": 4.0,
+            "name": "A#maj9/C"
+          },
+          {
+            "beat": 20.0,
+            "duration": 4.0,
+            "name": "A#maj9/D"
+          },
+          {
+            "beat": 24.0,
+            "duration": 4.0,
+            "name": "D#maj9"
+          },
+          {
+            "beat": 28.0,
+            "duration": 3.999896,
+            "name": "A#maj9/G"
+          }
+        ]
+      },
+      {
+        "id": "afda1eef-361483",
+        "label": "Section B",
+        "bars": 8,
+        "variation": "B",
+        "transition": "fill",
+        "chords": [
+          {
+            "beat": 0.0,
+            "duration": 8.0,
+            "name": "Cmaj9/E"
+          },
+          {
+            "beat": 8.0,
+            "duration": 4.0,
+            "name": "Fmaj9"
+          },
+          {
+            "beat": 12.0,
+            "duration": 4.0,
+            "name": "Am9"
+          },
+          {
+            "beat": 16.0,
+            "duration": 4.0,
+            "name": "F#m9"
+          },
+          {
+            "beat": 20.0,
+            "duration": 4.0,
+            "name": "F#m9"
+          },
+          {
+            "beat": 24.0,
+            "duration": 1.5,
+            "name": "Fmaj9/G"
+          },
+          {
+            "beat": 25.5,
+            "duration": 2.5,
+            "name": "Gmaj9"
+          },
+          {
+            "beat": 28.0,
+            "duration": 1.5,
+            "name": "Fmaj9"
+          },
+          {
+            "beat": 29.5,
+            "duration": 2.499896,
+            "name": "Gmaj9"
+          }
+        ]
+      },
+      {
+        "id": "afda1eef-361484",
+        "label": "Section C",
+        "bars": 8,
+        "variation": "C",
+        "transition": "fill",
+        "chords": [
+          {
+            "beat": 0.0,
+            "duration": 4.0,
+            "name": "Fmaj9"
+          },
+          {
+            "beat": 4.0,
+            "duration": 4.0,
+            "name": "Emaj9/G#"
+          },
+          {
+            "beat": 8.0,
+            "duration": 4.0,
+            "name": "Am9"
+          },
+          {
+            "beat": 12.0,
+            "duration": 4.0,
+            "name": "Gmaj9/B"
+          },
+          {
+            "beat": 16.0,
+            "duration": 4.0,
+            "name": "Cmaj9"
+          },
+          {
+            "beat": 20.0,
+            "duration": 2.0,
+            "name": "Fmaj9"
+          },
+          {
+            "beat": 22.0,
+            "duration": 2.0,
+            "name": "Cmaj9/E"
+          },
+          {
+            "beat": 24.0,
+            "duration": 4.0,
+            "name": "Dmaj9"
+          },
+          {
+            "beat": 28.0,
+            "duration": 3.999896,
+            "name": "Fmaj9"
+          }
+        ]
+      },
+      {
+        "id": "afda1eef-361485",
+        "label": "Intro",
+        "bars": 8,
+        "variation": "D",
+        "transition": "fill",
+        "chords": [
+          {
+            "beat": 0.0,
+            "duration": 4.0,
+            "name": "Cm9"
+          },
+          {
+            "beat": 4.0,
+            "duration": 4.0,
+            "name": "G#maj9"
+          },
+          {
+            "beat": 8.0,
+            "duration": 6.0,
+            "name": "Fm9"
+          },
+          {
+            "beat": 14.0,
+            "duration": 2.0,
+            "name": "A#maj9/F"
+          },
+          {
+            "beat": 16.0,
+            "duration": 4.0,
+            "name": "Cm9"
+          },
+          {
+            "beat": 20.0,
+            "duration": 4.0,
+            "name": "G#maj9"
+          },
+          {
+            "beat": 24.0,
+            "duration": 7.999896,
+            "name": "Gm9/A#"
+          }
+        ]
+      },
+      {
+        "id": "afda1eef-361486",
+        "label": "Section D",
+        "bars": 8,
+        "variation": "A",
+        "transition": "fill",
+        "chords": [
+          {
+            "beat": 0.0,
+            "duration": 3.75,
+            "name": "Fmaj9"
+          },
+          {
+            "beat": 3.75,
+            "duration": 4.0,
+            "name": "G#maj9"
+          },
+          {
+            "beat": 7.75,
+            "duration": 4.0,
+            "name": "Am9"
+          },
+          {
+            "beat": 11.75,
+            "duration": 4.0,
+            "name": "Gmaj9/B"
+          },
+          {
+            "beat": 15.75,
+            "duration": 4.0,
+            "name": "Cmaj9"
+          },
+          {
+            "beat": 19.75,
+            "duration": 2.25,
+            "name": "Fmaj9"
+          },
+          {
+            "beat": 22.0,
+            "duration": 1.75,
+            "name": "Cmaj9/E"
+          },
+          {
+            "beat": 23.75,
+            "duration": 4.0,
+            "name": "Dmaj9"
+          },
+          {
+            "beat": 27.75,
+            "duration": 4.249896,
+            "name": "Gmaj9"
+          }
+        ]
+      },
+      {
+        "id": "afda1eef-361487",
+        "label": "Section E",
+        "bars": 8,
+        "variation": "B",
+        "transition": "fill",
+        "chords": [
+          {
+            "beat": 0.0,
+            "duration": 4.0,
+            "name": "Cm9"
+          },
+          {
+            "beat": 4.0,
+            "duration": 4.0,
+            "name": "D#maj9"
+          },
+          {
+            "beat": 8.0,
+            "duration": 8.0,
+            "name": "G#maj9"
+          },
+          {
+            "beat": 16.0,
+            "duration": 4.0,
+            "name": "Cm9"
+          },
+          {
+            "beat": 20.0,
+            "duration": 4.0,
+            "name": "D#maj9"
+          },
+          {
+            "beat": 24.0,
+            "duration": 4.0,
+            "name": "Fm9"
+          },
+          {
+            "beat": 28.0,
+            "duration": 3.999896,
+            "name": "Dm9"
+          }
+        ]
+      },
+      {
+        "id": "afda1eef-361488",
+        "label": "Section F",
+        "bars": 8,
+        "variation": "C",
+        "chords": [
+          {
+            "beat": 0.0,
+            "duration": 3.75,
+            "name": "Cm9"
+          },
+          {
+            "beat": 3.75,
+            "duration": 4.0,
+            "name": "D#maj9"
+          },
+          {
+            "beat": 7.75,
+            "duration": 4.25,
+            "name": "G#maj9"
+          },
+          {
+            "beat": 12.0,
+            "duration": 1.0,
+            "name": "Gmaj9"
+          },
+          {
+            "beat": 13.0,
+            "duration": 1.0,
+            "name": "D#maj9/G"
+          },
+          {
+            "beat": 14.0,
+            "duration": 1.0,
+            "name": "A#maj9/F"
+          },
+          {
+            "beat": 15.0,
+            "duration": 1.0,
+            "name": "Cm9/G"
+          },
+          {
+            "beat": 16.0,
+            "duration": 3.75,
+            "name": "Cm9"
+          },
+          {
+            "beat": 19.75,
+            "duration": 4.0,
+            "name": "D#maj9"
+          },
+          {
+            "beat": 23.75,
+            "duration": 4.25,
+            "name": "Fm9"
+          },
+          {
+            "beat": 28.0,
+            "duration": 3.999896,
+            "name": "Dm9"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "ee56c1fa-5eea-49ee-8d5c-54781bee1bf6",
+    "title": "Breeze",
+    "subtitle": "Original SmartBridge Rock arrangement",
+    "category": "Rock",
+    "tempo": 65,
+    "timeSignature": [
+      4,
+      4
+    ],
+    "key": "F",
+    "accent": "#fb7185",
+    "sections": [
+      {
+        "id": "ee56c1fa-362313",
+        "label": "Section A",
+        "bars": 8,
+        "variation": "A",
+        "transition": "fill",
+        "chords": [
+          {
+            "beat": 0.0,
+            "duration": 4.0,
+            "name": "A#maj9"
+          },
+          {
+            "beat": 4.0,
+            "duration": 4.0,
+            "name": "Cmaj9"
+          },
+          {
+            "beat": 8.0,
+            "duration": 2.0,
+            "name": "A#maj9"
+          },
+          {
+            "beat": 10.0,
+            "duration": 1.0,
+            "name": "Fmaj9/A"
+          },
+          {
+            "beat": 11.0,
+            "duration": 1.0,
+            "name": "Gm9"
+          },
+          {
+            "beat": 12.0,
+            "duration": 4.0,
+            "name": "Fmaj9"
+          },
+          {
+            "beat": 16.0,
+            "duration": 4.0,
+            "name": "A#maj9"
+          },
+          {
+            "beat": 20.0,
+            "duration": 4.0,
+            "name": "Cmaj9"
+          },
+          {
+            "beat": 24.0,
+            "duration": 2.0,
+            "name": "A#maj9"
+          },
+          {
+            "beat": 26.0,
+            "duration": 1.0,
+            "name": "Fmaj9/A"
+          },
+          {
+            "beat": 27.0,
+            "duration": 1.0,
+            "name": "Gm9"
+          },
+          {
+            "beat": 28.0,
+            "duration": 4.0,
+            "name": "Fmaj9"
+          }
+        ]
+      },
+      {
+        "id": "ee56c1fa-362314",
+        "label": "Chorus",
+        "bars": 8,
+        "variation": "B",
+        "transition": "fill",
+        "chords": [
+          {
+            "beat": 0.0,
+            "duration": 3.0,
+            "name": "Gm9"
+          },
+          {
+            "beat": 3.0,
+            "duration": 1.0,
+            "name": "Fmaj9/A"
+          },
+          {
+            "beat": 4.0,
+            "duration": 4.0,
+            "name": "A#maj9"
+          },
+          {
+            "beat": 8.0,
+            "duration": 2.0,
+            "name": "Fmaj9"
+          },
+          {
+            "beat": 10.0,
+            "duration": 2.0,
+            "name": "Cmaj9/E"
+          },
+          {
+            "beat": 12.0,
+            "duration": 4.0,
+            "name": "Dm9"
+          },
+          {
+            "beat": 16.0,
+            "duration": 3.0,
+            "name": "Gm9"
+          },
+          {
+            "beat": 19.0,
+            "duration": 1.0,
+            "name": "Fmaj9/A"
+          },
+          {
+            "beat": 20.0,
+            "duration": 4.0,
+            "name": "A#maj9"
+          },
+          {
+            "beat": 24.0,
+            "duration": 2.0,
+            "name": "Fmaj9"
+          },
+          {
+            "beat": 26.0,
+            "duration": 2.0,
+            "name": "Cmaj9/E"
+          },
+          {
+            "beat": 28.0,
+            "duration": 3.999896,
+            "name": "A#maj9"
+          }
+        ]
+      },
+      {
+        "id": "ee56c1fa-362316",
+        "label": "Verse",
+        "bars": 8,
+        "variation": "D",
+        "transition": "fill",
+        "chords": [
+          {
+            "beat": 0.0,
+            "duration": 4.0,
+            "name": "Fmaj9"
+          },
+          {
+            "beat": 4.0,
+            "duration": 4.0,
+            "name": "Am9"
+          },
+          {
+            "beat": 8.0,
+            "duration": 4.0,
+            "name": "A#maj9"
+          },
+          {
+            "beat": 12.0,
+            "duration": 2.0,
+            "name": "Dm9"
+          },
+          {
+            "beat": 14.0,
+            "duration": 2.0,
+            "name": "Cmaj9"
+          },
+          {
+            "beat": 16.0,
+            "duration": 4.0,
+            "name": "Fmaj9"
+          },
+          {
+            "beat": 20.0,
+            "duration": 4.0,
+            "name": "Am9"
+          },
+          {
+            "beat": 24.0,
+            "duration": 4.0,
+            "name": "A#maj9"
+          },
+          {
+            "beat": 28.0,
+            "duration": 2.0,
+            "name": "Dm9"
+          },
+          {
+            "beat": 30.0,
+            "duration": 1.999896,
+            "name": "Cmaj9"
+          }
+        ]
+      },
+      {
+        "id": "ee56c1fa-362317",
+        "label": "Intro",
+        "bars": 8,
+        "variation": "A",
+        "transition": "fill",
+        "chords": [
+          {
+            "beat": 0.0,
+            "duration": 4.0,
+            "name": "Fmaj9"
+          },
+          {
+            "beat": 4.0,
+            "duration": 4.0,
+            "name": "Gm9"
+          },
+          {
+            "beat": 8.0,
+            "duration": 4.0,
+            "name": "Fmaj9/A"
+          },
+          {
+            "beat": 12.0,
+            "duration": 4.0,
+            "name": "A#maj9"
+          },
+          {
+            "beat": 16.0,
+            "duration": 4.0,
+            "name": "Fmaj9"
+          },
+          {
+            "beat": 20.0,
+            "duration": 4.0,
+            "name": "Gm9"
+          },
+          {
+            "beat": 24.0,
+            "duration": 4.0,
+            "name": "Fmaj9/A"
+          },
+          {
+            "beat": 28.0,
+            "duration": 3.999896,
+            "name": "A#maj9"
+          }
+        ]
+      },
+      {
+        "id": "ee56c1fa-362318",
+        "label": "Pre-Chorus",
+        "bars": 4,
+        "variation": "B",
+        "chords": [
+          {
+            "beat": 0.0,
+            "duration": 4.0,
+            "name": "A#maj9"
+          },
+          {
+            "beat": 4.0,
+            "duration": 4.0,
+            "name": "Am9"
+          },
+          {
+            "beat": 8.0,
+            "duration": 4.0,
+            "name": "A#maj9"
+          },
+          {
+            "beat": 12.0,
+            "duration": 4.0,
+            "name": "C"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "10d0cfb9-7cfa-4862-9f72-7e46c012679e",
+    "title": "Nitro",
+    "subtitle": "Original SmartBridge Rock arrangement",
+    "category": "Rock",
+    "tempo": 180,
+    "timeSignature": [
+      4,
+      4
+    ],
+    "key": "Em",
+    "accent": "#f97316",
+    "sections": [
+      {
+        "id": "10d0cfb9-359709",
+        "label": "Intro",
+        "bars": 8,
+        "variation": "A",
+        "transition": "fill",
+        "chords": [
+          {
+            "beat": 0.0,
+            "duration": 3.5,
+            "name": "Gmaj9"
+          },
+          {
+            "beat": 3.5,
+            "duration": 4.0,
+            "name": "Amaj9"
+          },
+          {
+            "beat": 7.5,
+            "duration": 4.0,
+            "name": "Cmaj9"
+          },
+          {
+            "beat": 11.5,
+            "duration": 4.0,
+            "name": "Dmaj9"
+          },
+          {
+            "beat": 15.5,
+            "duration": 4.0,
+            "name": "Gmaj9"
+          },
+          {
+            "beat": 19.5,
+            "duration": 4.0,
+            "name": "Amaj9"
+          },
+          {
+            "beat": 23.5,
+            "duration": 4.0,
+            "name": "Cmaj9"
+          },
+          {
+            "beat": 27.5,
+            "duration": 4.499896,
+            "name": "Dmaj9"
+          }
+        ]
+      },
+      {
+        "id": "10d0cfb9-359710",
+        "label": "Verse",
+        "bars": 8,
+        "variation": "B",
+        "transition": "fill",
+        "chords": [
+          {
+            "beat": 0.0,
+            "duration": 4.0,
+            "name": "Emaj9"
+          },
+          {
+            "beat": 4.0,
+            "duration": 4.0,
+            "name": "Emaj9"
+          },
+          {
+            "beat": 8.0,
+            "duration": 6.0,
+            "name": "Emaj9"
+          },
+          {
+            "beat": 14.0,
+            "duration": 0.5,
+            "name": "Em9"
+          },
+          {
+            "beat": 14.5,
+            "duration": 1.499896,
+            "name": "Dmaj9"
+          },
+          {
+            "beat": 15.999896,
+            "duration": 4.0,
+            "name": "Emaj9"
+          },
+          {
+            "beat": 19.999896,
+            "duration": 4.0,
+            "name": "Emaj9"
+          },
+          {
+            "beat": 23.999896,
+            "duration": 6.0,
+            "name": "Emaj9"
+          },
+          {
+            "beat": 29.999896,
+            "duration": 0.5,
+            "name": "Em9"
+          },
+          {
+            "beat": 30.499896,
+            "duration": 1.499896,
+            "name": "Dmaj9"
+          }
+        ]
+      },
+      {
+        "id": "10d0cfb9-359711",
+        "label": "Pre-Chorus",
+        "bars": 4,
+        "variation": "C",
+        "transition": "fill",
+        "chords": [
+          {
+            "beat": 0.0,
+            "duration": 3.5,
+            "name": "Cmaj9"
+          },
+          {
+            "beat": 3.5,
+            "duration": 4.0,
+            "name": "Cmaj9"
+          },
+          {
+            "beat": 7.5,
+            "duration": 4.0,
+            "name": "Cmaj9"
+          },
+          {
+            "beat": 11.5,
+            "duration": 2.0,
+            "name": "Dmaj9/G"
+          },
+          {
+            "beat": 13.5,
+            "duration": 2.0,
+            "name": "Gmaj9/A"
+          },
+          {
+            "beat": 15.5,
+            "duration": 0.5,
+            "name": "B"
+          }
+        ]
+      },
+      {
+        "id": "10d0cfb9-359712",
+        "label": "Chorus",
+        "bars": 8,
+        "variation": "D",
+        "transition": "fill",
+        "chords": [
+          {
+            "beat": 0.0,
+            "duration": 4.0,
+            "name": "Em9"
+          },
+          {
+            "beat": 4.0,
+            "duration": 4.0,
+            "name": "F#m9/E"
+          },
+          {
+            "beat": 8.0,
+            "duration": 4.0,
+            "name": "Em9"
+          },
+          {
+            "beat": 12.0,
+            "duration": 3.999896,
+            "name": "Amaj9/B"
+          },
+          {
+            "beat": 15.999896,
+            "duration": 4.0,
+            "name": "Em9"
+          },
+          {
+            "beat": 19.999896,
+            "duration": 4.0,
+            "name": "F#m9/E"
+          },
+          {
+            "beat": 23.999896,
+            "duration": 4.0,
+            "name": "Em9"
+          },
+          {
+            "beat": 27.999896,
+            "duration": 3.999896,
+            "name": "Amaj9/B"
+          }
+        ]
+      },
+      {
+        "id": "10d0cfb9-359714",
+        "label": "Section A",
+        "bars": 8,
+        "variation": "B",
+        "chords": [
+          {
+            "beat": 0.0,
+            "duration": 4.0,
+            "name": "C#m9"
+          },
+          {
+            "beat": 4.0,
+            "duration": 4.0,
+            "name": "Cmaj9"
+          },
+          {
+            "beat": 8.0,
+            "duration": 4.0,
+            "name": "Emaj9/B"
+          },
+          {
+            "beat": 12.0,
+            "duration": 4.0,
+            "name": "A#m9"
+          },
+          {
+            "beat": 16.0,
+            "duration": 4.0,
+            "name": "Amaj9"
+          },
+          {
+            "beat": 20.0,
+            "duration": 4.0,
+            "name": "Gmaj9"
+          },
+          {
+            "beat": 24.0,
+            "duration": 4.0,
+            "name": "Bm9"
+          },
+          {
+            "beat": 28.0,
+            "duration": 4.0,
+            "name": "Amaj9/D"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "be005013-94f6-4cf9-ad3b-414e7c737b43",
+    "title": "Cloud",
+    "subtitle": "Original SmartBridge Ballad arrangement",
+    "category": "Ballad",
+    "tempo": 80,
+    "timeSignature": [
+      4,
+      4
+    ],
+    "key": "Gm",
+    "accent": "#a78bfa",
+    "sections": [
+      {
+        "id": "be005013-361389",
+        "label": "Intro",
+        "bars": 8,
+        "variation": "A",
+        "transition": "fill",
+        "chords": [
+          {
+            "beat": 0.0,
+            "duration": 2.0,
+            "name": "Gm9"
+          },
+          {
+            "beat": 2.0,
+            "duration": 2.0,
+            "name": "Dm9/F"
+          },
+          {
+            "beat": 4.0,
+            "duration": 2.0,
+            "name": "Gm9/A#"
+          },
+          {
+            "beat": 6.0,
+            "duration": 2.0,
+            "name": "Am9"
+          },
+          {
+            "beat": 8.0,
+            "duration": 2.0,
+            "name": "Gm9"
+          },
+          {
+            "beat": 10.0,
+            "duration": 2.0,
+            "name": "Dm9/F"
+          },
+          {
+            "beat": 12.0,
+            "duration": 2.0,
+            "name": "Gm9/A#"
+          },
+          {
+            "beat": 14.0,
+            "duration": 1.999896,
+            "name": "Am9"
+          },
+          {
+            "beat": 15.999896,
+            "duration": 2.0,
+            "name": "Gm9"
+          },
+          {
+            "beat": 17.999896,
+            "duration": 2.0,
+            "name": "Dm9/F"
+          },
+          {
+            "beat": 19.999896,
+            "duration": 2.0,
+            "name": "Gm9/A#"
+          },
+          {
+            "beat": 21.999896,
+            "duration": 2.0,
+            "name": "Am9"
+          },
+          {
+            "beat": 23.999896,
+            "duration": 2.0,
+            "name": "Gm9"
+          },
+          {
+            "beat": 25.999896,
+            "duration": 2.0,
+            "name": "Dm9/F"
+          },
+          {
+            "beat": 27.999896,
+            "duration": 2.0,
+            "name": "Gm9/A#"
+          },
+          {
+            "beat": 29.999896,
+            "duration": 1.999896,
+            "name": "Am9"
+          }
+        ]
+      },
+      {
+        "id": "be005013-361390",
+        "label": "Verse",
+        "bars": 8,
+        "variation": "B",
+        "transition": "fill",
+        "chords": [
+          {
+            "beat": 0.0,
+            "duration": 1.75,
+            "name": "Gm9"
+          },
+          {
+            "beat": 1.75,
+            "duration": 2.0,
+            "name": "D#maj9"
+          },
+          {
+            "beat": 3.75,
+            "duration": 2.0,
+            "name": "Cm9"
+          },
+          {
+            "beat": 5.75,
+            "duration": 1.0,
+            "name": "Dmaj9"
+          },
+          {
+            "beat": 6.75,
+            "duration": 1.0,
+            "name": "Dmaj9"
+          },
+          {
+            "beat": 7.75,
+            "duration": 2.0,
+            "name": "Gm9"
+          },
+          {
+            "beat": 9.75,
+            "duration": 2.0,
+            "name": "D#maj9"
+          },
+          {
+            "beat": 11.75,
+            "duration": 2.0,
+            "name": "Cm9"
+          },
+          {
+            "beat": 13.75,
+            "duration": 1.0,
+            "name": "Dmaj9"
+          },
+          {
+            "beat": 14.75,
+            "duration": 1.249896,
+            "name": "Dmaj9"
+          },
+          {
+            "beat": 15.999896,
+            "duration": 1.75,
+            "name": "Gm9"
+          },
+          {
+            "beat": 17.749896,
+            "duration": 2.0,
+            "name": "D#maj9"
+          },
+          {
+            "beat": 19.749896,
+            "duration": 2.0,
+            "name": "Cm9"
+          },
+          {
+            "beat": 21.749896,
+            "duration": 1.0,
+            "name": "Dmaj9"
+          },
+          {
+            "beat": 22.749896,
+            "duration": 1.0,
+            "name": "Dmaj9"
+          },
+          {
+            "beat": 23.749896,
+            "duration": 2.0,
+            "name": "Gm9"
+          },
+          {
+            "beat": 25.749896,
+            "duration": 2.0,
+            "name": "D#maj9"
+          },
+          {
+            "beat": 27.749896,
+            "duration": 2.0,
+            "name": "Cm9"
+          },
+          {
+            "beat": 29.749896,
+            "duration": 1.0,
+            "name": "Dmaj9"
+          },
+          {
+            "beat": 30.749896,
+            "duration": 1.249896,
+            "name": "Dmaj9"
+          }
+        ]
+      },
+      {
+        "id": "be005013-361391",
+        "label": "Pre-Chorus",
+        "bars": 4,
+        "variation": "C",
+        "transition": "fill",
+        "chords": [
+          {
+            "beat": 0.0,
+            "duration": 4.0,
+            "name": "D#maj9"
+          },
+          {
+            "beat": 4.0,
+            "duration": 2.0,
+            "name": "A#maj9"
+          },
+          {
+            "beat": 6.0,
+            "duration": 2.0,
+            "name": "Fmaj9"
+          },
+          {
+            "beat": 8.0,
+            "duration": 2.0,
+            "name": "D#maj9"
+          },
+          {
+            "beat": 10.0,
+            "duration": 2.0,
+            "name": "Cm9/D#"
+          },
+          {
+            "beat": 12.0,
+            "duration": 2.0,
+            "name": "Dmaj9"
+          },
+          {
+            "beat": 14.0,
+            "duration": 1.999896,
+            "name": "D"
+          }
+        ]
+      },
+      {
+        "id": "be005013-361392",
+        "label": "Chorus",
+        "bars": 8,
+        "variation": "D",
+        "chords": [
+          {
+            "beat": 0.0,
+            "duration": 1.0,
+            "name": "Gm9"
+          },
+          {
+            "beat": 1.0,
+            "duration": 0.75,
+            "name": "Dm9/F"
+          },
+          {
+            "beat": 1.75,
+            "duration": 2.25,
+            "name": "D#maj9"
+          },
+          {
+            "beat": 4.0,
+            "duration": 1.75,
+            "name": "Cm9"
+          },
+          {
+            "beat": 5.75,
+            "duration": 1.0,
+            "name": "Dmaj9"
+          },
+          {
+            "beat": 6.75,
+            "duration": 1.25,
+            "name": "Dmaj9"
+          },
+          {
+            "beat": 8.0,
+            "duration": 1.0,
+            "name": "Gm9"
+          },
+          {
+            "beat": 9.0,
+            "duration": 0.75,
+            "name": "Dm9/F"
+          },
+          {
+            "beat": 9.75,
+            "duration": 2.25,
+            "name": "D#maj9"
+          },
+          {
+            "beat": 12.0,
+            "duration": 1.75,
+            "name": "Cm9"
+          },
+          {
+            "beat": 13.75,
+            "duration": 1.0,
+            "name": "Dmaj9"
+          },
+          {
+            "beat": 14.75,
+            "duration": 1.249896,
+            "name": "Dmaj9"
+          },
+          {
+            "beat": 15.999896,
+            "duration": 1.0,
+            "name": "Gm9"
+          },
+          {
+            "beat": 16.999896,
+            "duration": 0.75,
+            "name": "Dm9/F"
+          },
+          {
+            "beat": 17.749896,
+            "duration": 2.25,
+            "name": "D#maj9"
+          },
+          {
+            "beat": 19.999896,
+            "duration": 1.75,
+            "name": "Cm9"
+          },
+          {
+            "beat": 21.749896,
+            "duration": 1.0,
+            "name": "Dmaj9"
+          },
+          {
+            "beat": 22.749896,
+            "duration": 1.25,
+            "name": "Dmaj9"
+          },
+          {
+            "beat": 23.999896,
+            "duration": 1.0,
+            "name": "Gm9"
+          },
+          {
+            "beat": 24.999896,
+            "duration": 0.75,
+            "name": "Dm9/F"
+          },
+          {
+            "beat": 25.749896,
+            "duration": 2.25,
+            "name": "D#maj9"
+          },
+          {
+            "beat": 27.999896,
+            "duration": 1.75,
+            "name": "Cm9"
+          },
+          {
+            "beat": 29.749896,
+            "duration": 1.0,
+            "name": "Dmaj9"
+          },
+          {
+            "beat": 30.749896,
+            "duration": 1.249896,
+            "name": "Dmaj9"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "774a0576-21f0-478f-9751-4d14099b983c",
+    "title": "Lotus 3",
+    "subtitle": "Original SmartBridge Ballad arrangement",
+    "category": "Ballad",
+    "tempo": 65,
+    "timeSignature": [
+      4,
+      4
+    ],
+    "key": "C",
+    "accent": "#c084fc",
+    "sections": [
+      {
+        "id": "774a0576-359870",
+        "label": "Intro",
+        "bars": 8,
+        "variation": "A",
+        "transition": "fill",
+        "chords": [
+          {
+            "beat": 0.0,
+            "duration": 4.0,
+            "name": "A#maj9"
+          },
+          {
+            "beat": 4.0,
+            "duration": 4.0,
+            "name": "Fmaj9/A"
+          },
+          {
+            "beat": 8.0,
+            "duration": 2.0,
+            "name": "D#maj9/G"
+          },
+          {
+            "beat": 10.0,
+            "duration": 2.0,
+            "name": "Dm9/F"
+          },
+          {
+            "beat": 12.0,
+            "duration": 2.5,
+            "name": "D#maj9"
+          },
+          {
+            "beat": 14.5,
+            "duration": 0.25,
+            "name": "A#maj9/D"
+          },
+          {
+            "beat": 14.75,
+            "duration": 0.5,
+            "name": "D#maj9"
+          },
+          {
+            "beat": 15.25,
+            "duration": 0.749896,
+            "name": "Fmaj9"
+          },
+          {
+            "beat": 15.999896,
+            "duration": 4.0,
+            "name": "A#maj9"
+          },
+          {
+            "beat": 19.999896,
+            "duration": 4.0,
+            "name": "Fmaj9/A"
+          },
+          {
+            "beat": 23.999896,
+            "duration": 2.0,
+            "name": "D#maj9/G"
+          },
+          {
+            "beat": 25.999896,
+            "duration": 2.0,
+            "name": "Dm9/F"
+          },
+          {
+            "beat": 27.999896,
+            "duration": 2.5,
+            "name": "D#maj9"
+          },
+          {
+            "beat": 30.499896,
+            "duration": 0.25,
+            "name": "A#maj9/D"
+          },
+          {
+            "beat": 30.749896,
+            "duration": 0.5,
+            "name": "D#maj9"
+          },
+          {
+            "beat": 31.249896,
+            "duration": 0.749896,
+            "name": "Fmaj9"
+          }
+        ]
+      },
+      {
+        "id": "774a0576-359871",
+        "label": "Verse",
+        "bars": 8,
+        "variation": "B",
+        "transition": "fill",
+        "chords": [
+          {
+            "beat": 0.0,
+            "duration": 2.0,
+            "name": "A#maj9"
+          },
+          {
+            "beat": 2.0,
+            "duration": 2.0,
+            "name": "D#maj9/G"
+          },
+          {
+            "beat": 4.0,
+            "duration": 2.0,
+            "name": "Fmaj9/A"
+          },
+          {
+            "beat": 6.0,
+            "duration": 2.0,
+            "name": "A#maj9"
+          },
+          {
+            "beat": 8.0,
+            "duration": 2.0,
+            "name": "D#maj9"
+          },
+          {
+            "beat": 10.0,
+            "duration": 2.0,
+            "name": "A#maj9/D"
+          },
+          {
+            "beat": 12.0,
+            "duration": 2.0,
+            "name": "Cm9"
+          },
+          {
+            "beat": 14.0,
+            "duration": 1.0,
+            "name": "Fmaj9"
+          },
+          {
+            "beat": 15.0,
+            "duration": 1.0,
+            "name": "Fmaj9"
+          },
+          {
+            "beat": 16.0,
+            "duration": 2.0,
+            "name": "A#maj9"
+          },
+          {
+            "beat": 18.0,
+            "duration": 2.0,
+            "name": "D#maj9/G"
+          },
+          {
+            "beat": 20.0,
+            "duration": 2.0,
+            "name": "Fmaj9/A"
+          },
+          {
+            "beat": 22.0,
+            "duration": 1.5,
+            "name": "A#maj9"
+          },
+          {
+            "beat": 23.5,
+            "duration": 0.5,
+            "name": "A#maj9/D"
+          },
+          {
+            "beat": 24.0,
+            "duration": 2.0,
+            "name": "D#maj9"
+          },
+          {
+            "beat": 26.0,
+            "duration": 2.0,
+            "name": "Cmaj9/E"
+          },
+          {
+            "beat": 28.0,
+            "duration": 2.0,
+            "name": "Fmaj9"
+          },
+          {
+            "beat": 30.0,
+            "duration": 1.999896,
+            "name": "Fmaj9"
+          }
+        ]
+      },
+      {
+        "id": "774a0576-359872",
+        "label": "Pre-Chorus",
+        "bars": 4,
+        "variation": "C",
+        "transition": "fill",
+        "chords": [
+          {
+            "beat": 0.0,
+            "duration": 2.0,
+            "name": "D#maj9"
+          },
+          {
+            "beat": 2.0,
+            "duration": 2.0,
+            "name": "A#maj9/D"
+          },
+          {
+            "beat": 4.0,
+            "duration": 2.0,
+            "name": "Dmaj9/F#"
+          },
+          {
+            "beat": 6.0,
+            "duration": 1.0,
+            "name": "Gm9"
+          },
+          {
+            "beat": 7.0,
+            "duration": 1.0,
+            "name": "Fmaj9/A"
+          },
+          {
+            "beat": 8.0,
+            "duration": 1.0,
+            "name": "A#maj9"
+          },
+          {
+            "beat": 9.0,
+            "duration": 1.0,
+            "name": "D#maj9/G"
+          },
+          {
+            "beat": 10.0,
+            "duration": 2.0,
+            "name": "Cmaj9/E"
+          },
+          {
+            "beat": 12.0,
+            "duration": 2.0,
+            "name": "Fmaj9"
+          },
+          {
+            "beat": 14.0,
+            "duration": 1.999896,
+            "name": "G"
+          }
+        ]
+      },
+      {
+        "id": "774a0576-359873",
+        "label": "Chorus",
+        "bars": 8,
+        "variation": "D",
+        "chords": [
+          {
+            "beat": 0.0,
+            "duration": 2.0,
+            "name": "A#maj9"
+          },
+          {
+            "beat": 2.0,
+            "duration": 2.0,
+            "name": "A#maj9/D"
+          },
+          {
+            "beat": 4.0,
+            "duration": 2.0,
+            "name": "D#maj9"
+          },
+          {
+            "beat": 6.0,
+            "duration": 2.0,
+            "name": "Gmaj9/B"
+          },
+          {
+            "beat": 8.0,
+            "duration": 2.0,
+            "name": "Cm9"
+          },
+          {
+            "beat": 10.0,
+            "duration": 2.0,
+            "name": "Fmaj9/A"
+          },
+          {
+            "beat": 12.0,
+            "duration": 2.0,
+            "name": "A#maj9"
+          },
+          {
+            "beat": 14.0,
+            "duration": 1.0,
+            "name": "D#maj9/G"
+          },
+          {
+            "beat": 15.0,
+            "duration": 1.0,
+            "name": "Fmaj9/A"
+          },
+          {
+            "beat": 16.0,
+            "duration": 2.0,
+            "name": "A#maj9"
+          },
+          {
+            "beat": 18.0,
+            "duration": 2.0,
+            "name": "A#maj9/D"
+          },
+          {
+            "beat": 20.0,
+            "duration": 2.0,
+            "name": "D#maj9"
+          },
+          {
+            "beat": 22.0,
+            "duration": 2.0,
+            "name": "Gmaj9/B"
+          },
+          {
+            "beat": 24.0,
+            "duration": 2.0,
+            "name": "Cm9"
+          },
+          {
+            "beat": 26.0,
+            "duration": 2.0,
+            "name": "Fmaj9/A"
+          },
+          {
+            "beat": 28.0,
+            "duration": 2.0,
+            "name": "A#maj9"
+          },
+          {
+            "beat": 30.0,
+            "duration": 1.0,
+            "name": "D#maj9/G"
+          },
+          {
+            "beat": 31.0,
+            "duration": 0.999896,
+            "name": "Fmaj9/A"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "e277708b-036d-421a-96a8-3a9fcdc91b05",
+    "title": "Climb",
+    "subtitle": "Original SmartBridge Dance arrangement",
+    "category": "Dance",
+    "tempo": 120,
+    "timeSignature": [
+      4,
+      4
+    ],
+    "key": "Am",
+    "accent": "#2dd4bf",
+    "sections": [
+      {
+        "id": "e277708b-361162",
+        "label": "Section A",
+        "bars": 8,
+        "variation": "A",
+        "transition": "fill",
+        "chords": [
+          {
+            "beat": 0.0,
+            "duration": 4.0,
+            "name": "Gmaj9"
+          },
+          {
+            "beat": 4.0,
+            "duration": 3.5,
+            "name": "Amaj9"
+          },
+          {
+            "beat": 7.5,
+            "duration": 4.0,
+            "name": "Bm9"
+          },
+          {
+            "beat": 11.5,
+            "duration": 2.0,
+            "name": "Bm9"
+          },
+          {
+            "beat": 13.5,
+            "duration": 2.5,
+            "name": "Amaj9"
+          },
+          {
+            "beat": 16.0,
+            "duration": 4.0,
+            "name": "Gmaj9"
+          },
+          {
+            "beat": 20.0,
+            "duration": 3.5,
+            "name": "Amaj9"
+          },
+          {
+            "beat": 23.5,
+            "duration": 4.0,
+            "name": "Bm9"
+          },
+          {
+            "beat": 27.5,
+            "duration": 2.0,
+            "name": "Bm9"
+          },
+          {
+            "beat": 29.5,
+            "duration": 2.5,
+            "name": "Amaj9"
+          }
+        ]
+      },
+      {
+        "id": "e277708b-361163",
+        "label": "Section B",
+        "bars": 8,
+        "variation": "B",
+        "transition": "fill",
+        "chords": [
+          {
+            "beat": 0.0,
+            "duration": 1.5,
+            "name": "Em9/A"
+          },
+          {
+            "beat": 1.5,
+            "duration": 2.5,
+            "name": "Am9"
+          },
+          {
+            "beat": 4.0,
+            "duration": 1.5,
+            "name": "Em9/A"
+          },
+          {
+            "beat": 5.5,
+            "duration": 2.5,
+            "name": "Am9"
+          },
+          {
+            "beat": 8.0,
+            "duration": 1.5,
+            "name": "Em9/F"
+          },
+          {
+            "beat": 9.5,
+            "duration": 2.5,
+            "name": "Cmaj9/F"
+          },
+          {
+            "beat": 12.0,
+            "duration": 1.5,
+            "name": "Em9/G"
+          },
+          {
+            "beat": 13.5,
+            "duration": 1.5,
+            "name": "Cmaj9/G"
+          },
+          {
+            "beat": 15.0,
+            "duration": 1.0,
+            "name": "Em9/G"
+          },
+          {
+            "beat": 16.0,
+            "duration": 1.5,
+            "name": "Em9/A"
+          },
+          {
+            "beat": 17.5,
+            "duration": 2.5,
+            "name": "Am9"
+          },
+          {
+            "beat": 20.0,
+            "duration": 1.5,
+            "name": "Em9/A"
+          },
+          {
+            "beat": 21.5,
+            "duration": 2.5,
+            "name": "Am9"
+          },
+          {
+            "beat": 24.0,
+            "duration": 1.5,
+            "name": "Em9/F"
+          },
+          {
+            "beat": 25.5,
+            "duration": 2.5,
+            "name": "Cmaj9/F"
+          },
+          {
+            "beat": 28.0,
+            "duration": 1.5,
+            "name": "Em9/G"
+          },
+          {
+            "beat": 29.5,
+            "duration": 1.5,
+            "name": "Cmaj9/G"
+          },
+          {
+            "beat": 31.0,
+            "duration": 1.0,
+            "name": "Em9/G"
+          }
+        ]
+      },
+      {
+        "id": "e277708b-361164",
+        "label": "Section C",
+        "bars": 8,
+        "variation": "C",
+        "transition": "fill",
+        "chords": [
+          {
+            "beat": 0.0,
+            "duration": 2.0,
+            "name": "Em9/A"
+          },
+          {
+            "beat": 2.0,
+            "duration": 2.0,
+            "name": "Gmaj9"
+          },
+          {
+            "beat": 4.0,
+            "duration": 4.0,
+            "name": "Dmaj9"
+          },
+          {
+            "beat": 8.0,
+            "duration": 2.0,
+            "name": "Em9/A"
+          },
+          {
+            "beat": 10.0,
+            "duration": 2.0,
+            "name": "Gmaj9"
+          },
+          {
+            "beat": 12.0,
+            "duration": 4.0,
+            "name": "Dmaj9"
+          },
+          {
+            "beat": 16.0,
+            "duration": 2.0,
+            "name": "Em9/A"
+          },
+          {
+            "beat": 18.0,
+            "duration": 2.0,
+            "name": "Gmaj9"
+          },
+          {
+            "beat": 20.0,
+            "duration": 4.0,
+            "name": "Dmaj9"
+          },
+          {
+            "beat": 24.0,
+            "duration": 2.0,
+            "name": "Em9/A"
+          },
+          {
+            "beat": 26.0,
+            "duration": 2.0,
+            "name": "Gmaj9"
+          },
+          {
+            "beat": 28.0,
+            "duration": 4.0,
+            "name": "Dmaj9"
+          }
+        ]
+      },
+      {
+        "id": "e277708b-361165",
+        "label": "Section D",
+        "bars": 8,
+        "variation": "D",
+        "transition": "fill",
+        "chords": [
+          {
+            "beat": 0.0,
+            "duration": 1.5,
+            "name": "Am9"
+          },
+          {
+            "beat": 1.5,
+            "duration": 1.5,
+            "name": "Em9"
+          },
+          {
+            "beat": 3.0,
+            "duration": 5.0,
+            "name": "Fmaj9"
+          },
+          {
+            "beat": 8.0,
+            "duration": 1.5,
+            "name": "Fmaj9"
+          },
+          {
+            "beat": 9.5,
+            "duration": 1.5,
+            "name": "Em9"
+          },
+          {
+            "beat": 11.0,
+            "duration": 1.0,
+            "name": "Am9"
+          },
+          {
+            "beat": 16.0,
+            "duration": 1.5,
+            "name": "Am9"
+          },
+          {
+            "beat": 17.5,
+            "duration": 1.5,
+            "name": "Em9"
+          },
+          {
+            "beat": 19.0,
+            "duration": 5.0,
+            "name": "Fmaj9"
+          },
+          {
+            "beat": 24.0,
+            "duration": 1.5,
+            "name": "Fmaj9"
+          },
+          {
+            "beat": 25.5,
+            "duration": 1.5,
+            "name": "Em9"
+          },
+          {
+            "beat": 27.0,
+            "duration": 5.0,
+            "name": "Am9"
+          }
+        ]
+      },
+      {
+        "id": "e277708b-361166",
+        "label": "Section E",
+        "bars": 8,
+        "variation": "A",
+        "chords": [
+          {
+            "beat": 0.0,
+            "duration": 1.5,
+            "name": "Am9"
+          },
+          {
+            "beat": 1.5,
+            "duration": 1.5,
+            "name": "Em9"
+          },
+          {
+            "beat": 3.0,
+            "duration": 5.0,
+            "name": "Fmaj9"
+          },
+          {
+            "beat": 8.0,
+            "duration": 1.5,
+            "name": "Fmaj9"
+          },
+          {
+            "beat": 9.5,
+            "duration": 1.5,
+            "name": "Em9"
+          },
+          {
+            "beat": 11.0,
+            "duration": 1.0,
+            "name": "Am9"
+          },
+          {
+            "beat": 16.0,
+            "duration": 1.5,
+            "name": "Am9"
+          },
+          {
+            "beat": 17.5,
+            "duration": 1.5,
+            "name": "Em9"
+          },
+          {
+            "beat": 19.0,
+            "duration": 5.0,
+            "name": "Fmaj9"
+          },
+          {
+            "beat": 24.0,
+            "duration": 1.5,
+            "name": "Fmaj9"
+          },
+          {
+            "beat": 25.5,
+            "duration": 1.5,
+            "name": "Em9"
+          },
+          {
+            "beat": 27.0,
+            "duration": 5.0,
+            "name": "Am9"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "db20a928-2ded-4720-92f8-4dc75af60b69",
+    "title": "Storm",
+    "subtitle": "Original SmartBridge Dance arrangement",
+    "category": "Dance",
+    "tempo": 120,
+    "timeSignature": [
+      4,
+      4
+    ],
+    "key": "A",
+    "accent": "#14b8a6",
+    "sections": [
+      {
+        "id": "db20a928-361126",
+        "label": "Intro",
+        "bars": 8,
+        "variation": "A",
+        "transition": "fill",
+        "chords": [
+          {
+            "beat": 0.0,
+            "duration": 3.5,
+            "name": "Bm9"
+          },
+          {
+            "beat": 3.5,
+            "duration": 4.0,
+            "name": "Amaj9"
+          },
+          {
+            "beat": 7.5,
+            "duration": 4.0,
+            "name": "Emaj9/G#"
+          },
+          {
+            "beat": 11.5,
+            "duration": 4.5,
+            "name": "Gmaj9"
+          },
+          {
+            "beat": 16.0,
+            "duration": 3.5,
+            "name": "Bm9"
+          },
+          {
+            "beat": 19.5,
+            "duration": 4.0,
+            "name": "Amaj9"
+          },
+          {
+            "beat": 23.5,
+            "duration": 4.0,
+            "name": "Emaj9/G#"
+          },
+          {
+            "beat": 27.5,
+            "duration": 4.5,
+            "name": "Gmaj9"
+          }
+        ]
+      },
+      {
+        "id": "db20a928-361127",
+        "label": "Intro 2",
+        "bars": 8,
+        "variation": "B",
+        "transition": "fill",
+        "chords": [
+          {
+            "beat": 0.0,
+            "duration": 3.5,
+            "name": "Bm9"
+          },
+          {
+            "beat": 3.5,
+            "duration": 4.0,
+            "name": "Amaj9"
+          },
+          {
+            "beat": 7.5,
+            "duration": 4.0,
+            "name": "Emaj9/G#"
+          },
+          {
+            "beat": 11.5,
+            "duration": 4.5,
+            "name": "Gmaj9"
+          },
+          {
+            "beat": 16.0,
+            "duration": 3.5,
+            "name": "Bm9"
+          },
+          {
+            "beat": 19.5,
+            "duration": 4.0,
+            "name": "Amaj9"
+          },
+          {
+            "beat": 23.5,
+            "duration": 4.0,
+            "name": "Emaj9/G#"
+          },
+          {
+            "beat": 27.5,
+            "duration": 4.5,
+            "name": "Gmaj9"
+          }
+        ]
+      },
+      {
+        "id": "db20a928-361128",
+        "label": "Verse",
+        "bars": 8,
+        "variation": "C",
+        "transition": "fill",
+        "chords": [
+          {
+            "beat": 0.0,
+            "duration": 1.75,
+            "name": "Cm9/F"
+          },
+          {
+            "beat": 1.75,
+            "duration": 2.25,
+            "name": "Fm9"
+          },
+          {
+            "beat": 4.0,
+            "duration": 2.0,
+            "name": "Cm9/F"
+          },
+          {
+            "beat": 6.0,
+            "duration": 2.0,
+            "name": "Fm9"
+          },
+          {
+            "beat": 8.0,
+            "duration": 1.75,
+            "name": "Gm9/C"
+          },
+          {
+            "beat": 9.75,
+            "duration": 2.25,
+            "name": "Cm9"
+          },
+          {
+            "beat": 12.0,
+            "duration": 2.0,
+            "name": "Gm9/C"
+          },
+          {
+            "beat": 14.0,
+            "duration": 2.0,
+            "name": "Cm9"
+          },
+          {
+            "beat": 16.0,
+            "duration": 1.75,
+            "name": "Cm9/F"
+          },
+          {
+            "beat": 17.75,
+            "duration": 2.25,
+            "name": "Fm9"
+          },
+          {
+            "beat": 20.0,
+            "duration": 2.0,
+            "name": "Cm9/F"
+          },
+          {
+            "beat": 22.0,
+            "duration": 2.0,
+            "name": "Fm9"
+          },
+          {
+            "beat": 24.0,
+            "duration": 1.75,
+            "name": "Gm9/C"
+          },
+          {
+            "beat": 25.75,
+            "duration": 2.25,
+            "name": "Cm9"
+          },
+          {
+            "beat": 28.0,
+            "duration": 2.0,
+            "name": "Gm9/C"
+          },
+          {
+            "beat": 30.0,
+            "duration": 2.0,
+            "name": "Cm9"
+          }
+        ]
+      },
+      {
+        "id": "db20a928-361129",
+        "label": "Verse 2",
+        "bars": 8,
+        "variation": "D",
+        "transition": "fill",
+        "chords": [
+          {
+            "beat": 0.0,
+            "duration": 1.75,
+            "name": "Cm9/F"
+          },
+          {
+            "beat": 1.75,
+            "duration": 2.25,
+            "name": "Fm9"
+          },
+          {
+            "beat": 4.0,
+            "duration": 2.0,
+            "name": "Cm9/F"
+          },
+          {
+            "beat": 6.0,
+            "duration": 2.0,
+            "name": "Fm9"
+          },
+          {
+            "beat": 8.0,
+            "duration": 1.75,
+            "name": "Gm9/C"
+          },
+          {
+            "beat": 9.75,
+            "duration": 2.25,
+            "name": "Cm9"
+          },
+          {
+            "beat": 12.0,
+            "duration": 2.0,
+            "name": "Gm9/C"
+          },
+          {
+            "beat": 14.0,
+            "duration": 2.0,
+            "name": "Cm9"
+          },
+          {
+            "beat": 16.0,
+            "duration": 1.75,
+            "name": "Cm9/F"
+          },
+          {
+            "beat": 17.75,
+            "duration": 2.25,
+            "name": "Fm9"
+          },
+          {
+            "beat": 20.0,
+            "duration": 2.0,
+            "name": "Cm9/F"
+          },
+          {
+            "beat": 22.0,
+            "duration": 2.0,
+            "name": "Fm9"
+          },
+          {
+            "beat": 24.0,
+            "duration": 1.75,
+            "name": "Gm9/C"
+          },
+          {
+            "beat": 25.75,
+            "duration": 2.25,
+            "name": "Cm9"
+          },
+          {
+            "beat": 28.0,
+            "duration": 2.0,
+            "name": "Gm9/C"
+          },
+          {
+            "beat": 30.0,
+            "duration": 2.0,
+            "name": "Cm9"
+          }
+        ]
+      },
+      {
+        "id": "db20a928-361130",
+        "label": "Chorus",
+        "bars": 8,
+        "variation": "A",
+        "chords": [
+          {
+            "beat": 0.0,
+            "duration": 4.0,
+            "name": "Amaj9"
+          },
+          {
+            "beat": 4.0,
+            "duration": 4.0,
+            "name": "Emaj9/F#"
+          },
+          {
+            "beat": 8.0,
+            "duration": 3.5,
+            "name": "C#m9"
+          },
+          {
+            "beat": 11.5,
+            "duration": 0.5,
+            "name": "C#m9"
+          },
+          {
+            "beat": 12.0,
+            "duration": 2.5,
+            "name": "C#m9"
+          },
+          {
+            "beat": 14.5,
+            "duration": 1.5,
+            "name": "Bmaj9/E"
+          },
+          {
+            "beat": 16.0,
+            "duration": 4.0,
+            "name": "Amaj9"
+          },
+          {
+            "beat": 20.0,
+            "duration": 4.0,
+            "name": "Emaj9/F#"
+          },
+          {
+            "beat": 24.0,
+            "duration": 3.5,
+            "name": "C#m9"
+          },
+          {
+            "beat": 27.5,
+            "duration": 0.5,
+            "name": "C#m9"
+          },
+          {
+            "beat": 28.0,
+            "duration": 2.5,
+            "name": "C#m9"
+          },
+          {
+            "beat": 30.5,
+            "duration": 1.5,
+            "name": "Bmaj9/E"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "4b4db2b4-5765-4484-90ce-b8b410ede975",
+    "title": "Prism",
+    "subtitle": "Original SmartBridge Latin arrangement",
+    "category": "Latin",
+    "tempo": 110,
+    "timeSignature": [
+      4,
+      4
+    ],
+    "key": "F",
+    "accent": "#f59e0b",
+    "sections": [
+      {
+        "id": "4b4db2b4-361425",
+        "label": "Section A",
+        "bars": 8,
+        "variation": "A",
+        "transition": "fill",
+        "chords": [
+          {
+            "beat": 0.0,
+            "duration": 1.625,
+            "name": "Dm9/A"
+          },
+          {
+            "beat": 1.625,
+            "duration": 2.0,
+            "name": "Dmaj9/G#"
+          },
+          {
+            "beat": 3.625,
+            "duration": 2.0,
+            "name": "Cmaj9/G"
+          },
+          {
+            "beat": 5.625,
+            "duration": 2.0,
+            "name": "Dmaj9"
+          },
+          {
+            "beat": 7.625,
+            "duration": 2.0,
+            "name": "A#maj9/F"
+          },
+          {
+            "beat": 9.625,
+            "duration": 2.0,
+            "name": "Cmaj9/E"
+          },
+          {
+            "beat": 11.625,
+            "duration": 2.125,
+            "name": "Gm9"
+          },
+          {
+            "beat": 13.75,
+            "duration": 2.25,
+            "name": "Dm9/A"
+          },
+          {
+            "beat": 16.0,
+            "duration": 2.0,
+            "name": "Gmaj9/A"
+          },
+          {
+            "beat": 18.0,
+            "duration": 2.0,
+            "name": "Dm9/G#"
+          },
+          {
+            "beat": 20.0,
+            "duration": 2.125,
+            "name": "Cmaj9/G"
+          },
+          {
+            "beat": 22.125,
+            "duration": 1.5,
+            "name": "Dmaj9/F#"
+          },
+          {
+            "beat": 23.625,
+            "duration": 2.0,
+            "name": "A#maj9/F"
+          },
+          {
+            "beat": 25.625,
+            "duration": 2.0,
+            "name": "Amaj9/E"
+          },
+          {
+            "beat": 27.625,
+            "duration": 2.0,
+            "name": "A#maj9"
+          },
+          {
+            "beat": 29.625,
+            "duration": 2.375,
+            "name": "Fmaj9/D#"
+          }
+        ]
+      },
+      {
+        "id": "4b4db2b4-361426",
+        "label": "Section B",
+        "bars": 8,
+        "variation": "B",
+        "transition": "fill",
+        "chords": [
+          {
+            "beat": 0.0,
+            "duration": 2.0,
+            "name": "D#maj9"
+          },
+          {
+            "beat": 2.0,
+            "duration": 1.625,
+            "name": "Fmaj9/G"
+          },
+          {
+            "beat": 3.625,
+            "duration": 2.5,
+            "name": "Gm9/G#"
+          },
+          {
+            "beat": 6.125,
+            "duration": 0.5,
+            "name": "C#maj9"
+          },
+          {
+            "beat": 6.625,
+            "duration": 1.0,
+            "name": "Gm9"
+          },
+          {
+            "beat": 7.625,
+            "duration": 2.125,
+            "name": "Fmaj9"
+          },
+          {
+            "beat": 9.75,
+            "duration": 1.875,
+            "name": "Fmaj9"
+          },
+          {
+            "beat": 11.625,
+            "duration": 2.625,
+            "name": "Fmaj9"
+          },
+          {
+            "beat": 14.25,
+            "duration": 1.5,
+            "name": "F#maj9/A#"
+          },
+          {
+            "beat": 15.75,
+            "duration": 2.0,
+            "name": "D#maj9"
+          },
+          {
+            "beat": 17.75,
+            "duration": 1.875,
+            "name": "Fmaj9/G"
+          },
+          {
+            "beat": 19.625,
+            "duration": 2.0,
+            "name": "Gm9/G#"
+          },
+          {
+            "beat": 21.625,
+            "duration": 2.5,
+            "name": "D#maj9"
+          },
+          {
+            "beat": 24.125,
+            "duration": 1.5,
+            "name": "Dm9"
+          },
+          {
+            "beat": 25.625,
+            "duration": 2.125,
+            "name": "Fmaj9"
+          },
+          {
+            "beat": 27.75,
+            "duration": 2.0,
+            "name": "Fmaj9"
+          },
+          {
+            "beat": 29.75,
+            "duration": 2.25,
+            "name": "Amaj9/E"
+          }
+        ]
+      },
+      {
+        "id": "4b4db2b4-361427",
+        "label": "Section C",
+        "bars": 8,
+        "variation": "C",
+        "transition": "fill",
+        "chords": [
+          {
+            "beat": 0.0,
+            "duration": 2.0,
+            "name": "Fmaj9/A"
+          },
+          {
+            "beat": 2.0,
+            "duration": 2.0,
+            "name": "A#maj9/F#"
+          },
+          {
+            "beat": 4.0,
+            "duration": 1.875,
+            "name": "Emaj9"
+          },
+          {
+            "beat": 5.875,
+            "duration": 1.875,
+            "name": "Emaj9"
+          },
+          {
+            "beat": 7.75,
+            "duration": 2.25,
+            "name": "Fmaj9/A"
+          },
+          {
+            "beat": 10.0,
+            "duration": 1.75,
+            "name": "A#maj9/F#"
+          },
+          {
+            "beat": 11.75,
+            "duration": 2.0,
+            "name": "Fmaj9"
+          },
+          {
+            "beat": 13.75,
+            "duration": 2.0,
+            "name": "Emaj9"
+          },
+          {
+            "beat": 15.75,
+            "duration": 3.0,
+            "name": "Fmaj9/A"
+          },
+          {
+            "beat": 18.75,
+            "duration": 1.0,
+            "name": "A#maj9/F#"
+          },
+          {
+            "beat": 19.75,
+            "duration": 2.0,
+            "name": "Fmaj9"
+          },
+          {
+            "beat": 21.75,
+            "duration": 2.0,
+            "name": "Emaj9"
+          },
+          {
+            "beat": 23.75,
+            "duration": 2.5,
+            "name": "Fmaj9/A"
+          },
+          {
+            "beat": 26.25,
+            "duration": 1.5,
+            "name": "A#maj9/F#"
+          },
+          {
+            "beat": 27.75,
+            "duration": 2.875,
+            "name": "Fm9"
+          },
+          {
+            "beat": 30.625,
+            "duration": 1.375,
+            "name": "Emaj9"
+          }
+        ]
+      },
+      {
+        "id": "4b4db2b4-361428",
+        "label": "Section D",
+        "bars": 8,
+        "variation": "D",
+        "transition": "fill",
+        "chords": [
+          {
+            "beat": 0.0,
+            "duration": 3.625,
+            "name": "A#maj9"
+          },
+          {
+            "beat": 3.625,
+            "duration": 1.625,
+            "name": "Fmaj9/F#"
+          },
+          {
+            "beat": 5.25,
+            "duration": 3.0,
+            "name": "A#maj9/F#"
+          },
+          {
+            "beat": 8.25,
+            "duration": 3.375,
+            "name": "Fmaj9"
+          },
+          {
+            "beat": 11.625,
+            "duration": 4.125,
+            "name": "Fmaj9"
+          },
+          {
+            "beat": 15.75,
+            "duration": 2.5,
+            "name": "A#maj9"
+          },
+          {
+            "beat": 18.25,
+            "duration": 2.0,
+            "name": "A#maj9"
+          },
+          {
+            "beat": 20.25,
+            "duration": 0.875,
+            "name": "Cmaj9/G#"
+          },
+          {
+            "beat": 21.125,
+            "duration": 2.625,
+            "name": "Fm9/F#"
+          },
+          {
+            "beat": 23.75,
+            "duration": 3.0,
+            "name": "Gmaj9"
+          },
+          {
+            "beat": 26.75,
+            "duration": 1.0,
+            "name": "Gmaj9"
+          },
+          {
+            "beat": 27.75,
+            "duration": 0.5,
+            "name": "Fmaj9"
+          },
+          {
+            "beat": 28.25,
+            "duration": 3.75,
+            "name": "Gmaj9"
+          }
+        ]
+      },
+      {
+        "id": "4b4db2b4-361429",
+        "label": "Intro",
+        "bars": 8,
+        "variation": "A",
+        "transition": "fill",
+        "chords": [
+          {
+            "beat": 0.0,
+            "duration": 3.75,
+            "name": "Fmaj9"
+          },
+          {
+            "beat": 3.75,
+            "duration": 4.0,
+            "name": "A#maj9/F"
+          },
+          {
+            "beat": 7.75,
+            "duration": 4.0,
+            "name": "Fmaj9"
+          },
+          {
+            "beat": 11.75,
+            "duration": 4.0,
+            "name": "A#maj9/F"
+          },
+          {
+            "beat": 15.75,
+            "duration": 4.0,
+            "name": "Fmaj9"
+          },
+          {
+            "beat": 19.75,
+            "duration": 4.0,
+            "name": "A#maj9/F"
+          },
+          {
+            "beat": 23.75,
+            "duration": 4.0,
+            "name": "Gmaj9/F"
+          },
+          {
+            "beat": 27.75,
+            "duration": 4.25,
+            "name": "A#maj9/F"
+          }
+        ]
+      },
+      {
+        "id": "4b4db2b4-361430",
+        "label": "Section E",
+        "bars": 8,
+        "variation": "B",
+        "transition": "fill",
+        "chords": [
+          {
+            "beat": 0.0,
+            "duration": 3.75,
+            "name": "Amaj9"
+          },
+          {
+            "beat": 3.75,
+            "duration": 4.25,
+            "name": "Dmaj9"
+          },
+          {
+            "beat": 8.0,
+            "duration": 3.625,
+            "name": "Gmaj9"
+          },
+          {
+            "beat": 11.625,
+            "duration": 2.0,
+            "name": "Cmaj9"
+          },
+          {
+            "beat": 13.625,
+            "duration": 2.0,
+            "name": "A#maj9"
+          },
+          {
+            "beat": 15.625,
+            "duration": 4.0,
+            "name": "Amaj9"
+          },
+          {
+            "beat": 19.625,
+            "duration": 4.375,
+            "name": "Dmaj9"
+          },
+          {
+            "beat": 24.0,
+            "duration": 3.75,
+            "name": "Gmaj9"
+          },
+          {
+            "beat": 27.75,
+            "duration": 1.875,
+            "name": "Cmaj9"
+          },
+          {
+            "beat": 29.625,
+            "duration": 2.0,
+            "name": "A#maj9"
+          },
+          {
+            "beat": 31.625,
+            "duration": 0.375,
+            "name": "Amaj9"
+          }
+        ]
+      },
+      {
+        "id": "4b4db2b4-361431",
+        "label": "Intro 2",
+        "bars": 8,
+        "variation": "C",
+        "chords": [
+          {
+            "beat": 0.0,
+            "duration": 1.875,
+            "name": "Fmaj9/A"
+          },
+          {
+            "beat": 1.875,
+            "duration": 2.5,
+            "name": "A#maj9/F#"
+          },
+          {
+            "beat": 4.375,
+            "duration": 1.625,
+            "name": "Fmaj9"
+          },
+          {
+            "beat": 6.0,
+            "duration": 1.625,
+            "name": "Emaj9"
+          },
+          {
+            "beat": 7.625,
+            "duration": 2.125,
+            "name": "Fmaj9/A"
+          },
+          {
+            "beat": 9.75,
+            "duration": 2.25,
+            "name": "A#maj9/F#"
+          },
+          {
+            "beat": 12.0,
+            "duration": 1.75,
+            "name": "Emaj9"
+          },
+          {
+            "beat": 13.75,
+            "duration": 2.0,
+            "name": "D#maj9/E"
+          },
+          {
+            "beat": 15.75,
+            "duration": 2.25,
+            "name": "Dm9/D#"
+          },
+          {
+            "beat": 18.0,
+            "duration": 2.0,
+            "name": "A#maj9/F#"
+          },
+          {
+            "beat": 20.0,
+            "duration": 2.0,
+            "name": "Fmaj9"
+          },
+          {
+            "beat": 22.0,
+            "duration": 1.75,
+            "name": "Emaj9"
+          },
+          {
+            "beat": 23.75,
+            "duration": 1.75,
+            "name": "Dm9/D#"
+          },
+          {
+            "beat": 25.5,
+            "duration": 2.25,
+            "name": "A#maj9/F#"
+          },
+          {
+            "beat": 27.75,
+            "duration": 0.5,
+            "name": "Fmaj9"
+          },
+          {
+            "beat": 28.25,
+            "duration": 1.375,
+            "name": "Fmaj9"
+          },
+          {
+            "beat": 29.625,
+            "duration": 2.375,
+            "name": "Emaj9"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "5da72320-b636-4ab1-83d0-1993d2db11b5",
+    "title": "Warm",
+    "subtitle": "Original SmartBridge Latin arrangement",
+    "category": "Latin",
+    "tempo": 95,
+    "timeSignature": [
+      4,
+      4
+    ],
+    "key": "C",
+    "accent": "#eab308",
+    "sections": [
+      {
+        "id": "5da72320-361459",
+        "label": "Section A",
+        "bars": 8,
+        "variation": "A",
+        "transition": "fill",
+        "chords": [
+          {
+            "beat": 0.0,
+            "duration": 3.75,
+            "name": "Gmaj9"
+          },
+          {
+            "beat": 3.75,
+            "duration": 1.875,
+            "name": "Dmaj9/F#"
+          },
+          {
+            "beat": 5.625,
+            "duration": 1.875,
+            "name": "Bmaj9/D#"
+          },
+          {
+            "beat": 7.5,
+            "duration": 2.25,
+            "name": "Em9"
+          },
+          {
+            "beat": 9.75,
+            "duration": 2.0,
+            "name": "Amaj9/E"
+          },
+          {
+            "beat": 11.75,
+            "duration": 2.0,
+            "name": "Dmaj9"
+          },
+          {
+            "beat": 13.75,
+            "duration": 1.875,
+            "name": "Cmaj9"
+          },
+          {
+            "beat": 15.625,
+            "duration": 4.125,
+            "name": "Gmaj9"
+          },
+          {
+            "beat": 19.75,
+            "duration": 2.0,
+            "name": "Dmaj9/F#"
+          },
+          {
+            "beat": 21.75,
+            "duration": 1.75,
+            "name": "Bmaj9/D#"
+          },
+          {
+            "beat": 23.5,
+            "duration": 2.25,
+            "name": "Em9"
+          },
+          {
+            "beat": 25.75,
+            "duration": 2.0,
+            "name": "Amaj9/E"
+          },
+          {
+            "beat": 27.75,
+            "duration": 1.875,
+            "name": "Dmaj9"
+          },
+          {
+            "beat": 29.625,
+            "duration": 2.0,
+            "name": "Cmaj9"
+          },
+          {
+            "beat": 31.625,
+            "duration": 0.375,
+            "name": "Gmaj9"
+          }
+        ]
+      },
+      {
+        "id": "5da72320-361460",
+        "label": "Section B",
+        "bars": 8,
+        "variation": "B",
+        "transition": "fill",
+        "chords": [
+          {
+            "beat": 0.0,
+            "duration": 1.75,
+            "name": "Gmaj9"
+          },
+          {
+            "beat": 1.75,
+            "duration": 1.625,
+            "name": "Fmaj9"
+          },
+          {
+            "beat": 3.375,
+            "duration": 2.25,
+            "name": "Cmaj9/E"
+          },
+          {
+            "beat": 5.625,
+            "duration": 1.875,
+            "name": "Dmaj9"
+          },
+          {
+            "beat": 7.5,
+            "duration": 2.25,
+            "name": "Gmaj9"
+          },
+          {
+            "beat": 9.75,
+            "duration": 1.75,
+            "name": "Fmaj9"
+          },
+          {
+            "beat": 11.5,
+            "duration": 2.125,
+            "name": "Cmaj9/E"
+          },
+          {
+            "beat": 13.625,
+            "duration": 1.875,
+            "name": "Dmaj9"
+          },
+          {
+            "beat": 15.5,
+            "duration": 2.25,
+            "name": "Gmaj9"
+          },
+          {
+            "beat": 17.75,
+            "duration": 1.625,
+            "name": "Fmaj9"
+          },
+          {
+            "beat": 19.375,
+            "duration": 2.25,
+            "name": "Cmaj9/E"
+          },
+          {
+            "beat": 21.625,
+            "duration": 1.75,
+            "name": "Dmaj9"
+          },
+          {
+            "beat": 23.375,
+            "duration": 2.375,
+            "name": "Gmaj9"
+          },
+          {
+            "beat": 25.75,
+            "duration": 1.625,
+            "name": "Fmaj9"
+          },
+          {
+            "beat": 27.375,
+            "duration": 2.25,
+            "name": "Cmaj9/E"
+          },
+          {
+            "beat": 29.625,
+            "duration": 1.875,
+            "name": "Dmaj9"
+          },
+          {
+            "beat": 31.5,
+            "duration": 0.5,
+            "name": "Gmaj9"
+          }
+        ]
+      },
+      {
+        "id": "5da72320-361461",
+        "label": "Section C",
+        "bars": 8,
+        "variation": "C",
+        "transition": "fill",
+        "chords": [
+          {
+            "beat": 0.0,
+            "duration": 1.75,
+            "name": "Gmaj9"
+          },
+          {
+            "beat": 1.75,
+            "duration": 1.75,
+            "name": "Cmaj9/E"
+          },
+          {
+            "beat": 3.5,
+            "duration": 2.25,
+            "name": "Dmaj9"
+          },
+          {
+            "beat": 5.75,
+            "duration": 1.75,
+            "name": "Gmaj9"
+          },
+          {
+            "beat": 7.5,
+            "duration": 1.5,
+            "name": "Gmaj9"
+          },
+          {
+            "beat": 9.0,
+            "duration": 0.75,
+            "name": "Fmaj9"
+          },
+          {
+            "beat": 9.75,
+            "duration": 1.625,
+            "name": "Cmaj9/E"
+          },
+          {
+            "beat": 11.375,
+            "duration": 2.25,
+            "name": "Dmaj9"
+          },
+          {
+            "beat": 13.625,
+            "duration": 1.875,
+            "name": "Gmaj9"
+          },
+          {
+            "beat": 15.5,
+            "duration": 2.25,
+            "name": "Gmaj9"
+          },
+          {
+            "beat": 17.75,
+            "duration": 1.75,
+            "name": "Cmaj9/E"
+          },
+          {
+            "beat": 19.5,
+            "duration": 2.125,
+            "name": "Dmaj9"
+          },
+          {
+            "beat": 21.625,
+            "duration": 1.75,
+            "name": "Gmaj9"
+          },
+          {
+            "beat": 23.375,
+            "duration": 1.625,
+            "name": "Gmaj9"
+          },
+          {
+            "beat": 25.0,
+            "duration": 0.625,
+            "name": "Fmaj9"
+          },
+          {
+            "beat": 25.625,
+            "duration": 1.75,
+            "name": "Cmaj9/E"
+          },
+          {
+            "beat": 27.375,
+            "duration": 2.25,
+            "name": "Dmaj9"
+          },
+          {
+            "beat": 29.625,
+            "duration": 2.375,
+            "name": "Gmaj9"
+          }
+        ]
+      },
+      {
+        "id": "5da72320-361462",
+        "label": "Section D",
+        "bars": 8,
+        "variation": "D",
+        "transition": "fill",
+        "chords": [
+          {
+            "beat": 0.0,
+            "duration": 1.0,
+            "name": "Gmaj9"
+          },
+          {
+            "beat": 1.0,
+            "duration": 0.75,
+            "name": "Fmaj9"
+          },
+          {
+            "beat": 1.75,
+            "duration": 1.75,
+            "name": "Cmaj9/E"
+          },
+          {
+            "beat": 3.5,
+            "duration": 1.5,
+            "name": "Dmaj9"
+          },
+          {
+            "beat": 5.0,
+            "duration": 0.625,
+            "name": "Dmaj9/F#"
+          },
+          {
+            "beat": 5.625,
+            "duration": 1.0,
+            "name": "Gmaj9"
+          },
+          {
+            "beat": 6.625,
+            "duration": 0.875,
+            "name": "Fmaj9"
+          },
+          {
+            "beat": 7.5,
+            "duration": 1.5,
+            "name": "Gmaj9"
+          },
+          {
+            "beat": 9.0,
+            "duration": 0.75,
+            "name": "Fmaj9"
+          },
+          {
+            "beat": 9.75,
+            "duration": 1.625,
+            "name": "Cmaj9/E"
+          },
+          {
+            "beat": 11.375,
+            "duration": 1.625,
+            "name": "Dmaj9"
+          },
+          {
+            "beat": 13.0,
+            "duration": 0.625,
+            "name": "Dmaj9/F#"
+          },
+          {
+            "beat": 13.625,
+            "duration": 1.0,
+            "name": "Gmaj9"
+          },
+          {
+            "beat": 14.625,
+            "duration": 0.875,
+            "name": "Fmaj9"
+          },
+          {
+            "beat": 15.5,
+            "duration": 1.5,
+            "name": "Gmaj9"
+          },
+          {
+            "beat": 17.0,
+            "duration": 0.75,
+            "name": "Fmaj9"
+          },
+          {
+            "beat": 17.75,
+            "duration": 1.75,
+            "name": "Cmaj9/E"
+          },
+          {
+            "beat": 19.5,
+            "duration": 1.75,
+            "name": "Dmaj9"
+          },
+          {
+            "beat": 21.25,
+            "duration": 0.5,
+            "name": "Dmaj9/F#"
+          },
+          {
+            "beat": 21.75,
+            "duration": 1.0,
+            "name": "Gmaj9"
+          },
+          {
+            "beat": 22.75,
+            "duration": 1.0,
+            "name": "Fmaj9"
+          },
+          {
+            "beat": 23.75,
+            "duration": 1.25,
+            "name": "Gmaj9"
+          },
+          {
+            "beat": 25.0,
+            "duration": 0.625,
+            "name": "Fmaj9"
+          },
+          {
+            "beat": 25.625,
+            "duration": 1.75,
+            "name": "Cmaj9/E"
+          },
+          {
+            "beat": 27.375,
+            "duration": 1.625,
+            "name": "Dmaj9"
+          },
+          {
+            "beat": 29.0,
+            "duration": 0.625,
+            "name": "F#maj9"
+          },
+          {
+            "beat": 29.625,
+            "duration": 1.125,
+            "name": "Gmaj9"
+          },
+          {
+            "beat": 30.75,
+            "duration": 0.75,
+            "name": "Fmaj9"
+          },
+          {
+            "beat": 31.5,
+            "duration": 0.5,
+            "name": "Gmaj9"
+          }
+        ]
+      },
+      {
+        "id": "5da72320-361463",
+        "label": "Section E",
+        "bars": 8,
+        "variation": "A",
+        "transition": "fill",
+        "chords": [
+          {
+            "beat": 0.0,
+            "duration": 1.75,
+            "name": "Gmaj9"
+          },
+          {
+            "beat": 1.75,
+            "duration": 1.75,
+            "name": "Fmaj9"
+          },
+          {
+            "beat": 3.5,
+            "duration": 0.5,
+            "name": "F#maj9"
+          },
+          {
+            "beat": 4.0,
+            "duration": 1.75,
+            "name": "Gmaj9"
+          },
+          {
+            "beat": 5.75,
+            "duration": 2.0,
+            "name": "Fmaj9"
+          },
+          {
+            "beat": 7.75,
+            "duration": 2.0,
+            "name": "Gmaj9"
+          },
+          {
+            "beat": 9.75,
+            "duration": 2.0,
+            "name": "Fmaj9"
+          },
+          {
+            "beat": 11.75,
+            "duration": 2.0,
+            "name": "Gmaj9"
+          },
+          {
+            "beat": 13.75,
+            "duration": 1.75,
+            "name": "Fmaj9"
+          },
+          {
+            "beat": 15.5,
+            "duration": 2.25,
+            "name": "Gmaj9"
+          },
+          {
+            "beat": 17.75,
+            "duration": 2.0,
+            "name": "Fmaj9"
+          },
+          {
+            "beat": 19.75,
+            "duration": 2.0,
+            "name": "Gmaj9"
+          },
+          {
+            "beat": 21.75,
+            "duration": 2.0,
+            "name": "Fmaj9"
+          },
+          {
+            "beat": 23.75,
+            "duration": 2.0,
+            "name": "Gmaj9"
+          },
+          {
+            "beat": 25.75,
+            "duration": 1.5,
+            "name": "Fmaj9"
+          },
+          {
+            "beat": 27.25,
+            "duration": 0.375,
+            "name": "F#maj9"
+          },
+          {
+            "beat": 27.625,
+            "duration": 2.125,
+            "name": "Gmaj9"
+          },
+          {
+            "beat": 29.75,
+            "duration": 2.25,
+            "name": "Fmaj9"
+          }
+        ]
+      },
+      {
+        "id": "5da72320-361464",
+        "label": "Section F",
+        "bars": 8,
+        "variation": "B",
+        "chords": [
+          {
+            "beat": 0.0,
+            "duration": 4.0,
+            "name": "Gmaj9"
+          },
+          {
+            "beat": 4.0,
+            "duration": 4.0,
+            "name": "Fmaj9"
+          },
+          {
+            "beat": 8.0,
+            "duration": 3.75,
+            "name": "Cmaj9/E"
+          },
+          {
+            "beat": 11.75,
+            "duration": 4.25,
+            "name": "Gmaj9"
+          },
+          {
+            "beat": 16.0,
+            "duration": 4.0,
+            "name": "Gmaj9"
+          },
+          {
+            "beat": 20.0,
+            "duration": 4.0,
+            "name": "Fmaj9"
+          },
+          {
+            "beat": 24.0,
+            "duration": 3.75,
+            "name": "Cmaj9/E"
+          },
+          {
+            "beat": 27.75,
+            "duration": 4.25,
+            "name": "Gmaj9"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "5b09c716-fa4a-49b8-812d-100d588e1459",
+    "title": "Forge",
+    "subtitle": "Original SmartBridge Swing & Jazz arrangement",
+    "category": "Swing & Jazz",
+    "tempo": 160,
+    "timeSignature": [
+      4,
+      4
+    ],
+    "key": "C",
+    "accent": "#60a5fa",
+    "sections": [
+      {
+        "id": "5b09c716-361240",
+        "label": "Intro",
+        "bars": 8,
+        "variation": "A",
+        "transition": "fill",
+        "chords": [
+          {
+            "beat": 0.0,
+            "duration": 4.0,
+            "name": "D#m9"
+          },
+          {
+            "beat": 4.0,
+            "duration": 4.0,
+            "name": "G#maj9"
+          },
+          {
+            "beat": 8.0,
+            "duration": 8.0,
+            "name": "G#maj9/C#"
+          },
+          {
+            "beat": 16.0,
+            "duration": 4.0,
+            "name": "C#m9"
+          },
+          {
+            "beat": 20.0,
+            "duration": 4.0,
+            "name": "F#maj9"
+          },
+          {
+            "beat": 24.0,
+            "duration": 4.0,
+            "name": "Bmaj9"
+          },
+          {
+            "beat": 28.0,
+            "duration": 3.999896,
+            "name": "Fmaj9"
+          }
+        ]
+      },
+      {
+        "id": "5b09c716-361241",
+        "label": "Section A",
+        "bars": 16,
+        "variation": "B",
+        "transition": "fill",
+        "chords": [
+          {
+            "beat": 0.0,
+            "duration": 8.0,
+            "name": "A#m9"
+          },
+          {
+            "beat": 8.0,
+            "duration": 8.0,
+            "name": "D#maj9"
+          },
+          {
+            "beat": 16.0,
+            "duration": 8.0,
+            "name": "A#m9"
+          },
+          {
+            "beat": 24.0,
+            "duration": 8.0,
+            "name": "D#maj9"
+          },
+          {
+            "beat": 32.0,
+            "duration": 8.0,
+            "name": "A#m9"
+          },
+          {
+            "beat": 40.0,
+            "duration": 8.0,
+            "name": "D#maj9"
+          },
+          {
+            "beat": 48.0,
+            "duration": 8.0,
+            "name": "A#m9"
+          },
+          {
+            "beat": 56.0,
+            "duration": 7.999896,
+            "name": "D#maj9"
+          }
+        ]
+      },
+      {
+        "id": "5b09c716-361242",
+        "label": "Section B",
+        "bars": 8,
+        "variation": "C",
+        "transition": "fill",
+        "chords": [
+          {
+            "beat": 0.0,
+            "duration": 8.0,
+            "name": "C#maj9/G#"
+          },
+          {
+            "beat": 8.0,
+            "duration": 8.0,
+            "name": "C#maj9"
+          },
+          {
+            "beat": 16.0,
+            "duration": 4.0,
+            "name": "Cm9"
+          },
+          {
+            "beat": 20.0,
+            "duration": 4.0,
+            "name": "Fmaj9"
+          },
+          {
+            "beat": 24.0,
+            "duration": 7.999896,
+            "name": "A#m9"
+          }
+        ]
+      },
+      {
+        "id": "5b09c716-361243",
+        "label": "Section C",
+        "bars": 8,
+        "variation": "D",
+        "transition": "fill",
+        "chords": [
+          {
+            "beat": 0.0,
+            "duration": 3.5,
+            "name": "F#maj9"
+          },
+          {
+            "beat": 3.5,
+            "duration": 4.5,
+            "name": "Emaj9"
+          },
+          {
+            "beat": 8.0,
+            "duration": 8.0,
+            "name": "Fmaj9"
+          },
+          {
+            "beat": 16.0,
+            "duration": 8.0,
+            "name": "F#maj9"
+          },
+          {
+            "beat": 24.0,
+            "duration": 7.999896,
+            "name": "Fmaj9"
+          }
+        ]
+      },
+      {
+        "id": "5b09c716-361244",
+        "label": "Chorus",
+        "bars": 16,
+        "variation": "A",
+        "transition": "fill",
+        "chords": [
+          {
+            "beat": 0.0,
+            "duration": 4.0,
+            "name": "A#m9"
+          },
+          {
+            "beat": 4.0,
+            "duration": 4.0,
+            "name": "G#maj9"
+          },
+          {
+            "beat": 8.0,
+            "duration": 4.0,
+            "name": "F#maj9"
+          },
+          {
+            "beat": 12.0,
+            "duration": 4.0,
+            "name": "Fmaj9"
+          },
+          {
+            "beat": 16.0,
+            "duration": 4.0,
+            "name": "A#m9"
+          },
+          {
+            "beat": 20.0,
+            "duration": 4.0,
+            "name": "G#maj9"
+          },
+          {
+            "beat": 24.0,
+            "duration": 4.0,
+            "name": "F#maj9"
+          },
+          {
+            "beat": 28.0,
+            "duration": 4.0,
+            "name": "Fmaj9"
+          },
+          {
+            "beat": 32.0,
+            "duration": 4.0,
+            "name": "A#m9"
+          },
+          {
+            "beat": 36.0,
+            "duration": 4.0,
+            "name": "G#maj9"
+          },
+          {
+            "beat": 40.0,
+            "duration": 4.0,
+            "name": "F#maj9"
+          },
+          {
+            "beat": 44.0,
+            "duration": 4.0,
+            "name": "Fmaj9"
+          },
+          {
+            "beat": 48.0,
+            "duration": 3.0,
+            "name": "A#m9"
+          },
+          {
+            "beat": 51.0,
+            "duration": 5.0,
+            "name": "G#maj9"
+          },
+          {
+            "beat": 56.0,
+            "duration": 4.0,
+            "name": "F#maj9"
+          },
+          {
+            "beat": 60.0,
+            "duration": 3.999896,
+            "name": "Fmaj9"
+          }
+        ]
+      },
+      {
+        "id": "5b09c716-361245",
+        "label": "Section D",
+        "bars": 16,
+        "variation": "B",
+        "chords": [
+          {
+            "beat": 0.0,
+            "duration": 4.0,
+            "name": "G#maj9"
+          },
+          {
+            "beat": 4.0,
+            "duration": 4.0,
+            "name": "G#maj9"
+          },
+          {
+            "beat": 8.0,
+            "duration": 4.0,
+            "name": "Emaj9"
+          },
+          {
+            "beat": 12.0,
+            "duration": 4.0,
+            "name": "D#maj9"
+          },
+          {
+            "beat": 16.0,
+            "duration": 4.0,
+            "name": "G#maj9"
+          },
+          {
+            "beat": 20.0,
+            "duration": 4.0,
+            "name": "G#maj9"
+          },
+          {
+            "beat": 24.0,
+            "duration": 4.0,
+            "name": "Emaj9"
+          },
+          {
+            "beat": 28.0,
+            "duration": 4.0,
+            "name": "D#maj9"
+          },
+          {
+            "beat": 32.0,
+            "duration": 32.0,
+            "name": "A#m9"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "b3c83a06-cbef-4f66-9238-328b73946db7",
+    "title": "Range",
+    "subtitle": "Original SmartBridge Swing & Jazz arrangement",
+    "category": "Swing & Jazz",
+    "tempo": 95,
+    "timeSignature": [
+      4,
+      4
+    ],
+    "key": "Eb",
+    "accent": "#818cf8",
+    "sections": [
+      {
+        "id": "b3c83a06-359945",
+        "label": "Section A",
+        "bars": 8,
+        "variation": "A",
+        "transition": "fill",
+        "chords": [
+          {
+            "beat": 0.0,
+            "duration": 1.75,
+            "name": "D#maj9"
+          },
+          {
+            "beat": 1.75,
+            "duration": 2.25,
+            "name": "C#maj9"
+          },
+          {
+            "beat": 4.0,
+            "duration": 1.75,
+            "name": "D#maj9"
+          },
+          {
+            "beat": 5.75,
+            "duration": 2.25,
+            "name": "C#maj9"
+          },
+          {
+            "beat": 8.0,
+            "duration": 1.75,
+            "name": "D#maj9"
+          },
+          {
+            "beat": 9.75,
+            "duration": 2.25,
+            "name": "C#maj9"
+          },
+          {
+            "beat": 12.0,
+            "duration": 1.75,
+            "name": "Bmaj9"
+          },
+          {
+            "beat": 13.75,
+            "duration": 2.25,
+            "name": "A#maj9"
+          },
+          {
+            "beat": 16.0,
+            "duration": 1.75,
+            "name": "D#maj9"
+          },
+          {
+            "beat": 17.75,
+            "duration": 2.25,
+            "name": "C#maj9"
+          },
+          {
+            "beat": 20.0,
+            "duration": 1.75,
+            "name": "D#maj9"
+          },
+          {
+            "beat": 21.75,
+            "duration": 2.25,
+            "name": "C#maj9"
+          },
+          {
+            "beat": 24.0,
+            "duration": 1.75,
+            "name": "D#maj9"
+          },
+          {
+            "beat": 25.75,
+            "duration": 2.25,
+            "name": "C#maj9"
+          },
+          {
+            "beat": 28.0,
+            "duration": 1.5,
+            "name": "Bmaj9"
+          },
+          {
+            "beat": 29.5,
+            "duration": 2.499896,
+            "name": "A#maj9"
+          }
+        ]
+      },
+      {
+        "id": "b3c83a06-359946",
+        "label": "Section B",
+        "bars": 8,
+        "variation": "B",
+        "transition": "fill",
+        "chords": [
+          {
+            "beat": 0.0,
+            "duration": 4.0,
+            "name": "D#maj9"
+          },
+          {
+            "beat": 4.0,
+            "duration": 2.0,
+            "name": "Gm9"
+          },
+          {
+            "beat": 6.0,
+            "duration": 2.0,
+            "name": "Cmaj9"
+          },
+          {
+            "beat": 8.0,
+            "duration": 2.0,
+            "name": "Fm9"
+          },
+          {
+            "beat": 10.0,
+            "duration": 2.0,
+            "name": "G#maj9/D#"
+          },
+          {
+            "beat": 12.0,
+            "duration": 2.0,
+            "name": "Dm9"
+          },
+          {
+            "beat": 14.0,
+            "duration": 0.75,
+            "name": "Fm9/G"
+          },
+          {
+            "beat": 14.75,
+            "duration": 1.25,
+            "name": "G#m9/G"
+          },
+          {
+            "beat": 16.0,
+            "duration": 2.0,
+            "name": "Cmaj9"
+          },
+          {
+            "beat": 18.0,
+            "duration": 2.0,
+            "name": "Gmaj9"
+          },
+          {
+            "beat": 20.0,
+            "duration": 2.0,
+            "name": "Cmaj9"
+          },
+          {
+            "beat": 22.0,
+            "duration": 2.0,
+            "name": "Gmaj9"
+          },
+          {
+            "beat": 24.0,
+            "duration": 2.0,
+            "name": "Cmaj9"
+          },
+          {
+            "beat": 26.0,
+            "duration": 2.0,
+            "name": "Gmaj9"
+          },
+          {
+            "beat": 28.0,
+            "duration": 2.0,
+            "name": "Fm9"
+          },
+          {
+            "beat": 30.0,
+            "duration": 0.75,
+            "name": "A#maj9"
+          },
+          {
+            "beat": 30.75,
+            "duration": 1.249896,
+            "name": "A#maj9"
+          }
+        ]
+      },
+      {
+        "id": "b3c83a06-359947",
+        "label": "Section C",
+        "bars": 8,
+        "variation": "C",
+        "transition": "fill",
+        "chords": [
+          {
+            "beat": 0.0,
+            "duration": 0.75,
+            "name": "Am9"
+          },
+          {
+            "beat": 0.75,
+            "duration": 0.5,
+            "name": "Am9"
+          },
+          {
+            "beat": 1.25,
+            "duration": 0.5,
+            "name": "Am9"
+          },
+          {
+            "beat": 1.75,
+            "duration": 1.0,
+            "name": "Cmaj9/D"
+          },
+          {
+            "beat": 2.75,
+            "duration": 1.25,
+            "name": "D#m9/D"
+          },
+          {
+            "beat": 4.0,
+            "duration": 0.75,
+            "name": "Gm9"
+          },
+          {
+            "beat": 4.75,
+            "duration": 1.0,
+            "name": "Gm9"
+          },
+          {
+            "beat": 5.75,
+            "duration": 1.0,
+            "name": "A#m9/C"
+          },
+          {
+            "beat": 6.75,
+            "duration": 1.25,
+            "name": "C#m9/C"
+          },
+          {
+            "beat": 8.0,
+            "duration": 1.75,
+            "name": "Fm9"
+          },
+          {
+            "beat": 9.75,
+            "duration": 1.0,
+            "name": "G#m9/A#"
+          },
+          {
+            "beat": 10.75,
+            "duration": 1.0,
+            "name": "Bm9/A#"
+          },
+          {
+            "beat": 11.75,
+            "duration": 3.0,
+            "name": "D#maj9"
+          },
+          {
+            "beat": 14.75,
+            "duration": 0.5,
+            "name": "Fm9"
+          },
+          {
+            "beat": 15.25,
+            "duration": 0.75,
+            "name": "Gm9"
+          },
+          {
+            "beat": 16.0,
+            "duration": 1.75,
+            "name": "Am9"
+          },
+          {
+            "beat": 17.75,
+            "duration": 1.0,
+            "name": "Cm9/D"
+          },
+          {
+            "beat": 18.75,
+            "duration": 1.25,
+            "name": "Dmaj9"
+          },
+          {
+            "beat": 20.0,
+            "duration": 1.75,
+            "name": "Gm9"
+          },
+          {
+            "beat": 21.75,
+            "duration": 1.0,
+            "name": "Cmaj9"
+          },
+          {
+            "beat": 22.75,
+            "duration": 1.25,
+            "name": "C#m9/C"
+          },
+          {
+            "beat": 24.0,
+            "duration": 1.75,
+            "name": "Fm9"
+          },
+          {
+            "beat": 25.75,
+            "duration": 1.0,
+            "name": "G#m9/A#"
+          },
+          {
+            "beat": 26.75,
+            "duration": 1.0,
+            "name": "Bm9/A#"
+          },
+          {
+            "beat": 27.75,
+            "duration": 4.249896,
+            "name": "D#maj9"
+          }
+        ]
+      },
+      {
+        "id": "b3c83a06-359948",
+        "label": "Section D",
+        "bars": 8,
+        "variation": "D",
+        "chords": [
+          {
+            "beat": 0.0,
+            "duration": 1.75,
+            "name": "D#maj9"
+          },
+          {
+            "beat": 1.75,
+            "duration": 2.25,
+            "name": "Dmaj9"
+          },
+          {
+            "beat": 4.0,
+            "duration": 1.75,
+            "name": "C#maj9"
+          },
+          {
+            "beat": 5.75,
+            "duration": 2.25,
+            "name": "Dmaj9"
+          },
+          {
+            "beat": 8.0,
+            "duration": 1.75,
+            "name": "D#maj9"
+          },
+          {
+            "beat": 9.75,
+            "duration": 2.25,
+            "name": "Dmaj9"
+          },
+          {
+            "beat": 12.0,
+            "duration": 4.0,
+            "name": "C#maj9"
+          },
+          {
+            "beat": 16.0,
+            "duration": 1.75,
+            "name": "D#maj9"
+          },
+          {
+            "beat": 17.75,
+            "duration": 2.25,
+            "name": "Dmaj9"
+          },
+          {
+            "beat": 20.0,
+            "duration": 1.75,
+            "name": "C#maj9"
+          },
+          {
+            "beat": 21.75,
+            "duration": 2.25,
+            "name": "Dmaj9"
+          },
+          {
+            "beat": 24.0,
+            "duration": 1.75,
+            "name": "D#maj9"
+          },
+          {
+            "beat": 25.75,
+            "duration": 2.25,
+            "name": "Dmaj9"
+          },
+          {
+            "beat": 28.0,
+            "duration": 4.0,
+            "name": "C#maj9"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "5eeaa1c5-12e1-43bf-91f5-7a02edec6aaf",
+    "title": "Sunset",
+    "subtitle": "Original SmartBridge R&B arrangement",
+    "category": "R&B",
+    "tempo": 95,
+    "timeSignature": [
+      4,
+      4
+    ],
+    "key": "C",
+    "accent": "#ec4899",
+    "sections": [
+      {
+        "id": "5eeaa1c5-360379",
+        "label": "Verse",
+        "bars": 8,
+        "variation": "A",
+        "transition": "fill",
+        "chords": [
+          {
+            "beat": 0.0,
+            "duration": 3.75,
+            "name": "Fmaj9"
+          },
+          {
+            "beat": 3.75,
+            "duration": 4.0,
+            "name": "Cmaj9/E"
+          },
+          {
+            "beat": 7.75,
+            "duration": 2.0,
+            "name": "Dm9"
+          },
+          {
+            "beat": 9.75,
+            "duration": 2.25,
+            "name": "Fmaj9/G"
+          },
+          {
+            "beat": 12.0,
+            "duration": 1.0,
+            "name": "Cmaj9"
+          },
+          {
+            "beat": 13.0,
+            "duration": 1.0,
+            "name": "Dm9"
+          },
+          {
+            "beat": 14.0,
+            "duration": 1.0,
+            "name": "Cmaj9/E"
+          },
+          {
+            "beat": 15.0,
+            "duration": 0.75,
+            "name": "Cmaj9"
+          },
+          {
+            "beat": 15.75,
+            "duration": 4.0,
+            "name": "Fmaj9"
+          },
+          {
+            "beat": 19.75,
+            "duration": 4.0,
+            "name": "Cmaj9/E"
+          },
+          {
+            "beat": 23.75,
+            "duration": 2.0,
+            "name": "Dm9"
+          },
+          {
+            "beat": 25.75,
+            "duration": 2.25,
+            "name": "Fmaj9/G"
+          },
+          {
+            "beat": 28.0,
+            "duration": 1.0,
+            "name": "Cmaj9"
+          },
+          {
+            "beat": 29.0,
+            "duration": 1.0,
+            "name": "Dm9"
+          },
+          {
+            "beat": 30.0,
+            "duration": 1.0,
+            "name": "Cmaj9/E"
+          },
+          {
+            "beat": 31.0,
+            "duration": 0.999896,
+            "name": "Cmaj9"
+          }
+        ]
+      },
+      {
+        "id": "5eeaa1c5-360380",
+        "label": "Intro",
+        "bars": 8,
+        "variation": "B",
+        "transition": "fill",
+        "chords": [
+          {
+            "beat": 0.0,
+            "duration": 2.5,
+            "name": "Cmaj9"
+          },
+          {
+            "beat": 2.5,
+            "duration": 0.5,
+            "name": "Fmaj9/C"
+          },
+          {
+            "beat": 3.0,
+            "duration": 1.0,
+            "name": "Cmaj9"
+          },
+          {
+            "beat": 4.0,
+            "duration": 2.5,
+            "name": "Cmaj9"
+          },
+          {
+            "beat": 6.5,
+            "duration": 0.5,
+            "name": "Fmaj9/C"
+          },
+          {
+            "beat": 7.0,
+            "duration": 1.0,
+            "name": "Cmaj9"
+          },
+          {
+            "beat": 8.0,
+            "duration": 2.5,
+            "name": "Cmaj9"
+          },
+          {
+            "beat": 10.5,
+            "duration": 0.5,
+            "name": "Fmaj9/C"
+          },
+          {
+            "beat": 11.0,
+            "duration": 1.0,
+            "name": "Cmaj9"
+          },
+          {
+            "beat": 12.0,
+            "duration": 2.5,
+            "name": "Cmaj9"
+          },
+          {
+            "beat": 14.5,
+            "duration": 0.5,
+            "name": "Fmaj9/C"
+          },
+          {
+            "beat": 15.0,
+            "duration": 0.999896,
+            "name": "Cmaj9"
+          },
+          {
+            "beat": 15.999896,
+            "duration": 2.5,
+            "name": "Cmaj9"
+          },
+          {
+            "beat": 18.499896,
+            "duration": 0.5,
+            "name": "Fmaj9/C"
+          },
+          {
+            "beat": 18.999896,
+            "duration": 1.0,
+            "name": "Cmaj9"
+          },
+          {
+            "beat": 19.999896,
+            "duration": 2.5,
+            "name": "Cmaj9"
+          },
+          {
+            "beat": 22.499896,
+            "duration": 0.5,
+            "name": "Fmaj9/C"
+          },
+          {
+            "beat": 22.999896,
+            "duration": 1.0,
+            "name": "Cmaj9"
+          },
+          {
+            "beat": 23.999896,
+            "duration": 2.5,
+            "name": "Cmaj9"
+          },
+          {
+            "beat": 26.499896,
+            "duration": 0.5,
+            "name": "Fmaj9/C"
+          },
+          {
+            "beat": 26.999896,
+            "duration": 1.0,
+            "name": "Cmaj9"
+          },
+          {
+            "beat": 27.999896,
+            "duration": 2.5,
+            "name": "Cmaj9"
+          },
+          {
+            "beat": 30.499896,
+            "duration": 0.5,
+            "name": "Fmaj9/C"
+          },
+          {
+            "beat": 30.999896,
+            "duration": 0.999896,
+            "name": "Cmaj9"
+          }
+        ]
+      },
+      {
+        "id": "5eeaa1c5-360381",
+        "label": "Chorus",
+        "bars": 8,
+        "variation": "C",
+        "transition": "fill",
+        "chords": [
+          {
+            "beat": 0.0,
+            "duration": 1.0,
+            "name": "Cmaj9"
+          },
+          {
+            "beat": 1.0,
+            "duration": 1.0,
+            "name": "Dm9"
+          },
+          {
+            "beat": 2.0,
+            "duration": 1.0,
+            "name": "Cmaj9/E"
+          },
+          {
+            "beat": 3.0,
+            "duration": 0.75,
+            "name": "Cmaj9"
+          },
+          {
+            "beat": 3.75,
+            "duration": 2.0,
+            "name": "Fmaj9"
+          },
+          {
+            "beat": 5.75,
+            "duration": 2.25,
+            "name": "Cmaj9/E"
+          },
+          {
+            "beat": 8.0,
+            "duration": 1.0,
+            "name": "Am9"
+          },
+          {
+            "beat": 9.0,
+            "duration": 1.0,
+            "name": "Gmaj9"
+          },
+          {
+            "beat": 10.0,
+            "duration": 1.0,
+            "name": "Fmaj9"
+          },
+          {
+            "beat": 11.0,
+            "duration": 0.75,
+            "name": "Cmaj9/E"
+          },
+          {
+            "beat": 11.75,
+            "duration": 2.0,
+            "name": "Dm9"
+          },
+          {
+            "beat": 13.75,
+            "duration": 2.25,
+            "name": "Fmaj9/G"
+          },
+          {
+            "beat": 16.0,
+            "duration": 1.0,
+            "name": "Cmaj9"
+          },
+          {
+            "beat": 17.0,
+            "duration": 1.0,
+            "name": "Dm9"
+          },
+          {
+            "beat": 18.0,
+            "duration": 1.0,
+            "name": "Cmaj9/E"
+          },
+          {
+            "beat": 19.0,
+            "duration": 0.75,
+            "name": "Cmaj9"
+          },
+          {
+            "beat": 19.75,
+            "duration": 2.0,
+            "name": "Fmaj9"
+          },
+          {
+            "beat": 21.75,
+            "duration": 2.25,
+            "name": "Cmaj9/E"
+          },
+          {
+            "beat": 24.0,
+            "duration": 1.0,
+            "name": "Am9"
+          },
+          {
+            "beat": 25.0,
+            "duration": 1.0,
+            "name": "Gmaj9"
+          },
+          {
+            "beat": 26.0,
+            "duration": 1.0,
+            "name": "Fmaj9"
+          },
+          {
+            "beat": 27.0,
+            "duration": 0.75,
+            "name": "Cmaj9/E"
+          },
+          {
+            "beat": 27.75,
+            "duration": 2.0,
+            "name": "Dm9"
+          },
+          {
+            "beat": 29.75,
+            "duration": 2.249896,
+            "name": "Fmaj9/G"
+          }
+        ]
+      },
+      {
+        "id": "5eeaa1c5-360383",
+        "label": "Pre-Chorus",
+        "bars": 4,
+        "variation": "A",
+        "chords": [
+          {
+            "beat": 0.0,
+            "duration": 3.75,
+            "name": "A#maj9"
+          },
+          {
+            "beat": 3.75,
+            "duration": 4.0,
+            "name": "Am9"
+          },
+          {
+            "beat": 7.75,
+            "duration": 4.0,
+            "name": "G#maj9"
+          },
+          {
+            "beat": 11.75,
+            "duration": 2.25,
+            "name": "Gmaj9"
+          },
+          {
+            "beat": 14.0,
+            "duration": 1.999896,
+            "name": "G"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "098d55cb-da08-4295-91fc-f83c8e80db4c",
+    "title": "Glide",
+    "subtitle": "Original SmartBridge R&B arrangement",
+    "category": "R&B",
+    "tempo": 95,
+    "timeSignature": [
+      4,
+      4
+    ],
+    "key": "D#m",
+    "accent": "#f472b6",
+    "sections": [
+      {
+        "id": "098d55cb-361693",
+        "label": "Chorus",
+        "bars": 8,
+        "variation": "A",
+        "transition": "fill",
+        "chords": [
+          {
+            "beat": 0.0,
+            "duration": 2.5,
+            "name": "D#m9"
+          },
+          {
+            "beat": 2.5,
+            "duration": 1.5,
+            "name": "G#m9"
+          },
+          {
+            "beat": 4.0,
+            "duration": 2.5,
+            "name": "Bmaj9"
+          },
+          {
+            "beat": 6.5,
+            "duration": 1.5,
+            "name": "C#maj9"
+          },
+          {
+            "beat": 8.0,
+            "duration": 2.5,
+            "name": "D#m9"
+          },
+          {
+            "beat": 10.5,
+            "duration": 1.5,
+            "name": "G#m9"
+          },
+          {
+            "beat": 12.0,
+            "duration": 2.5,
+            "name": "Bmaj9"
+          },
+          {
+            "beat": 14.5,
+            "duration": 1.5,
+            "name": "C#maj9"
+          },
+          {
+            "beat": 16.0,
+            "duration": 2.5,
+            "name": "D#m9"
+          },
+          {
+            "beat": 18.5,
+            "duration": 1.5,
+            "name": "G#m9"
+          },
+          {
+            "beat": 20.0,
+            "duration": 2.5,
+            "name": "Bmaj9"
+          },
+          {
+            "beat": 22.5,
+            "duration": 1.5,
+            "name": "C#maj9"
+          },
+          {
+            "beat": 24.0,
+            "duration": 2.5,
+            "name": "D#m9"
+          },
+          {
+            "beat": 26.5,
+            "duration": 1.5,
+            "name": "G#m9"
+          },
+          {
+            "beat": 28.0,
+            "duration": 2.5,
+            "name": "Bmaj9"
+          },
+          {
+            "beat": 30.5,
+            "duration": 1.5,
+            "name": "C#maj9"
+          }
+        ]
+      },
+      {
+        "id": "098d55cb-361695",
+        "label": "Pre-Chorus",
+        "bars": 4,
+        "variation": "C",
+        "transition": "fill",
+        "chords": [
+          {
+            "beat": 0.0,
+            "duration": 2.0,
+            "name": "Bmaj9"
+          },
+          {
+            "beat": 2.0,
+            "duration": 2.0,
+            "name": "C#maj9/B"
+          },
+          {
+            "beat": 4.0,
+            "duration": 2.0,
+            "name": "Bmaj9"
+          },
+          {
+            "beat": 6.0,
+            "duration": 2.0,
+            "name": "C#maj9/B"
+          },
+          {
+            "beat": 8.0,
+            "duration": 2.0,
+            "name": "Bmaj9"
+          },
+          {
+            "beat": 10.0,
+            "duration": 2.0,
+            "name": "C#maj9/B"
+          },
+          {
+            "beat": 12.0,
+            "duration": 2.0,
+            "name": "Bmaj9"
+          },
+          {
+            "beat": 14.0,
+            "duration": 2.0,
+            "name": "A#"
+          }
+        ]
+      },
+      {
+        "id": "098d55cb-361696",
+        "label": "Verse",
+        "bars": 8,
+        "variation": "D",
+        "transition": "fill",
+        "chords": [
+          {
+            "beat": 0.0,
+            "duration": 2.0,
+            "name": "D#m9"
+          },
+          {
+            "beat": 2.0,
+            "duration": 2.0,
+            "name": "Bmaj9"
+          },
+          {
+            "beat": 4.0,
+            "duration": 2.0,
+            "name": "G#m9"
+          },
+          {
+            "beat": 6.0,
+            "duration": 2.0,
+            "name": "C#maj9"
+          },
+          {
+            "beat": 8.0,
+            "duration": 2.0,
+            "name": "D#m9"
+          },
+          {
+            "beat": 10.0,
+            "duration": 2.0,
+            "name": "Bmaj9"
+          },
+          {
+            "beat": 12.0,
+            "duration": 2.0,
+            "name": "G#m9"
+          },
+          {
+            "beat": 14.0,
+            "duration": 2.0,
+            "name": "C#maj9"
+          },
+          {
+            "beat": 16.0,
+            "duration": 2.0,
+            "name": "D#m9"
+          },
+          {
+            "beat": 18.0,
+            "duration": 2.0,
+            "name": "Bmaj9"
+          },
+          {
+            "beat": 20.0,
+            "duration": 2.0,
+            "name": "G#m9"
+          },
+          {
+            "beat": 22.0,
+            "duration": 2.0,
+            "name": "C#maj9"
+          },
+          {
+            "beat": 24.0,
+            "duration": 2.0,
+            "name": "D#m9"
+          },
+          {
+            "beat": 26.0,
+            "duration": 2.0,
+            "name": "Bmaj9"
+          },
+          {
+            "beat": 28.0,
+            "duration": 2.0,
+            "name": "G#m9"
+          },
+          {
+            "beat": 30.0,
+            "duration": 2.0,
+            "name": "C#maj9"
+          }
+        ]
+      },
+      {
+        "id": "098d55cb-361697",
+        "label": "Intro",
+        "bars": 8,
+        "variation": "A",
+        "chords": [
+          {
+            "beat": 0.0,
+            "duration": 2.0,
+            "name": "D#m9"
+          },
+          {
+            "beat": 2.0,
+            "duration": 2.0,
+            "name": "Bmaj9"
+          },
+          {
+            "beat": 4.0,
+            "duration": 2.0,
+            "name": "G#m9"
+          },
+          {
+            "beat": 6.0,
+            "duration": 2.0,
+            "name": "C#maj9"
+          },
+          {
+            "beat": 8.0,
+            "duration": 2.0,
+            "name": "D#m9"
+          },
+          {
+            "beat": 10.0,
+            "duration": 2.0,
+            "name": "Bmaj9"
+          },
+          {
+            "beat": 12.0,
+            "duration": 2.0,
+            "name": "G#m9"
+          },
+          {
+            "beat": 14.0,
+            "duration": 2.0,
+            "name": "C#maj9"
+          },
+          {
+            "beat": 16.0,
+            "duration": 2.0,
+            "name": "D#m9"
+          },
+          {
+            "beat": 18.0,
+            "duration": 2.0,
+            "name": "Bmaj9"
+          },
+          {
+            "beat": 20.0,
+            "duration": 2.0,
+            "name": "G#m9"
+          },
+          {
+            "beat": 22.0,
+            "duration": 2.0,
+            "name": "C#maj9"
+          },
+          {
+            "beat": 24.0,
+            "duration": 2.0,
+            "name": "D#m9"
+          },
+          {
+            "beat": 26.0,
+            "duration": 2.0,
+            "name": "Bmaj9"
+          },
+          {
+            "beat": 28.0,
+            "duration": 2.0,
+            "name": "G#m9"
+          },
+          {
+            "beat": 30.0,
+            "duration": 2.0,
+            "name": "C#maj9"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "30b7941d-c2bc-4011-9716-cb5309d1c4fa",
+    "title": "Dew",
+    "subtitle": "Original SmartBridge Country arrangement",
+    "category": "Country",
+    "tempo": 65,
+    "timeSignature": [
+      4,
+      4
+    ],
+    "key": "G",
+    "accent": "#d97706",
+    "sections": [
+      {
+        "id": "30b7941d-359684",
+        "label": "Intro",
+        "bars": 8,
+        "variation": "A",
+        "transition": "fill",
+        "chords": [
+          {
+            "beat": 0.0,
+            "duration": 1.5,
+            "name": "Gmaj9"
+          },
+          {
+            "beat": 1.5,
+            "duration": 2.5,
+            "name": "Cmaj9/G"
+          },
+          {
+            "beat": 4.0,
+            "duration": 1.5,
+            "name": "Gmaj9"
+          },
+          {
+            "beat": 5.5,
+            "duration": 2.5,
+            "name": "Cmaj9/G"
+          },
+          {
+            "beat": 8.0,
+            "duration": 1.5,
+            "name": "Gmaj9"
+          },
+          {
+            "beat": 9.5,
+            "duration": 2.5,
+            "name": "Cmaj9/G"
+          },
+          {
+            "beat": 12.0,
+            "duration": 0.75,
+            "name": "Gmaj9"
+          },
+          {
+            "beat": 12.75,
+            "duration": 0.75,
+            "name": "Cmaj9/G"
+          },
+          {
+            "beat": 13.5,
+            "duration": 2.5,
+            "name": "Gmaj9"
+          },
+          {
+            "beat": 16.0,
+            "duration": 1.5,
+            "name": "Gmaj9"
+          },
+          {
+            "beat": 17.5,
+            "duration": 2.5,
+            "name": "Cmaj9/G"
+          },
+          {
+            "beat": 20.0,
+            "duration": 1.5,
+            "name": "Gmaj9"
+          },
+          {
+            "beat": 21.5,
+            "duration": 2.5,
+            "name": "Cmaj9/G"
+          },
+          {
+            "beat": 24.0,
+            "duration": 1.5,
+            "name": "Gmaj9"
+          },
+          {
+            "beat": 25.5,
+            "duration": 2.5,
+            "name": "Cmaj9/G"
+          },
+          {
+            "beat": 28.0,
+            "duration": 1.5,
+            "name": "Gmaj9"
+          },
+          {
+            "beat": 29.5,
+            "duration": 0.5,
+            "name": "Cmaj9/G"
+          },
+          {
+            "beat": 30.0,
+            "duration": 1.999896,
+            "name": "Gmaj9"
+          }
+        ]
+      },
+      {
+        "id": "30b7941d-359685",
+        "label": "Verse",
+        "bars": 8,
+        "variation": "B",
+        "transition": "fill",
+        "chords": [
+          {
+            "beat": 0.0,
+            "duration": 1.25,
+            "name": "Gmaj9"
+          },
+          {
+            "beat": 1.25,
+            "duration": 0.75,
+            "name": "Cmaj9/G"
+          },
+          {
+            "beat": 2.0,
+            "duration": 2.0,
+            "name": "Em9"
+          },
+          {
+            "beat": 4.0,
+            "duration": 1.5,
+            "name": "Cmaj9"
+          },
+          {
+            "beat": 5.5,
+            "duration": 1.5,
+            "name": "Gmaj9"
+          },
+          {
+            "beat": 7.0,
+            "duration": 1.0,
+            "name": "Gmaj9"
+          },
+          {
+            "beat": 8.0,
+            "duration": 2.0,
+            "name": "Gmaj9"
+          },
+          {
+            "beat": 10.0,
+            "duration": 2.0,
+            "name": "Dmaj9"
+          },
+          {
+            "beat": 12.0,
+            "duration": 1.75,
+            "name": "Cmaj9"
+          },
+          {
+            "beat": 13.75,
+            "duration": 2.25,
+            "name": "Cmaj9"
+          },
+          {
+            "beat": 16.0,
+            "duration": 2.0,
+            "name": "Gmaj9"
+          },
+          {
+            "beat": 18.0,
+            "duration": 2.0,
+            "name": "Em9"
+          },
+          {
+            "beat": 20.0,
+            "duration": 1.5,
+            "name": "Cmaj9"
+          },
+          {
+            "beat": 21.5,
+            "duration": 1.75,
+            "name": "Gmaj9"
+          },
+          {
+            "beat": 23.25,
+            "duration": 0.75,
+            "name": "Cmaj9/G"
+          },
+          {
+            "beat": 24.0,
+            "duration": 2.0,
+            "name": "Gmaj9"
+          },
+          {
+            "beat": 26.0,
+            "duration": 1.0,
+            "name": "Dmaj9"
+          },
+          {
+            "beat": 27.0,
+            "duration": 1.0,
+            "name": "Dmaj9"
+          },
+          {
+            "beat": 28.0,
+            "duration": 3.999896,
+            "name": "Cmaj9"
+          }
+        ]
+      },
+      {
+        "id": "30b7941d-359686",
+        "label": "Pre-Chorus",
+        "bars": 4,
+        "variation": "C",
+        "transition": "fill",
+        "chords": [
+          {
+            "beat": 0.0,
+            "duration": 2.0,
+            "name": "Gmaj9/D"
+          },
+          {
+            "beat": 2.0,
+            "duration": 2.0,
+            "name": "Fmaj9/C"
+          },
+          {
+            "beat": 4.0,
+            "duration": 1.5,
+            "name": "Gmaj9/B"
+          },
+          {
+            "beat": 5.5,
+            "duration": 2.5,
+            "name": "Am9"
+          },
+          {
+            "beat": 8.0,
+            "duration": 2.0,
+            "name": "Gmaj9/D"
+          },
+          {
+            "beat": 10.0,
+            "duration": 2.0,
+            "name": "Am9/C"
+          },
+          {
+            "beat": 12.0,
+            "duration": 1.0,
+            "name": "Gmaj9/B"
+          },
+          {
+            "beat": 13.0,
+            "duration": 0.5,
+            "name": "Am9/C"
+          },
+          {
+            "beat": 13.5,
+            "duration": 2.499896,
+            "name": "D"
+          }
+        ]
+      },
+      {
+        "id": "30b7941d-359687",
+        "label": "Chorus",
+        "bars": 8,
+        "variation": "D",
+        "chords": [
+          {
+            "beat": 0.0,
+            "duration": 2.0,
+            "name": "Gmaj9"
+          },
+          {
+            "beat": 2.0,
+            "duration": 2.0,
+            "name": "Cmaj9"
+          },
+          {
+            "beat": 4.0,
+            "duration": 2.0,
+            "name": "Gmaj9"
+          },
+          {
+            "beat": 6.0,
+            "duration": 1.0,
+            "name": "Cmaj9"
+          },
+          {
+            "beat": 7.0,
+            "duration": 1.0,
+            "name": "Cmaj9/B"
+          },
+          {
+            "beat": 8.0,
+            "duration": 2.0,
+            "name": "Em9"
+          },
+          {
+            "beat": 10.0,
+            "duration": 2.0,
+            "name": "Gmaj9/D"
+          },
+          {
+            "beat": 12.0,
+            "duration": 0.5,
+            "name": "Cmaj9"
+          },
+          {
+            "beat": 12.5,
+            "duration": 1.0,
+            "name": "Gmaj9/B"
+          },
+          {
+            "beat": 13.5,
+            "duration": 1.5,
+            "name": "Gmaj9"
+          },
+          {
+            "beat": 15.0,
+            "duration": 0.5,
+            "name": "Cmaj9/E"
+          },
+          {
+            "beat": 15.5,
+            "duration": 0.5,
+            "name": "Fmaj9"
+          },
+          {
+            "beat": 16.0,
+            "duration": 2.0,
+            "name": "Gmaj9"
+          },
+          {
+            "beat": 18.0,
+            "duration": 2.0,
+            "name": "Cmaj9"
+          },
+          {
+            "beat": 20.0,
+            "duration": 1.0,
+            "name": "Gmaj9"
+          },
+          {
+            "beat": 21.0,
+            "duration": 1.0,
+            "name": "Cmaj9/G"
+          },
+          {
+            "beat": 22.0,
+            "duration": 2.0,
+            "name": "Cmaj9"
+          },
+          {
+            "beat": 24.0,
+            "duration": 2.0,
+            "name": "Em9"
+          },
+          {
+            "beat": 26.0,
+            "duration": 2.0,
+            "name": "Gmaj9/D"
+          },
+          {
+            "beat": 28.0,
+            "duration": 0.5,
+            "name": "Cmaj9"
+          },
+          {
+            "beat": 28.5,
+            "duration": 0.5,
+            "name": "Gmaj9/B"
+          },
+          {
+            "beat": 29.0,
+            "duration": 0.5,
+            "name": "Am9"
+          },
+          {
+            "beat": 29.5,
+            "duration": 2.499896,
+            "name": "Gmaj9"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "a7a0ec02-e3f7-44de-8d0c-eea0ced66706",
+    "title": "Harbor",
+    "subtitle": "Original SmartBridge Country arrangement",
+    "category": "Country",
+    "tempo": 115,
+    "timeSignature": [
+      4,
+      4
+    ],
+    "key": "A",
+    "accent": "#b45309",
+    "sections": [
+      {
+        "id": "a7a0ec02-359674",
+        "label": "Intro",
+        "bars": 16,
+        "variation": "A",
+        "transition": "fill",
+        "chords": [
+          {
+            "beat": 0.0,
+            "duration": 8.0,
+            "name": "Amaj9"
+          },
+          {
+            "beat": 8.0,
+            "duration": 8.0,
+            "name": "Gmaj9"
+          },
+          {
+            "beat": 16.0,
+            "duration": 8.0,
+            "name": "Amaj9"
+          },
+          {
+            "beat": 24.0,
+            "duration": 8.0,
+            "name": "Gmaj9"
+          },
+          {
+            "beat": 32.0,
+            "duration": 8.0,
+            "name": "Amaj9"
+          },
+          {
+            "beat": 40.0,
+            "duration": 8.0,
+            "name": "Gmaj9"
+          },
+          {
+            "beat": 48.0,
+            "duration": 8.0,
+            "name": "Amaj9"
+          },
+          {
+            "beat": 56.0,
+            "duration": 4.0,
+            "name": "Gmaj9"
+          },
+          {
+            "beat": 60.0,
+            "duration": 3.999896,
+            "name": "Gmaj9"
+          }
+        ]
+      },
+      {
+        "id": "a7a0ec02-359675",
+        "label": "Verse",
+        "bars": 16,
+        "variation": "B",
+        "transition": "fill",
+        "chords": [
+          {
+            "beat": 0.0,
+            "duration": 2.5,
+            "name": "Amaj9"
+          },
+          {
+            "beat": 2.5,
+            "duration": 1.0,
+            "name": "Dmaj9/A"
+          },
+          {
+            "beat": 3.5,
+            "duration": 3.0,
+            "name": "Amaj9"
+          },
+          {
+            "beat": 6.5,
+            "duration": 1.5,
+            "name": "Dmaj9/F#"
+          },
+          {
+            "beat": 8.0,
+            "duration": 2.5,
+            "name": "F#m9"
+          },
+          {
+            "beat": 10.5,
+            "duration": 1.0,
+            "name": "Bmaj9/F#"
+          },
+          {
+            "beat": 11.5,
+            "duration": 2.0,
+            "name": "Emaj9"
+          },
+          {
+            "beat": 13.5,
+            "duration": 1.0,
+            "name": "Emaj9"
+          },
+          {
+            "beat": 14.5,
+            "duration": 1.5,
+            "name": "Emaj9"
+          },
+          {
+            "beat": 16.0,
+            "duration": 3.5,
+            "name": "Dmaj9"
+          },
+          {
+            "beat": 19.5,
+            "duration": 2.0,
+            "name": "Bm9"
+          },
+          {
+            "beat": 21.5,
+            "duration": 1.0,
+            "name": "Bmaj9"
+          },
+          {
+            "beat": 22.5,
+            "duration": 1.5,
+            "name": "Bm9"
+          },
+          {
+            "beat": 24.0,
+            "duration": 1.5,
+            "name": "Dmaj9/A"
+          },
+          {
+            "beat": 25.5,
+            "duration": 2.5,
+            "name": "Amaj9"
+          },
+          {
+            "beat": 28.0,
+            "duration": 1.5,
+            "name": "Dmaj9/A"
+          },
+          {
+            "beat": 29.5,
+            "duration": 2.5,
+            "name": "Amaj9"
+          },
+          {
+            "beat": 32.0,
+            "duration": 2.5,
+            "name": "Amaj9"
+          },
+          {
+            "beat": 34.5,
+            "duration": 1.0,
+            "name": "Dmaj9/A"
+          },
+          {
+            "beat": 35.5,
+            "duration": 2.0,
+            "name": "Amaj9"
+          },
+          {
+            "beat": 37.5,
+            "duration": 1.0,
+            "name": "Dmaj9/A"
+          },
+          {
+            "beat": 38.5,
+            "duration": 1.5,
+            "name": "Amaj9"
+          },
+          {
+            "beat": 40.0,
+            "duration": 3.5,
+            "name": "F#m9"
+          },
+          {
+            "beat": 43.5,
+            "duration": 2.0,
+            "name": "Emaj9"
+          },
+          {
+            "beat": 45.5,
+            "duration": 2.5,
+            "name": "Emaj9"
+          },
+          {
+            "beat": 48.0,
+            "duration": 3.5,
+            "name": "Dmaj9"
+          },
+          {
+            "beat": 51.5,
+            "duration": 4.5,
+            "name": "Bm9"
+          },
+          {
+            "beat": 56.0,
+            "duration": 1.5,
+            "name": "Dmaj9/A"
+          },
+          {
+            "beat": 57.5,
+            "duration": 2.0,
+            "name": "Amaj9"
+          },
+          {
+            "beat": 59.5,
+            "duration": 2.0,
+            "name": "Dmaj9/A"
+          },
+          {
+            "beat": 61.5,
+            "duration": 1.0,
+            "name": "Amaj9"
+          },
+          {
+            "beat": 62.5,
+            "duration": 1.499896,
+            "name": "Dmaj9/A"
+          }
+        ]
+      },
+      {
+        "id": "a7a0ec02-359676",
+        "label": "Pre-Chorus",
+        "bars": 4,
+        "variation": "C",
+        "transition": "fill",
+        "chords": [
+          {
+            "beat": 0.0,
+            "duration": 4.0,
+            "name": "Bm9"
+          },
+          {
+            "beat": 4.0,
+            "duration": 4.0,
+            "name": "F#m9"
+          },
+          {
+            "beat": 8.0,
+            "duration": 4.0,
+            "name": "Dmaj9"
+          },
+          {
+            "beat": 12.0,
+            "duration": 1.5,
+            "name": "Emaj9"
+          },
+          {
+            "beat": 13.5,
+            "duration": 2.5,
+            "name": "E"
+          }
+        ]
+      },
+      {
+        "id": "a7a0ec02-359677",
+        "label": "Chorus",
+        "bars": 16,
+        "variation": "D",
+        "chords": [
+          {
+            "beat": 0.0,
+            "duration": 4.0,
+            "name": "Amaj9"
+          },
+          {
+            "beat": 4.0,
+            "duration": 4.0,
+            "name": "Amaj9"
+          },
+          {
+            "beat": 8.0,
+            "duration": 3.5,
+            "name": "Cmaj9"
+          },
+          {
+            "beat": 11.5,
+            "duration": 4.5,
+            "name": "Gmaj9"
+          },
+          {
+            "beat": 16.0,
+            "duration": 3.5,
+            "name": "Amaj9"
+          },
+          {
+            "beat": 19.5,
+            "duration": 4.5,
+            "name": "Emaj9"
+          },
+          {
+            "beat": 24.0,
+            "duration": 3.5,
+            "name": "Gmaj9"
+          },
+          {
+            "beat": 27.5,
+            "duration": 4.5,
+            "name": "Dmaj9"
+          },
+          {
+            "beat": 32.0,
+            "duration": 3.5,
+            "name": "Amaj9"
+          },
+          {
+            "beat": 35.5,
+            "duration": 4.5,
+            "name": "Amaj9"
+          },
+          {
+            "beat": 40.0,
+            "duration": 3.5,
+            "name": "Cmaj9"
+          },
+          {
+            "beat": 43.5,
+            "duration": 4.5,
+            "name": "Gmaj9"
+          },
+          {
+            "beat": 48.0,
+            "duration": 3.5,
+            "name": "Amaj9"
+          },
+          {
+            "beat": 51.5,
+            "duration": 4.5,
+            "name": "Emaj9"
+          },
+          {
+            "beat": 56.0,
+            "duration": 3.5,
+            "name": "Gmaj9"
+          },
+          {
+            "beat": 59.5,
+            "duration": 4.499896,
+            "name": "Dmaj9"
+          }
+        ]
+      }
+    ]
+  }
+]
