@@ -1,12 +1,13 @@
 name: Website CI
 
-# Standard hosted CI for the SmartBridge marketing site and browser demos.
+# Standard hosted CI for the SmartBridge website and browser applications.
 # Covers clean install, TypeScript, Vitest, production Next build, and
-# Playwright mocked-Web-MIDI browser tests (demo.spec.ts only).
+# the complete default Playwright browser suite. New browser specs, including
+# app-shell.spec.ts after integration, are discovered automatically.
 #
-# Physical Yamaha hardware tests (hardware.spec.ts) are intentionally excluded.
-# They require SMARTBRIDGE_HARDWARE_TEST=1 and a self-hosted runner with a
-# connected keyboard — see hardware-midi.yml (workflow_dispatch only).
+# playwright.config.ts excludes physical hardware.spec.ts unless
+# SMARTBRIDGE_HARDWARE_TEST=1. Physical Yamaha tests require a self-hosted
+# runner with a connected keyboard — see hardware-midi.yml (manual only).
 #
 # Desktop parity (A05 fixture export + C++ golden tests) is NOT invoked here:
 # UNKNOWN — claudioreyesdeveloper/SmartBridge-Plugin is a private repository.
@@ -62,8 +63,8 @@ jobs:
           if-no-files-found: ignore
           retention-days: 14
 
-  playwright-mocked-midi:
-    name: Playwright mocked Web MIDI
+  playwright-browser:
+    name: Playwright default browser suite
     runs-on: ubuntu-latest
     timeout-minutes: 25
     needs: verify
@@ -84,10 +85,10 @@ jobs:
       - name: Install Playwright Chromium
         run: npx playwright install --with-deps chromium
 
-      - name: Mocked-MIDI browser tests
+      - name: Default browser tests
         env:
           CI: "true"
-        run: npx playwright test tests/browser/demo.spec.ts
+        run: npx playwright test
 
       - name: Upload Playwright HTML report
         if: always()
