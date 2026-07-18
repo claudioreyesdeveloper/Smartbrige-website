@@ -1,0 +1,571 @@
+.solo-workspace {
+  --solo-panel: #0a1a28;
+  --solo-panel-2: #0d2232;
+  --solo-line: rgba(117, 177, 215, 0.2);
+  --solo-muted: #91aabd;
+  --solo-ink: #edf8ff;
+  --solo-accent: #51b9db;
+  max-width: none;
+  min-width: 0;
+  color: var(--solo-ink);
+  overflow-x: clip;
+}
+
+.solo-compatibility-check,
+.solo-compatibility-stop {
+  max-width: 48rem;
+  margin: clamp(2rem, 9vh, 6rem) auto;
+}
+
+.solo-compatibility-check {
+  color: #a8c0d4;
+  text-align: center;
+}
+
+.solo-compatibility-stop {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start;
+  padding: 1.5rem;
+  border: 1px solid rgba(245, 180, 70, 0.38);
+  border-radius: 0.85rem;
+  background: rgba(120, 80, 20, 0.24);
+}
+
+.solo-compatibility-stop > svg {
+  flex: 0 0 auto;
+  color: #fbbf24;
+}
+
+.solo-compatibility-stop span {
+  color: #f8c85f;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.solo-compatibility-stop h2 {
+  margin: 0.35rem 0;
+  font-size: 1.35rem;
+}
+
+.solo-compatibility-stop p {
+  margin: 0;
+  color: #c3d3df;
+  line-height: 1.55;
+}
+
+.solo-context {
+  display: grid;
+  grid-template-columns: minmax(14rem, 1.35fr) minmax(12rem, 1fr) minmax(11rem, 0.8fr);
+  gap: 0.85rem 1rem;
+  align-items: end;
+  padding: 1rem 1.15rem;
+  border: 1px solid var(--solo-line);
+  border-radius: 0.8rem 0.8rem 0 0;
+  background: linear-gradient(180deg, #0d2434 0%, #091a28 100%);
+}
+
+.solo-context-heading span,
+.solo-card-title span,
+.solo-save-bar > div > span {
+  display: block;
+  color: #79cde3;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.solo-context-heading h2 {
+  margin: 0.2rem 0 0;
+  font-size: 1.25rem;
+  font-weight: 650;
+}
+
+.solo-context label,
+.solo-options label {
+  display: grid;
+  gap: 0.32rem;
+}
+
+.solo-context label > span,
+.solo-options label > span {
+  color: #a7becd;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.solo-context select,
+.solo-options select {
+  width: 100%;
+  min-width: 0;
+  min-height: 2.45rem;
+  padding: 0.45rem 0.65rem;
+  border: 1px solid rgba(117, 177, 215, 0.3);
+  border-radius: 0.42rem;
+  background: #071724;
+  color: var(--solo-ink);
+  font: inherit;
+}
+
+.solo-context-facts {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  border-top: 1px solid var(--solo-line);
+  border-bottom: 1px solid var(--solo-line);
+}
+
+.solo-context-facts > span {
+  display: grid;
+  gap: 0.15rem;
+  padding: 0.65rem 0.75rem;
+  border-right: 1px solid var(--solo-line);
+}
+
+.solo-context-facts > span:last-child {
+  border-right: 0;
+}
+
+.solo-context-facts small,
+.solo-chords small,
+.solo-saved-state small {
+  color: #7f9caf;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.solo-context-facts strong {
+  font-size: 0.94rem;
+}
+
+.solo-chords {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 0.8rem;
+  align-items: center;
+}
+
+.solo-chords > strong {
+  overflow: hidden;
+  color: #d8edfa;
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.solo-chords > span {
+  display: inline-flex;
+  gap: 0.35rem;
+  align-items: center;
+  color: #82cce2;
+  font-size: 0.78rem;
+}
+
+.solo-alert {
+  display: flex;
+  gap: 0.55rem;
+  align-items: center;
+  margin-top: 0.75rem;
+  padding: 0.7rem 0.9rem;
+  border: 1px solid rgba(248, 113, 113, 0.38);
+  border-radius: 0.55rem;
+  background: rgba(100, 25, 30, 0.3);
+  color: #fecaca;
+}
+
+.solo-view-tab {
+  display: flex;
+  border-right: 1px solid var(--solo-line);
+  border-left: 1px solid var(--solo-line);
+  background: #071623;
+}
+
+.solo-view-tab button {
+  display: inline-flex;
+  gap: 0.5rem;
+  align-items: center;
+  min-height: 3rem;
+  padding: 0 1.2rem;
+  border: 0;
+  border-right: 1px solid var(--solo-line);
+  border-bottom: 2px solid var(--solo-accent);
+  background: #0b2030;
+  color: #f0fbff;
+  font: inherit;
+  font-weight: 700;
+}
+
+.solo-panel-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 3fr) minmax(16rem, 1fr);
+  gap: 0.75rem;
+  padding: 0.75rem;
+  border: 1px solid var(--solo-line);
+  background: #04101a;
+}
+
+.solo-card {
+  min-width: 0;
+  border: 1px solid var(--solo-line);
+  border-radius: 0.6rem;
+  background: var(--solo-panel);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.18);
+}
+
+.solo-card-title {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: center;
+  min-height: 3.65rem;
+  padding: 0.75rem 0.9rem;
+  border-bottom: 1px solid var(--solo-line);
+  background: rgba(14, 39, 56, 0.72);
+}
+
+.solo-card-title h3 {
+  margin: 0.18rem 0 0;
+  font-size: 1.05rem;
+}
+
+.solo-card-title > strong {
+  color: #9eb7c8;
+  font-size: 0.78rem;
+  font-weight: 650;
+}
+
+.solo-options {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 0.65rem;
+  align-items: end;
+  padding: 0.8rem 0.85rem;
+  border-bottom: 1px solid var(--solo-line);
+}
+
+.solo-generate {
+  grid-column: 1 / -1;
+  justify-self: start;
+  display: inline-flex;
+  gap: 0.45rem;
+  align-items: center;
+  min-height: 2.6rem;
+  padding: 0 1rem;
+  border: 1px solid rgba(81, 185, 219, 0.5);
+  border-radius: 0.42rem;
+  background: #135d75;
+  color: #f3fcff;
+  font: inherit;
+  font-size: 0.84rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.solo-generate:hover {
+  background: #16718d;
+}
+
+.solo-generate:disabled,
+.solo-actions button:disabled,
+.solo-save-bar button:disabled {
+  opacity: 0.42;
+  cursor: not-allowed;
+}
+
+.solo-take-list {
+  min-height: 17rem;
+  max-height: 24rem;
+  overflow-y: auto;
+}
+
+.solo-take-list > button {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 2rem minmax(0, 1fr) auto;
+  gap: 0.7rem;
+  align-items: center;
+  padding: 0.78rem 0.85rem;
+  border: 0;
+  border-bottom: 1px solid rgba(120, 174, 210, 0.1);
+  background: transparent;
+  color: var(--solo-ink);
+  text-align: left;
+  cursor: default;
+}
+
+.solo-take-list > button:hover,
+.solo-take-list > button.is-selected {
+  background: rgba(32, 112, 143, 0.25);
+}
+
+.solo-take-list > button.is-selected {
+  box-shadow: inset 3px 0 0 var(--solo-accent);
+}
+
+.solo-take-icon {
+  display: grid;
+  place-items: center;
+  width: 1.9rem;
+  height: 1.9rem;
+  border-radius: 50%;
+  background: #12384b;
+  color: #91d9ee;
+}
+
+.solo-take-icon.is-playing {
+  background: #17654e;
+  color: #b8f5df;
+  box-shadow: 0 0 0 4px rgba(54, 211, 153, 0.1);
+}
+
+.solo-take-list > button > span:nth-child(2) {
+  min-width: 0;
+  display: grid;
+  gap: 0.16rem;
+}
+
+.solo-take-list > button strong {
+  font-size: 0.93rem;
+}
+
+.solo-take-list > button small {
+  color: #9bb3c3;
+  font-size: 0.75rem;
+}
+
+.solo-take-list > button em {
+  overflow: hidden;
+  color: #8eabba;
+  font-size: 0.76rem;
+  font-style: normal;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.solo-take-list > button b {
+  color: #8ca8b9;
+  font-size: 0.74rem;
+  font-weight: 600;
+}
+
+.solo-empty {
+  min-height: 13rem;
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  color: var(--solo-muted);
+}
+
+.solo-actions {
+  display: flex;
+  gap: 0.55rem;
+  align-items: center;
+  min-height: 3.5rem;
+  padding: 0.65rem 0.85rem;
+  border-top: 1px solid var(--solo-line);
+  background: rgba(3, 12, 19, 0.42);
+}
+
+.solo-actions button {
+  display: inline-flex;
+  gap: 0.35rem;
+  align-items: center;
+  min-height: 2.25rem;
+  padding: 0 0.75rem;
+  border: 1px solid rgba(59, 200, 113, 0.35);
+  border-radius: 0.4rem;
+  background: rgba(30, 129, 67, 0.32);
+  color: #c9f9d9;
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 750;
+  cursor: pointer;
+}
+
+.solo-actions button.is-stop {
+  border-color: rgba(220, 94, 94, 0.35);
+  background: rgba(150, 50, 50, 0.3);
+  color: #ffd2d2;
+}
+
+.solo-actions > span {
+  margin-left: auto;
+  color: #7895a8;
+  font-size: 0.74rem;
+}
+
+.solo-selection-card {
+  align-self: start;
+}
+
+.solo-playback-status {
+  display: flex;
+  gap: 0.7rem;
+  padding: 1rem;
+}
+
+.solo-status-light {
+  flex: 0 0 auto;
+  width: 0.65rem;
+  height: 0.65rem;
+  margin-top: 0.25rem;
+  border-radius: 50%;
+  background: #64748b;
+}
+
+.solo-status-light.is-playing {
+  background: #36d399;
+  box-shadow: 0 0 0 4px rgba(54, 211, 153, 0.12);
+}
+
+.solo-playback-status strong {
+  font-size: 0.9rem;
+}
+
+.solo-playback-status p {
+  margin: 0.35rem 0 0;
+  color: var(--solo-muted);
+  font-size: 0.79rem;
+  line-height: 1.45;
+}
+
+.solo-take-details {
+  margin: 0 0.85rem 0.8rem;
+  border: 1px solid rgba(117, 177, 215, 0.15);
+  border-radius: 0.45rem;
+}
+
+.solo-take-details > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.5rem 0.65rem;
+  border-bottom: 1px solid rgba(117, 177, 215, 0.1);
+}
+
+.solo-take-details > div:last-child {
+  border-bottom: 0;
+}
+
+.solo-take-details dt {
+  color: #7f9caf;
+  font-size: 0.74rem;
+}
+
+.solo-take-details dd {
+  margin: 0;
+  color: #d7e9f4;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-align: right;
+}
+
+.solo-saved-state {
+  display: flex;
+  gap: 0.55rem;
+  align-items: flex-start;
+  margin: 0.8rem;
+  padding: 0.75rem;
+  border: 1px solid rgba(54, 211, 153, 0.3);
+  border-radius: 0.5rem;
+  background: rgba(24, 110, 80, 0.18);
+  color: #9ce8cb;
+}
+
+.solo-saved-state > div {
+  display: grid;
+  gap: 0.15rem;
+}
+
+.solo-saved-state strong {
+  color: #e6fff5;
+  font-size: 0.86rem;
+}
+
+.solo-saved-state span {
+  color: #8eb9aa;
+  font-size: 0.74rem;
+}
+
+.solo-not-saved {
+  display: flex;
+  gap: 0.45rem;
+  align-items: center;
+  margin: 0.8rem;
+  padding: 0.7rem;
+  border: 1px dashed rgba(117, 177, 215, 0.24);
+  border-radius: 0.45rem;
+  color: #879fb0;
+  font-size: 0.76rem;
+}
+
+.solo-save-bar {
+  position: sticky;
+  bottom: 0;
+  z-index: 3;
+  display: flex;
+  justify-content: space-between;
+  gap: 1.5rem;
+  align-items: center;
+  padding: 0.9rem 1.1rem;
+  border: 1px solid rgba(81, 185, 219, 0.35);
+  border-top: 2px solid rgba(81, 185, 219, 0.62);
+  border-radius: 0 0 0.75rem 0.75rem;
+  background: rgba(5, 22, 31, 0.97);
+  box-shadow: 0 -12px 28px rgba(0, 0, 0, 0.25);
+}
+
+.solo-save-bar strong {
+  display: block;
+  margin-top: 0.18rem;
+  font-size: 0.95rem;
+}
+
+.solo-save-bar p {
+  margin: 0.18rem 0 0;
+  color: #89a8ba;
+  font-size: 0.75rem;
+}
+
+.solo-save-bar > button {
+  flex: 0 0 auto;
+  display: inline-flex;
+  gap: 0.45rem;
+  align-items: center;
+  min-height: 2.75rem;
+  padding: 0 1.1rem;
+  border: 1px solid #5bc4e3;
+  border-radius: 0.48rem;
+  background: #176b85;
+  color: white;
+  font: inherit;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.solo-spin {
+  animation: solo-spin 0.9s linear infinite;
+}
+
+@keyframes solo-spin {
+  to { transform: rotate(360deg); }
+}
+
+@media (max-width: 70rem) {
+  .solo-panel-grid {
+    grid-template-columns: minmax(0, 1fr) 16rem;
+  }
+
+  .solo-options {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
