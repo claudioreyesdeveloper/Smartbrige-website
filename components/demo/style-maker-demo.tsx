@@ -25,7 +25,6 @@ import {
   type MidiNote,
   type ParsedYamahaStyle,
   type StyleSectionRange,
-  type StyleVoice,
 } from "@/lib/demo/style-midi"
 import { StylePreviewPlayer } from "@/lib/demo/style-preview"
 import { MusicsoftTransfer } from "@/lib/demo/yamaha/musicsoft-transfer"
@@ -45,7 +44,6 @@ type LaneSource = {
   notes: MidiNote[]
   cycleTicks: number
   custom?: boolean
-  voice?: StyleVoice
 }
 
 function laneSourceFor(
@@ -53,7 +51,7 @@ function laneSourceFor(
   parts: Part[],
   custom: LaneSource | null,
   donor: ParsedYamahaStyle | null,
-  voice?: StyleVoice & { playedVelocityMax: number },
+  playedVelocityMax?: number,
 ): LaneSource | null {
   if (!donor) return null
   if (id === "custom") return custom
@@ -63,27 +61,28 @@ function laneSourceFor(
     ? {
         id: part.id,
         name: part.name,
-        notes: voice
+        notes: playedVelocityMax
           ? notes.map((note) => ({
               ...note,
               velocity: Math.max(
                 1,
                 Math.min(
-                  voice.playedVelocityMax,
-                  Math.round(30 + (note.velocity / 127) * (voice.playedVelocityMax - 30)),
+                  playedVelocityMax,
+                  Math.round(30 + (note.velocity / 127) * (playedVelocityMax - 30)),
                 ),
               ),
             }))
           : notes,
         cycleTicks: part.bars * 4 * donor.ticksPerQuarter,
-        voice,
       }
     : null
 }
 
 const bassParts = partCatalog.bass as Part[]
 const drumParts = partCatalog.drums as Part[]
-const bassVoice = partCatalog.bassVoice as StyleVoice & { playedVelocityMax: number }
+const bassPlayedVelocityMax = partCatalog.bassPlayedVelocityMax
+const isMainSection = (section: StyleSectionRange) =>
+  /^Main\s+[A-D]$/i.test(section.label.trim())
 
 function RhythmGlyph({ part, active }: { part: Part; active: boolean }) {
   return (
@@ -121,7 +120,7 @@ export function StyleMakerDemo() {
   }, [session])
 
   const bass = useMemo<LaneSource | null>(() => {
-    return laneSourceFor(bassId, bassParts, customBass, donor, bassVoice)
+    return laneSourceFor(bassId, bassParts, customBass, donor, bassPlayedVelocityMax)
   }, [bassId, customBass, donor])
 
   const drums = useMemo<LaneSource | null>(() => {
@@ -129,7 +128,7 @@ export function StyleMakerDemo() {
   }, [customDrums, donor, drumsId])
 
   const styleSections = useMemo(
-    () => donor ? extractStyleSections(donor) : [],
+    () => donor ? extractStyleSections(donor).filter(isMainSection) : [],
     [donor],
   )
   const selectedSection = useMemo<StyleSectionRange | null>(
@@ -161,9 +160,13 @@ export function StyleMakerDemo() {
       if (!parsed.yamahaTail.length) {
         throw new Error("Upload a native Yamaha .sty/.prs file with its CASM tail intact.")
       }
+      const mainSections = extractStyleSections(parsed).filter(isMainSection)
+      if (!mainSections.length) {
+        throw new Error("This style does not contain a Main A, B, C, or D section.")
+      }
       setDonorFile(file)
       setDonor(parsed)
-      setSectionId(extractStyleSections(parsed)[0]?.id || "")
+      setSectionId(mainSections[0].id)
       setNotice("")
       setEngagements((value) => value + 1)
     } catch (error) {
@@ -228,7 +231,7 @@ export function StyleMakerDemo() {
       bassParts,
       customBass,
       donor,
-      bassVoice,
+      bassPlayedVelocityMax,
     )
     const auditionDrums = laneSourceFor(
       lane === "drums" && requestedId ? requestedId : drumsId,

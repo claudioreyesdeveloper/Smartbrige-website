@@ -11,9 +11,11 @@ const u32 = (value: number) => [
 
 function stylePreviewFixture() {
   const track = [
+    0, 0xff, 0x06, 7, ...ascii("Intro A"),
+    0, 0x97, 65, 80, 96, 0x87, 65, 0,
     0, 0xff, 0x06, 6, ...ascii("Main A"),
     0, 0xb0, 0, 127, 0, 0xb0, 32, 0, 0, 0xc0, 0,
-    0, 0xb2, 0, 0, 0, 0xb2, 32, 0, 0, 0xc2, 33,
+    0, 0xb2, 0, 8, 0, 0xb2, 32, 5, 0, 0xc2, 17,
     0, 0x90, 36, 100, 0, 0x92, 40, 90, 0, 0x93, 60, 80,
     96, 0x80, 36, 0, 0, 0x82, 40, 0, 0, 0x83, 60, 0,
     0, 0xff, 0x06, 6, ...ascii("Main B"),
@@ -21,6 +23,8 @@ function stylePreviewFixture() {
     0, 0x94, 52, 80, 0, 0x95, 55, 80, 0, 0x96, 57, 80, 0, 0x97, 60, 80,
     96, 0x80, 38, 0, 0, 0x82, 43, 0, 0, 0x83, 48, 0,
     0, 0x84, 52, 0, 0, 0x85, 55, 0, 0, 0x86, 57, 0, 0, 0x87, 60, 0,
+    0, 0xff, 0x06, 8, ...ascii("Ending A"),
+    0, 0x97, 67, 80, 96, 0x87, 67, 0,
     0, 0xff, 0x2f, 0,
   ]
   const tail = [...ascii("CASM"), 0, 0, 0, 4, 1, 2, 3, 4]
@@ -236,6 +240,14 @@ test("Style Maker previews voices and channels 9-16 on Port 2", async ({
   expect(sends.some(({ port, data }) =>
     port.endsWith("Port 2") &&
     data.join(",") === "240,67,16,76,8,10,1,8,247",
+  )).toBe(true)
+  expect(sends.some(({ port, data }) =>
+    port.endsWith("Port 2") &&
+    data.join(",") === "240,67,16,76,8,10,2,5,247",
+  )).toBe(true)
+  expect(sends.some(({ port, data }) =>
+    port.endsWith("Port 2") &&
+    data.join(",") === "240,67,16,76,8,10,3,17,247",
   )).toBe(true)
   for (let status = 0x98; status <= 0x9f; status += 1) {
     expect(sends.some(({ port, data }) =>

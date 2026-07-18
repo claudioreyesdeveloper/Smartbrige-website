@@ -95,10 +95,15 @@ describe("Yamaha style editing", () => {
 
   it("replaces only the selected Yamaha style section", () => {
     const track = [
+      0, 0xff, 0x06, 7, ...ascii("Intro A"),
+      0, 0x92, 35, 90, 96, 0x82, 35, 0,
       0, 0xff, 0x06, 6, ...ascii("Main A"),
+      0, 0xb2, 0, 8, 0, 0xb2, 32, 5, 0, 0xc2, 17,
       0, 0x92, 40, 90, 96, 0x82, 40, 0,
       0, 0xff, 0x06, 6, ...ascii("Main B"),
       0, 0x92, 43, 90, 96, 0x82, 43, 0,
+      0, 0xff, 0x06, 8, ...ascii("Ending A"),
+      0, 0x92, 47, 90, 96, 0x82, 47, 0,
       0, 0xff, 0x2f, 0,
     ]
     const donor = parseYamahaStyle(Uint8Array.from([
@@ -106,18 +111,32 @@ describe("Yamaha style editing", () => {
       ...ascii("MTrk"), ...u32(track.length), ...track,
     ]))
     const sections = extractStyleSections(donor)
-    expect(sections.map((section) => section.label)).toEqual(["Main A", "Main B"])
+    expect(sections.map((section) => section.label)).toEqual([
+      "Intro A",
+      "Main A",
+      "Main B",
+      "Ending A",
+    ])
+    const mainB = sections.find((section) => section.label === "Main B")!
     const notes = patternToMidiNotes([[0, 50, 0.5, 100]], donor.ticksPerQuarter)
     const output = parseYamahaStyle(replaceStyleLanes(donor, {
       bass: { notes, cycleTicks: donor.ticksPerQuarter * 4 },
-      range: sections[1],
+      range: mainB,
     }))
     const noteOns = output.tracks[0].events.filter(
       (event) => (event.status & 0xf0) === 0x90 && event.data[1] > 0,
     )
-    expect(noteOns.some((event) => event.tick === 0 && event.data[0] === 40)).toBe(true)
-    expect(noteOns.some((event) => event.tick === 96 && event.data[0] === 43)).toBe(false)
-    expect(noteOns.some((event) => event.tick === 96 && event.data[0] === 50)).toBe(true)
+    expect(noteOns.some((event) => event.tick === 0 && event.data[0] === 35)).toBe(true)
+    expect(noteOns.some((event) => event.tick === 96 && event.data[0] === 40)).toBe(true)
+    expect(noteOns.some((event) => event.tick === 192 && event.data[0] === 43)).toBe(false)
+    expect(noteOns.some((event) => event.tick === 192 && event.data[0] === 50)).toBe(true)
+    expect(noteOns.some((event) => event.tick === 288 && event.data[0] === 47)).toBe(true)
+    const bassVoiceEvents = output.tracks[0].events.filter(
+      (event) => (event.status & 0x0f) === 2 &&
+        ((event.status & 0xf0) === 0xc0 ||
+          ((event.status & 0xf0) === 0xb0 && (event.data[0] === 0 || event.data[0] === 32))),
+    )
+    expect(bassVoiceEvents.map((event) => event.data)).toEqual([[0, 8], [32, 5], [17]])
   })
 
   it("generates the verified YRGN/SLOT/STYL registration layout", () => {
