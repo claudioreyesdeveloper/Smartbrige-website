@@ -17,7 +17,10 @@ function stylePreviewFixture() {
     0, 0x90, 36, 100, 0, 0x92, 40, 90, 0, 0x93, 60, 80,
     96, 0x80, 36, 0, 0, 0x82, 40, 0, 0, 0x83, 60, 0,
     0, 0xff, 0x06, 6, ...ascii("Main B"),
-    0, 0x90, 38, 100, 0, 0x92, 43, 90, 96, 0x80, 38, 0, 0, 0x82, 43, 0,
+    0, 0x90, 38, 100, 0, 0x92, 43, 90, 0, 0x93, 48, 80,
+    0, 0x94, 52, 80, 0, 0x95, 55, 80, 0, 0x96, 57, 80, 0, 0x97, 60, 80,
+    96, 0x80, 38, 0, 0, 0x82, 43, 0, 0, 0x83, 48, 0,
+    0, 0x84, 52, 0, 0, 0x85, 55, 0, 0, 0x86, 57, 0, 0, 0x87, 60, 0,
     0, 0xff, 0x2f, 0,
   ]
   const tail = [...ascii("CASM"), 0, 0, 0, 4, 1, 2, 3, 4]
@@ -119,9 +122,28 @@ test("Jam Player exposes two complete 4/4 songs per category and mocked Web MIDI
   await expect(page.locator(".song-list button")).toHaveCount(2)
   await expect(page.getByPlaceholder("Search 796 styles")).toBeVisible()
   await expect(page.getByRole("button", { name: "Play arrangement" })).toBeVisible()
-  await expect(page.locator(".timeline-section header strong").nth(0)).toHaveText("Verse")
-  await expect(page.locator(".timeline-section header strong").nth(1)).toHaveText("Pre-Chorus")
-  await expect(page.locator(".timeline-section header strong").nth(2)).toHaveText("Chorus")
+  await expect(page.locator(".timeline-section header strong").nth(0)).toHaveText("Section A")
+  await expect(page.locator(".timeline-section header strong").nth(1)).toHaveText("Chorus")
+  await expect(page.locator(".timeline-section header strong").nth(2)).toHaveText("Verse")
+
+  await page.evaluate(() => {
+    (window as unknown as { __midiSends: unknown[] }).__midiSends = []
+  })
+  await page.locator(".timeline-section").nth(1).dblclick()
+  await expect(page.getByText("Playing Chorus from the beginning.")).toBeVisible()
+  await page.waitForTimeout(30)
+  const sectionSends = await page.evaluate(() =>
+    (window as unknown as { __midiSends: { data: number[] }[] }).__midiSends,
+  )
+  expect(sectionSends.some(({ data }) =>
+    data.join(",") === "240,67,126,0,9,127,247",
+  )).toBe(true)
+  expect(sectionSends.some(({ data }) =>
+    data.join(",") === "240,67,126,0,0,127,247",
+  )).toBe(false)
+  const chordNoteOns = sectionSends.filter(({ data }) => data[0] === 0x93 && data[2] === 1)
+  expect(chordNoteOns.length).toBeGreaterThan(0)
+  expect(chordNoteOns.length).toBeLessThanOrEqual(5)
 
   await page.evaluate(() => {
     (window as unknown as { __midiSends: unknown[] }).__midiSends = []
@@ -180,11 +202,26 @@ test("Style Maker previews voices and channels 9-16 on Port 2", async ({
   const sectionPicker = page.getByRole("combobox", { name: "Style Maker section" })
   await expect(sectionPicker.locator("option")).toHaveCount(2)
   await sectionPicker.selectOption({ label: "Main B" })
-  await expect(page.getByRole("button", { name: /Start/ })).toHaveCount(2)
+  await expect(page.locator(".lane-audition-controls").getByRole("button", { name: /Start/ })).toHaveCount(2)
 
-  await page.locator(".lane-editor").first().getByRole("button", { name: /Deep Pocket/ }).dblclick()
+  await page.evaluate(() => {
+    (window as unknown as { __midiSends: unknown[] }).__midiSends = []
+  })
+  await page.getByRole("button", { name: /BEFORE · START/ }).click()
   await page.waitForTimeout(100)
   let sends = await page.evaluate(() =>
+    (window as unknown as { __midiSends: { port: string; data: number[] }[] }).__midiSends,
+  )
+  expect(sends.some(({ port, data }) => port.endsWith("Port 2") && data[0] === 0x98)).toBe(true)
+  expect(sends.some(({ port, data }) => port.endsWith("Port 2") && data[0] === 0x9a)).toBe(true)
+  await page.locator(".compare-actions").getByRole("button", { name: "Stop" }).click()
+
+  await page.evaluate(() => {
+    (window as unknown as { __midiSends: unknown[] }).__midiSends = []
+  })
+  await page.locator(".lane-editor").first().getByRole("button", { name: /Deep Pocket/ }).dblclick()
+  await page.waitForTimeout(100)
+  sends = await page.evaluate(() =>
     (window as unknown as { __midiSends: { port: string; data: number[] }[] }).__midiSends,
   )
   expect(sends.some(({ port, data }) => port.endsWith("Port 2") && data[0] === 0x9a)).toBe(true)
@@ -198,11 +235,16 @@ test("Style Maker previews voices and channels 9-16 on Port 2", async ({
   )
   expect(sends.some(({ port, data }) =>
     port.endsWith("Port 2") &&
-    data.slice(0, 7).join(",") === "240,67,16,76,8,10,1",
+    data.join(",") === "240,67,16,76,8,10,1,8,247",
   )).toBe(true)
-  expect(sends.some(({ port, data }) =>
-    port.endsWith("Port 2") && (data[0] === 0x98 || data[0] === 0x9a),
-  )).toBe(true)
+  for (let status = 0x98; status <= 0x9f; status += 1) {
+    expect(sends.some(({ port, data }) =>
+      port.endsWith("Port 2") && data[0] === status,
+    )).toBe(true)
+  }
+  const bassNotes = sends.filter(({ data }) => data[0] === 0x9a && data[2] > 0)
+  expect(bassNotes.length).toBeGreaterThan(0)
+  expect(bassNotes.every(({ data }) => data[2] <= 80)).toBe(true)
 })
 
 test("demo landing has no serious accessibility violations", async ({ page }) => {

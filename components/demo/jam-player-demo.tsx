@@ -22,23 +22,7 @@ import {
   stylesForProfile,
 } from "@/lib/demo/yamaha/style-catalog"
 
-const openingSectionLabels = [
-  "Verse",
-  "Pre-Chorus",
-  "Chorus",
-  "Verse 2",
-  "Pre-Chorus 2",
-  "Chorus 2",
-  "Bridge",
-  "Final Chorus",
-]
-const songs = (rawSongs as DemoSong[]).map((song) => ({
-  ...song,
-  sections: song.sections.map((section, index) => ({
-    ...section,
-    label: openingSectionLabels[index] || section.label,
-  })),
-}))
+const songs = rawSongs as DemoSong[]
 const reharmonizations = rawReharmonizations as Record<
   string,
   { styles: Record<string, Record<string, ChordEvent[]>> }
@@ -79,9 +63,11 @@ const initialPlayback: JamPlaybackState = {
 function SongTimeline({
   song,
   playback,
+  onPlaySection,
 }: {
   song: DemoSong
   playback: JamPlaybackState
+  onPlaySection: (sectionIndex: number) => void
 }) {
   const beatsPerBar = song.timeSignature[0]
   const introBeats = beatsPerBar
@@ -106,6 +92,13 @@ function SongTimeline({
             key={section.id}
             className={`timeline-section${active ? " is-active" : ""}`}
             style={{ "--section-accent": song.accent } as React.CSSProperties}
+            aria-label={`Play ${section.label}`}
+            title={`Double-click to play ${section.label}`}
+            tabIndex={0}
+            onDoubleClick={() => onPlaySection(sectionIndex)}
+            onKeyDown={(event) => {
+              if (event.key === "Enter") onPlaySection(sectionIndex)
+            }}
           >
             <header>
               <div>
@@ -254,6 +247,27 @@ export function JamPlayerDemo() {
     }
     setNotice("")
     scheduler.current?.start(song, styleMappingForEntry(midi.profile, selectedStyle))
+    setEngagements((value) => value + 1)
+  }
+
+  const playSection = (sectionIndex: number) => {
+    if (!midi.connected || !midi.profile || !selectedStyle) {
+      setNotice("Connect a supported Yamaha keyboard before playing a section.")
+      return
+    }
+    const startBeat = song.timeSignature[0] + song.sections
+      .slice(0, sectionIndex)
+      .reduce(
+        (total, section) => total + section.bars * song.timeSignature[0],
+        0,
+      )
+    scheduler.current?.stop()
+    scheduler.current?.start(
+      song,
+      styleMappingForEntry(midi.profile, selectedStyle),
+      startBeat,
+    )
+    setNotice(`Playing ${song.sections[sectionIndex].label} from the beginning.`)
     setEngagements((value) => value + 1)
   }
 
@@ -443,7 +457,7 @@ export function JamPlayerDemo() {
           </div>
 
           {notice && <div className="demo-status" role="status">{notice}</div>}
-          <SongTimeline song={song} playback={playback} />
+          <SongTimeline song={song} playback={playback} onPlaySection={playSection} />
         </section>
       </div>
       <FeedbackPrompt meaningfulActions={engagements} />

@@ -50,9 +50,9 @@ export class StylePreviewPlayer {
     this.stop()
     if (!events.length) throw new Error("This style section has no MIDI events to preview.")
     const millisecondsPerTick = 60000 / Math.max(20, bpm) / ticksPerQuarter
-    const maxTick = ticksPerQuarter * 4 * maxBars
+    const startTick = events[0]?.tick || 0
+    const maxTick = startTick + ticksPerQuarter * 4 * maxBars
     const preview = events.filter((event) => event.tick <= maxTick)
-    const startTick = preview[0]?.tick || 0
     this.playing = true
 
     preview.forEach((event) => {

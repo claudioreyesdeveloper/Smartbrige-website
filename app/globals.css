@@ -1361,7 +1361,7 @@ body:has(.demo-station) .site-footer {
 
 .style-catalog-controls {
   display: grid;
-  grid-template-columns: minmax(9rem, 0.8fr) minmax(9rem, 0.7fr) minmax(15rem, 1.4fr);
+  grid-template-columns: minmax(18rem, 1.6fr) minmax(10rem, 0.7fr) minmax(15rem, 1.2fr);
   gap: 0.55rem;
   align-items: center;
 }
@@ -1448,6 +1448,15 @@ body:has(.demo-station) .site-footer {
 
 .timeline-section {
   --section-accent: #4db8ff;
+  cursor: pointer;
+  transition: border-color 140ms ease, box-shadow 140ms ease;
+}
+
+.timeline-section:hover,
+.timeline-section:focus-visible {
+  border-color: color-mix(in srgb, var(--section-accent) 45%, #315574);
+  outline: none;
+  box-shadow: inset 3px 0 var(--section-accent);
 }
 
 .timeline-section.is-active {
@@ -1928,6 +1937,18 @@ body:has(.demo-station) .site-footer {
 
 .compare-actions button.is-playing {
   box-shadow: 0 0 24px rgba(62, 199, 231, 0.18);
+}
+
+.compare-actions button.compare-stop {
+  min-width: 5rem;
+  justify-content: center;
+  color: #ffc3c3;
+  text-align: center;
+}
+
+.compare-actions button.compare-stop:disabled {
+  cursor: default;
+  opacity: 0.4;
 }
 
 .compare-arrow {

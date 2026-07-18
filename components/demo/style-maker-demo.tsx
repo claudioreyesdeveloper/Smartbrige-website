@@ -25,6 +25,7 @@ import {
   type MidiNote,
   type ParsedYamahaStyle,
   type StyleSectionRange,
+  type StyleVoice,
 } from "@/lib/demo/style-midi"
 import { StylePreviewPlayer } from "@/lib/demo/style-preview"
 import { MusicsoftTransfer } from "@/lib/demo/yamaha/musicsoft-transfer"
@@ -44,6 +45,7 @@ type LaneSource = {
   notes: MidiNote[]
   cycleTicks: number
   custom?: boolean
+  voice?: StyleVoice
 }
 
 function laneSourceFor(
@@ -51,22 +53,37 @@ function laneSourceFor(
   parts: Part[],
   custom: LaneSource | null,
   donor: ParsedYamahaStyle | null,
+  voice?: StyleVoice & { playedVelocityMax: number },
 ): LaneSource | null {
   if (!donor) return null
   if (id === "custom") return custom
   const part = parts.find((candidate) => candidate.id === id)
+  const notes = part ? patternToMidiNotes(part.notes, donor.ticksPerQuarter) : []
   return part
     ? {
         id: part.id,
         name: part.name,
-        notes: patternToMidiNotes(part.notes, donor.ticksPerQuarter),
+        notes: voice
+          ? notes.map((note) => ({
+              ...note,
+              velocity: Math.max(
+                1,
+                Math.min(
+                  voice.playedVelocityMax,
+                  Math.round(30 + (note.velocity / 127) * (voice.playedVelocityMax - 30)),
+                ),
+              ),
+            }))
+          : notes,
         cycleTicks: part.bars * 4 * donor.ticksPerQuarter,
+        voice,
       }
     : null
 }
 
 const bassParts = partCatalog.bass as Part[]
 const drumParts = partCatalog.drums as Part[]
+const bassVoice = partCatalog.bassVoice as StyleVoice & { playedVelocityMax: number }
 
 function RhythmGlyph({ part, active }: { part: Part; active: boolean }) {
   return (
@@ -104,7 +121,7 @@ export function StyleMakerDemo() {
   }, [session])
 
   const bass = useMemo<LaneSource | null>(() => {
-    return laneSourceFor(bassId, bassParts, customBass, donor)
+    return laneSourceFor(bassId, bassParts, customBass, donor, bassVoice)
   }, [bassId, customBass, donor])
 
   const drums = useMemo<LaneSource | null>(() => {
@@ -211,6 +228,7 @@ export function StyleMakerDemo() {
       bassParts,
       customBass,
       donor,
+      bassVoice,
     )
     const auditionDrums = laneSourceFor(
       lane === "drums" && requestedId ? requestedId : drumsId,
@@ -225,7 +243,7 @@ export function StyleMakerDemo() {
       range: selectedSection,
     })
     const parsed = parseYamahaStyle(rendered)
-    const channel = lane === "bass" ? 10 : 8
+    const channel = lane === "bass" ? 10 : 9
     preview.current?.play(
       extractStyleSectionPreviewEvents(parsed, selectedSection, [channel]),
       parsed.ticksPerQuarter,
@@ -405,14 +423,16 @@ export function StyleMakerDemo() {
                 <p>SmartBridge streams the style parts on Yamaha channels 9–16 without changing your donor’s native CASM tail.</p>
               </div>
               <div className="compare-actions">
-                <button type="button" className={previewing === "original" ? "is-playing" : ""} onClick={() => previewing === "original" ? stopPreview() : playVersion("original")}>
-                  {previewing === "original" ? <Square size={18} fill="currentColor" /> : <Play size={18} fill="currentColor" />}
-                  <span><small>BEFORE</small><strong>Original style</strong></span>
+                <button type="button" className={previewing === "original" ? "is-playing" : ""} onClick={() => playVersion("original")}>
+                  <Play size={18} fill="currentColor" />
+                  <span><small>BEFORE · START</small><strong>Original style</strong></span>
                 </button>
-                <ArrowRight size={20} className="compare-arrow" />
-                <button type="button" className={`is-after${previewing === "modified" ? " is-playing" : ""}`} onClick={() => previewing === "modified" ? stopPreview() : playVersion("modified")}>
-                  {previewing === "modified" ? <Square size={18} fill="currentColor" /> : <Play size={18} fill="currentColor" />}
-                  <span><small>AFTER</small><strong>{activeBassPart?.name || bass?.name} + {activeDrumPart?.name || drums?.name}</strong></span>
+                <button type="button" className="compare-stop" onClick={stopPreview} disabled={!previewing}>
+                  <Square size={16} fill="currentColor" /> Stop
+                </button>
+                <button type="button" className={`is-after${previewing === "modified" ? " is-playing" : ""}`} onClick={() => playVersion("modified")}>
+                  <Play size={18} fill="currentColor" />
+                  <span><small>AFTER · START</small><strong>{activeBassPart?.name || bass?.name} + {activeDrumPart?.name || drums?.name}</strong></span>
                 </button>
               </div>
             </section>

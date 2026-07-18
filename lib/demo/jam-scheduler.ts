@@ -145,9 +145,15 @@ export class JamScheduler {
     this.session.sendBoth(tempoCommand(song.tempo))
     this.session.sendPort1(ARRANGER_COMMANDS.midiStart)
     this.session.sendBoth(ARRANGER_COMMANDS.start)
-    this.session.sendBoth(ARRANGER_COMMANDS.intro1, performance.now() + 50)
 
-    if (this.startBeat > 0) this.primeMidSong(song, this.startBeat)
+    if (this.startBeat > 0) {
+      this.events.forEach((event) => {
+        if (event.dispatchBeat <= this.startBeat) this.sent.add(event.id)
+      })
+      this.primeMidSong(song, this.startBeat)
+    } else {
+      this.session.sendBoth(ARRANGER_COMMANDS.intro1, performance.now() + 50)
+    }
     this.onState(this.state)
     this.timer = setInterval(() => this.tick(song), 10)
   }
@@ -160,6 +166,7 @@ export class JamScheduler {
       this.session.sendBoth(mainCommand(activeSection.section.variation))
       this.sent.add(`main-${activeSection.section.id}`)
       this.sent.add(`section-${activeSection.section.id}`)
+      this.state.arrangerState = `Main ${activeSection.section.variation}`
     }
     const activeChord = [...this.events]
       .filter((event) => event.type === "chord" && event.beat <= beat)

@@ -59,10 +59,10 @@ describe("Yamaha style editing", () => {
     const noteOns = reparsed.tracks.flatMap((track) =>
       track.events.filter((event) => (event.status & 0xf0) === 0x90 && event.data[1] > 0),
     )
-    expect(noteOns.some((event) => (event.status & 0x0f) === 0 && event.data[0] === 40)).toBe(true)
+    expect(noteOns.some((event) => (event.status & 0x0f) === 1 && event.data[0] === 40)).toBe(true)
     expect(noteOns.some((event) => (event.status & 0x0f) === 2 && event.data[0] === 40)).toBe(true)
     expect(noteOns.some((event) => (event.status & 0x0f) === 3 && event.data[0] === 60)).toBe(true)
-    expect(noteOns.some((event) => (event.status & 0x0f) === 0 && event.data[0] === 36)).toBe(false)
+    expect(noteOns.some((event) => (event.status & 0x0f) === 0 && event.data[0] === 36)).toBe(true)
   })
 
   it("keeps native Yamaha style replacements on channels 9-16", () => {
@@ -88,7 +88,7 @@ describe("Yamaha style editing", () => {
     const noteOns = output.tracks.flatMap((item) =>
       item.events.filter((event) => (event.status & 0xf0) === 0x90 && event.data[1] > 0),
     )
-    expect(noteOns.some((event) => (event.status & 0x0f) === 8 && event.data[0] === 45)).toBe(true)
+    expect(noteOns.some((event) => (event.status & 0x0f) === 9 && event.data[0] === 45)).toBe(true)
     expect(noteOns.some((event) => (event.status & 0x0f) === 10 && event.data[0] === 45)).toBe(true)
     expect(noteOns.some((event) => (event.status & 0x0f) < 8 && event.data[0] === 45)).toBe(false)
   })
@@ -165,5 +165,23 @@ describe("Yamaha style editing", () => {
       [0x9a, 36, 90],
     ])
     expect(port1).not.toHaveBeenCalled()
+  })
+
+  it("previews a selected section relative to its own start tick", () => {
+    vi.useFakeTimers()
+    const port2 = vi.fn()
+    const session = {
+      sendPort1: vi.fn(),
+      sendPort2: port2,
+      panic: vi.fn(),
+    } as unknown as YamahaMidiSession
+    new StylePreviewPlayer(session).play(
+      [{ tick: 4000, status: 0x99, data: [36, 100] }],
+      96,
+      120,
+      8,
+    )
+    vi.advanceTimersByTime(1)
+    expect(port2).toHaveBeenCalledWith(Uint8Array.of(0x99, 36, 100))
   })
 })

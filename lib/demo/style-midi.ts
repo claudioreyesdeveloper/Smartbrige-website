@@ -38,6 +38,12 @@ export type StyleSectionRange = {
   endTick: number
 }
 
+export type StyleVoice = {
+  bankMsb: number
+  bankLsb: number
+  program: number
+}
+
 const readU16 = (data: Uint8Array, offset: number) =>
   (data[offset] << 8) | data[offset + 1]
 const readU32 = (data: Uint8Array, offset: number) =>
@@ -217,7 +223,7 @@ function notesToEvents(
 export function replaceStyleLanes(
   style: ParsedYamahaStyle,
   replacements: {
-    bass?: { notes: MidiNote[]; cycleTicks: number }
+    bass?: { notes: MidiNote[]; cycleTicks: number; voice?: StyleVoice }
     drums?: { notes: MidiNote[]; cycleTicks: number }
     range?: StyleSectionRange
   },
@@ -258,11 +264,27 @@ export function replaceStyleLanes(
     })
   }
 
+  const replaceVoiceOnChannel = (channel: number, voice: StyleVoice) => {
+    tracks.forEach((track) => {
+      track.events = track.events.filter((event) => {
+        if ((event.status & 0x0f) !== channel) return true
+        const kind = event.status & 0xf0
+        return kind !== 0xc0 &&
+          !(kind === 0xb0 && (event.data[0] === 0 || event.data[0] === 32))
+      })
+    })
+    target.events.push(
+      { tick: 0, status: 0xb0 | channel, data: [0, voice.bankMsb], order: order++ },
+      { tick: 0, status: 0xb0 | channel, data: [32, voice.bankLsb], order: order++ },
+      { tick: 0, status: 0xc0 | channel, data: [voice.program], order: order++ },
+    )
+  }
+
   if (replacements.drums) {
-    removeNotesOnChannels([0, 1, 8, 9])
+    removeNotesOnChannels([1, 9])
     const events = notesToEvents(
       replacements.drums.notes,
-      channelBase,
+      channelBase + 1,
       replacements.drums.cycleTicks,
       rangeEnd,
       order,
@@ -273,6 +295,9 @@ export function replaceStyleLanes(
   }
   if (replacements.bass) {
     removeNotesOnChannels([2, 10])
+    if (replacements.bass.voice) {
+      replaceVoiceOnChannel(channelBase + 2, replacements.bass.voice)
+    }
     const events = notesToEvents(
       replacements.bass.notes,
       channelBase + 2,
