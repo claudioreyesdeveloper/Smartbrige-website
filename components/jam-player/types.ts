@@ -189,14 +189,20 @@ export type JamConnectionState = {
   browserSupported: boolean
   secure: boolean
   connected: boolean
+  connecting: boolean
   model: YamahaModelId | null
   displayName: string | null
   guidance: string
+  error: string | null
 }
 
 export type JamConnectionClient = {
   getState(): JamConnectionState
   subscribe(listener: (state: JamConnectionState) => void): () => void
+  /** Connect with an explicit Yamaha model (same flow as Demo Station). */
+  connect(model: YamahaModelId): Promise<void>
+  disconnect(): Promise<void>
+  /** Reconnect using the preferred/saved model when possible. */
   refresh(): Promise<void>
 }
 

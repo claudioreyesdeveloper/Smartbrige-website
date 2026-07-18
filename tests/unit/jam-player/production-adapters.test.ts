@@ -243,20 +243,26 @@ describe("production Jam adapters", () => {
         supported: true,
         secure: true,
         connected: true,
+        connecting: false,
         profile: { id: "genos", displayName: "Genos" },
         modelName: "Genos",
         outputName: "Yamaha Port 1",
         error: "",
       },
       requestAccess: vi.fn(async () => undefined),
+      disconnect: vi.fn(async () => undefined),
     }) as unknown as YamahaMidiSession
     const remove = vi.spyOn(session, "removeEventListener")
     const connection = createYamahaConnectionAdapter(session)
     const listener = vi.fn()
     const unsubscribe = connection.subscribe(listener)
+    await connection.connect("genos2")
+    expect(session.requestAccess).toHaveBeenCalledWith("genos2")
     await connection.refresh()
     expect(session.requestAccess).toHaveBeenCalled()
     expect(connection.getState()).toMatchObject({ connected: true, model: "genos", secure: true })
+    await connection.disconnect()
+    expect(session.disconnect).toHaveBeenCalled()
     unsubscribe()
     expect(remove).toHaveBeenCalledWith("statechange", expect.any(Function))
   })

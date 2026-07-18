@@ -3,6 +3,7 @@ import type { JamConnectionClient, JamConnectionState, YamahaModelId } from "../
 export type FakeConnectionOptions = {
   browserSupported?: boolean
   connected?: boolean
+  connecting?: boolean
   model?: YamahaModelId
   displayName?: string
 }
@@ -21,12 +22,21 @@ function buildState(options: FakeConnectionOptions): JamConnectionState {
       "Open SmartBridge in Google Chrome or Microsoft Edge on a computer, then reconnect your keyboard with USB."
   } else if (!connected) {
     guidance =
-      "Connect your Yamaha Genos, Genos2, Tyros4, or Tyros5 with a USB cable, then click Refresh connection."
+      "Turn on your Yamaha, plug in USB, choose your model, then Connect my keyboard."
   } else {
     guidance = `${displayName} connected. You can prepare and play arrangements.`
   }
 
-  return { browserSupported, secure: true, connected, model, displayName, guidance }
+  return {
+    browserSupported,
+    secure: true,
+    connected,
+    connecting: options.connecting ?? false,
+    model,
+    displayName,
+    guidance,
+    error: null,
+  }
 }
 
 export function createFakeConnectionClient(
@@ -48,6 +58,31 @@ export function createFakeConnectionClient(
       listeners.add(listener)
       listener({ ...state })
       return () => listeners.delete(listener)
+    },
+
+    async connect(model) {
+      state = buildState({
+        browserSupported: state.browserSupported,
+        connected: true,
+        model,
+        displayName:
+          model === "genos2"
+            ? "Yamaha Genos2"
+            : model === "tyros5"
+              ? "Yamaha Tyros5"
+              : model === "tyros4"
+                ? "Yamaha Tyros4"
+                : "Yamaha Genos",
+      })
+      emit()
+    },
+
+    async disconnect() {
+      state = buildState({
+        browserSupported: state.browserSupported,
+        connected: false,
+      })
+      emit()
     },
 
     async refresh() {

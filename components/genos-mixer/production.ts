@@ -16,6 +16,7 @@ import {
 } from "@/lib/projects/client"
 import type { ProjectDocument, ProjectMixerChannel } from "@/lib/projects/document"
 import { getMidiSession, type YamahaMidiSession } from "@/lib/yamaha"
+import { getPreferredKeyboardModel } from "@/lib/yamaha/preferred-model"
 import type { YamahaModelId } from "@/lib/yamaha/types"
 import { createUnknownMixerChannels } from "./state"
 import type {
@@ -188,7 +189,10 @@ class ProductionMixerDevice {
   }
 
   async refresh(): Promise<readonly MixerChannel[]> {
-    if (!this.session.state.connected) await this.session.requestAccess()
+    if (!this.session.state.connected) {
+      const preferred = getPreferredKeyboardModel() ?? this.session.state.profile?.id
+      await this.session.requestAccess(preferred ?? undefined)
+    }
     this.syncEngine()
     const engine = this.requireEngine()
     engine.refresh()

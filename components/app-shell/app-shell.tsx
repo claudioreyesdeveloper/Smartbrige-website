@@ -3,6 +3,7 @@
 import Link from "next/link"
 import { useMemo, type ReactNode } from "react"
 import { usePathname } from "next/navigation"
+import { AppKeyboardBar } from "@/components/keyboard/app-keyboard-bar"
 import { EntitlementProviderBoundary, useEntitlements } from "./entitlement-context"
 import { ServiceNav } from "./service-nav"
 import { StaticEntitlementProvider } from "./static-entitlement-provider"
@@ -86,9 +87,12 @@ function AppShellFrame({ children, email }: AppShellFrameProps) {
                 </>
               )}
             </div>
-            <p className="app-shell-topbar-note" role="status">
-              {email ? `Signed in as ${email}` : "Signed-in workspace"}
-            </p>
+            <div className="app-shell-topbar-aside">
+              <AppKeyboardBar />
+              <p className="app-shell-topbar-note" role="status">
+                {email ? `Signed in as ${email}` : "Signed-in workspace"}
+              </p>
+            </div>
           </div>
         </header>
 

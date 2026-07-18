@@ -24,6 +24,10 @@ import {
   type ProjectStylePart,
 } from "@/lib/projects/document"
 import { getMidiSession, type YamahaMidiSession } from "@/lib/yamaha"
+import {
+  getPreferredKeyboardModel,
+  setPreferredKeyboardModel,
+} from "@/lib/yamaha/preferred-model"
 import type {
   DispatchPlaybackState,
   DisplayChord,
@@ -307,22 +311,32 @@ function connectionState(session: YamahaMidiSession): JamConnectionState {
       : state.error ||
         (state.connected
           ? "Keyboard is connected and ready."
-          : "Connect both Yamaha USB-MIDI ports, then refresh.")
+          : "Turn on your Yamaha, plug in USB, choose your model, then Connect my keyboard.")
   return {
     browserSupported: state.supported,
     secure: state.secure,
     connected: state.connected && state.profile !== null,
+    connecting: state.connecting,
     model: state.profile?.id ?? null,
     displayName: state.modelName || state.outputName || null,
     guidance,
+    error: state.error || null,
   }
 }
 
 export function createYamahaConnectionAdapter(session: YamahaMidiSession): JamConnectionClient {
   return {
     getState: () => connectionState(session),
+    async connect(model) {
+      setPreferredKeyboardModel(model)
+      await session.requestAccess(model)
+    },
+    async disconnect() {
+      await session.disconnect()
+    },
     async refresh() {
-      await session.requestAccess()
+      const preferred = getPreferredKeyboardModel() ?? session.state.profile?.id
+      await session.requestAccess(preferred ?? undefined)
     },
     subscribe(listener) {
       const handle = () => listener(connectionState(session))

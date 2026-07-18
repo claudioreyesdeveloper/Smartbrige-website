@@ -236,6 +236,79 @@ body:has(.app-shell-root) > main {
   color: #94a3b8;
 }
 
+.app-shell-topbar-aside {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.55rem;
+  min-width: min(100%, 28rem);
+}
+
+.app-keyboard-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.4rem;
+}
+
+.app-keyboard-bar.is-connected {
+  color: #86efac;
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+
+.app-keyboard-bar-models {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+}
+
+.app-keyboard-bar-models button {
+  border: 1px solid color-mix(in srgb, var(--color-border) 80%, transparent);
+  background: color-mix(in srgb, var(--color-surface) 70%, transparent);
+  color: #cbd5e1;
+  border-radius: 999px;
+  padding: 0.25rem 0.55rem;
+  font-size: 0.7rem;
+  cursor: pointer;
+}
+
+.app-keyboard-bar-models button.is-selected {
+  border-color: #34d399;
+  color: #ecfdf5;
+  background: rgba(6, 78, 59, 0.55);
+}
+
+.app-keyboard-bar-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  border: 1px solid color-mix(in srgb, var(--color-border) 80%, transparent);
+  background: transparent;
+  color: #e2e8f0;
+  border-radius: 999px;
+  padding: 0.3rem 0.7rem;
+  font-size: 0.75rem;
+  cursor: pointer;
+}
+
+.app-keyboard-bar-button.is-primary {
+  border-color: #34d399;
+  background: rgba(6, 78, 59, 0.45);
+}
+
+.app-keyboard-bar-button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.app-keyboard-bar-link {
+  font-size: 0.7rem;
+  color: #94a3b8;
+  text-decoration: underline;
+}
+
 .app-shell-main {
   flex: 1;
   min-width: 0;

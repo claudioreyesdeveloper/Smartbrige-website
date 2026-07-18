@@ -380,7 +380,8 @@ test("paid Jam Player loads songs, timeline, and transport controls", async ({
   }
 
   if (testInfo.project.name === "desktop") {
-    await page.getByRole("button", { name: /Refresh connection/i }).click()
+    await page.getByRole("button", { name: /^Genos2$/i }).first().click()
+    await page.getByRole("button", { name: /Connect my keyboard/i }).first().click()
     await expect(page.getByText(/connected and ready/i)).toBeVisible()
     const requests: Array<{ path: string; method: string; body: unknown }> = []
     page.on("request", (request) => {
@@ -435,7 +436,9 @@ test("paid Jam Player save status and style autocomplete are available", async (
   await expect(page.getByText(/All changes saved|Unsaved changes|Saved/i).first()).toBeVisible()
   await page.getByLabel("Search styles").fill("CoolJazz")
   await expect(page.getByLabel("Yamaha style")).toContainText(/CoolJazz/)
-  await page.getByRole("button", { name: /Refresh connection/i }).click()
+  await page.getByRole("button", { name: /^Genos2$/i }).first().click()
+  await page.getByRole("button", { name: /Connect my keyboard/i }).first().click()
+  await expect(page.getByText(/connected and ready/i)).toBeVisible()
   const paths: string[] = []
   page.on("request", (request) => {
     if (request.url().includes("/api/engine/jam/")) paths.push(new URL(request.url()).pathname)

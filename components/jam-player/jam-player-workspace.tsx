@@ -3,13 +3,12 @@
 import {
   LoaderCircle,
   Play,
-  RefreshCw,
   Save,
   Square,
   TriangleAlert,
-  Usb,
 } from "lucide-react"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import { KeyboardSetupPanel } from "@/components/keyboard/keyboard-setup-panel"
 import { createProductionJamAdapters } from "./production"
 import { prepareAndPlay } from "./prepare-flow"
 import { SongTimeline } from "./song-timeline"
@@ -732,29 +731,11 @@ export function JamPlayerWorkspace({ adapters: injected }: JamPlayerWorkspacePro
             </div>
           </header>
 
-          <div
-            className={`paid-jam-connection${connection.connected ? " is-connected" : ""}`}
-            role="status"
-            aria-label="Keyboard connection"
-          >
-            <Usb size={20} aria-hidden="true" />
-            <div>
-              <span className="paid-jam-step-label">1 · Keyboard connection</span>
-              <strong>
-                {connection.connected
-                  ? connection.displayName
-                  : "Keyboard not connected"}
-              </strong>
-              <p>{connection.guidance}</p>
-            </div>
-            <button
-              type="button"
-              onClick={() => void adapters.connection.refresh()}
-              disabled={preparing}
-            >
-              <RefreshCw size={16} aria-hidden="true" /> Refresh connection
-            </button>
-          </div>
+          <KeyboardSetupPanel
+            onSafeStop={() => {
+              adapters.dispatcher.stop()
+            }}
+          />
 
           <section
             className="paid-jam-transform-panel"
