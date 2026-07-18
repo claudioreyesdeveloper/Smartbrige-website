@@ -3,6 +3,7 @@ import type {
   InsertCatalogEntryInput,
   InsertCatalogVersionInput,
   CatalogStore,
+  ListCatalogEntriesOptions,
 } from "@/lib/catalog/store"
 import type {
   CatalogActivationRecord,
@@ -94,12 +95,27 @@ export class MemoryCatalogStore implements CatalogStore {
   async listEntriesForService(
     catalogVersionId: string,
     serviceKey: ServiceKey,
+    options?: ListCatalogEntriesOptions,
   ): Promise<CatalogEntryRecord[]> {
     return [...this.entries.values()]
-      .filter(
-        (entry) =>
-          entry.catalogVersionId === catalogVersionId && entry.serviceKey === serviceKey,
-      )
+      .filter((entry) => {
+        if (
+          entry.catalogVersionId !== catalogVersionId ||
+          entry.serviceKey !== serviceKey
+        ) {
+          return false
+        }
+        if (options?.kinds && options.kinds.length > 0) {
+          if (!options.kinds.includes(entry.kind)) return false
+        }
+        if (options?.songStableId) {
+          const songId = options.songStableId
+          if (entry.stableId === songId) return true
+          const metaSongId = entry.metadata.song_stable_id
+          return typeof metaSongId === "string" && metaSongId === songId
+        }
+        return true
+      })
       .sort((left, right) => left.stableId.localeCompare(right.stableId))
   }
 

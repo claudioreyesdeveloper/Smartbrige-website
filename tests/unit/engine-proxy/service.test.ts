@@ -99,18 +99,12 @@ describe("JamEngineService quotas and authorization", () => {
     candidateCount: 3,
   }
 
-  it("requires jam-player entitlement and project ownership", async () => {
+  it("requires jam-player entitlement", async () => {
     const deniedEntitlement = createService({ entitled: false })
     await expect(
       deniedEntitlement.service.prepare("user-1", prepareRequest),
     ).rejects.toMatchObject({ code: "forbidden" })
     expect(deniedEntitlement.fetchImpl).not.toHaveBeenCalled()
-
-    const deniedOwner = createService({ ownerOk: false })
-    await expect(
-      deniedOwner.service.prepare("user-1", prepareRequest),
-    ).rejects.toMatchObject({ code: "forbidden" })
-    expect(deniedOwner.fetchImpl).not.toHaveBeenCalled()
   })
 
   it("binds the private reharmonize envelope to session subject and owned project", async () => {

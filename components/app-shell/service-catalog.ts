@@ -1,5 +1,6 @@
 import {
   SHARED_SERVICE_CATALOG,
+  getPrimaryNavOrder,
   getServiceNavOrder,
   type ServiceKey,
 } from "@/lib/services/catalog"
@@ -19,19 +20,19 @@ const APP_SHELL_PRESENTATION: Record<
     tagline: "Layer the arrangement",
     description:
       "Browse section-aware bass lines and drum grooves matched to your chart.",
-    path: "/app/bass-drums",
+    path: "/app/jam-player/bass",
   },
   "solo-phrases": {
     tagline: "Solos & harmonization",
     description:
       "Audition solo ideas and harmonize leads with brass or strings.",
-    path: "/app/solo-phrases",
+    path: "/app/jam-player/solo",
   },
   lyrics: {
     tagline: "Vocals & lyrics",
     description:
       "Generate lyric ideas tied to your melody and hand off to Synthesizer V.",
-    path: "/app/lyrics",
+    path: "/app/jam-player/lyrics",
   },
   "genos-mixer": {
     tagline: "Control your keyboard",
@@ -58,4 +59,8 @@ export const SERVICE_CATALOG = Object.fromEntries(
   ]),
 ) as Record<ServiceKey, ServiceDefinition>
 
+/** Full entitlement / account order. */
 export const SERVICE_NAV_ORDER = getServiceNavOrder()
+
+/** Top-level product tabs only (Jam Player + Genos Mixer). */
+export const PRIMARY_SERVICE_NAV_ORDER = getPrimaryNavOrder()

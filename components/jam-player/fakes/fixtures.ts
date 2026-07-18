@@ -57,6 +57,50 @@ export const FIXTURE_SONGS: JamSong[] = [
         ],
       },
     ],
+    reharmonizations: [
+      {
+        id: "Pop",
+        label: "Pop",
+        chordsBySection: {
+          "sec-verse": [
+            { beat: 0, duration: 4, name: "C" },
+            { beat: 4, duration: 4, name: "G/B" },
+            { beat: 8, duration: 4, name: "Am" },
+            { beat: 12, duration: 4, name: "F" },
+            { beat: 16, duration: 4, name: "C" },
+            { beat: 20, duration: 4, name: "G/B" },
+            { beat: 24, duration: 4, name: "Am" },
+            { beat: 28, duration: 4, name: "G" },
+          ],
+          "sec-chorus": [
+            { beat: 0, duration: 4, name: "F" },
+            { beat: 4, duration: 4, name: "C" },
+            { beat: 8, duration: 4, name: "Dm" },
+            { beat: 12, duration: 4, name: "G" },
+            { beat: 16, duration: 4, name: "F" },
+            { beat: 20, duration: 4, name: "C" },
+            { beat: 24, duration: 4, name: "G" },
+            { beat: 28, duration: 4, name: "C" },
+          ],
+        },
+      },
+      {
+        id: "Rock",
+        label: "Rock",
+        chordsBySection: {
+          "sec-verse": [
+            { beat: 0, duration: 4, name: "C5" },
+            { beat: 4, duration: 4, name: "Am" },
+            { beat: 8, duration: 4, name: "F5" },
+            { beat: 12, duration: 4, name: "G5" },
+            { beat: 16, duration: 4, name: "C5" },
+            { beat: 20, duration: 4, name: "Am" },
+            { beat: 24, duration: 4, name: "Dm" },
+            { beat: 28, duration: 4, name: "G5" },
+          ],
+        },
+      },
+    ],
   },
   {
     id: "song-midnight-lane",
@@ -113,6 +157,7 @@ export const FIXTURE_SONGS: JamSong[] = [
         ],
       },
     ],
+    reharmonizations: [],
   },
   {
     id: "song-harbor-swing",
@@ -157,6 +202,7 @@ export const FIXTURE_SONGS: JamSong[] = [
         ],
       },
     ],
+    reharmonizations: [],
   },
 ]
 

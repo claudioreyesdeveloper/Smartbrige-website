@@ -60,7 +60,8 @@ export type MixerVoiceAdapter = {
 
 export type GenosMixerAdapters = {
   device: MixerDeviceAdapter
-  projects: MixerProjectAdapter
+  /** @deprecated Mixer uses Save Mix / Load Mix files — kept optional for old fixtures. */
+  projects?: MixerProjectAdapter
   voices: MixerVoiceAdapter
   dispose?(): void
 }

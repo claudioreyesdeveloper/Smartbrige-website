@@ -1,3 +1,4 @@
+import { mapToTyrosCategory } from "@/lib/jam/catalog/categories"
 import {
   JAM_ARRANGER_MAINS,
   JAM_CATALOG_EXPORT_VERSION,
@@ -15,6 +16,7 @@ import type {
   JamArrangerMain,
   JamCatalogSnapshot,
   JamChordSummary,
+  JamReharmonizationSummary,
   JamSectionSummary,
   JamSongSummary,
   JamStyleSummary,
@@ -162,6 +164,126 @@ function parseChordBlock(
   }
 }
 
+function chordsFromTimingsJson(
+  raw: string,
+  sectionLabel: string,
+  beatsPerBar: number,
+  label: string,
+): JamChordSummary[] {
+  if (!raw.trim()) return []
+  let parsed: unknown
+  try {
+    parsed = JSON.parse(raw)
+  } catch {
+    throw new JamCatalogError("malformed", `${label} is not valid JSON.`)
+  }
+  if (!Array.isArray(parsed)) return []
+  const bpb = beatsPerBar > 0 ? beatsPerBar : 4
+  const out: JamChordSummary[] = []
+  for (const item of parsed) {
+    if (!isPlainObject(item)) continue
+    const symbol = optionalString(item.chord)
+    if (!symbol) continue
+    if (!isFiniteNumber(item.beat) || !isFiniteNumber(item.duration) || item.duration <= 0) {
+      continue
+    }
+    const beat = item.beat
+    out.push({
+      symbol,
+      sectionLabel,
+      startBar: Math.trunc(beat / bpb),
+      startBeat: beat - Math.trunc(beat / bpb) * bpb,
+      lengthBeats: item.duration,
+    })
+  }
+  return out
+}
+
+function chordsFromClipTimings(
+  clip: Record<string, unknown>,
+  sectionLabel: string,
+  clipStableId: string,
+): JamChordSummary[] {
+  const raw = clip.chord_timings
+  if (typeof raw !== "string") return []
+  const beatsPerBar =
+    isFiniteNumber(clip.ts_num) && clip.ts_num > 0 ? Math.trunc(clip.ts_num) : 4
+  return chordsFromTimingsJson(
+    raw,
+    sectionLabel,
+    beatsPerBar,
+    `Clip ${clipStableId}.chord_timings`,
+  )
+}
+
+type RawEntry = {
+  stableId: string
+  section: string
+  kind: string
+  metadata: Record<string, unknown>
+  hasAsset: boolean
+}
+
+type RawClipVariation = {
+  stableId: string
+  songStableId: string
+  clipStableId: string
+  sourceName: string
+  chordTimingsJson: string
+}
+
+function parseClipVariation(entry: RawEntry): RawClipVariation | null {
+  const metadata = entry.metadata
+  if (!isPlainObject(metadata)) return null
+  const songStableId = optionalString(metadata.song_stable_id)
+  const clipStableId = optionalString(metadata.clip_stable_id)
+  const variation = metadata.variation
+  if (!songStableId || !clipStableId || !isPlainObject(variation)) return null
+  const sourceName = optionalString(variation.source_name)
+  const chordTimingsJson = optionalString(variation.chord_timings_json)
+  if (!sourceName || !chordTimingsJson) return null
+  return {
+    stableId: entry.stableId,
+    songStableId,
+    clipStableId,
+    sourceName,
+    chordTimingsJson,
+  }
+}
+
+function buildReharmonizations(
+  sections: JamSectionSummary[],
+  variations: RawClipVariation[],
+  beatsPerBar: number,
+): JamReharmonizationSummary[] {
+  if (variations.length === 0) return []
+  const sectionByClip = new Map(sections.map((section) => [section.stableId, section]))
+  const bySource = new Map<string, Record<string, JamChordSummary[]>>()
+
+  for (const variation of variations) {
+    const section = sectionByClip.get(variation.clipStableId)
+    if (!section) continue
+    const chords = chordsFromTimingsJson(
+      variation.chordTimingsJson,
+      section.name,
+      beatsPerBar,
+      `Variation ${variation.stableId}.chord_timings_json`,
+    )
+    if (chords.length === 0) continue
+    const bucket = bySource.get(variation.sourceName) ?? {}
+    bucket[variation.clipStableId] = chords
+    bySource.set(variation.sourceName, bucket)
+  }
+
+  return Array.from(bySource.entries())
+    .map(([sourceName, chordsByClipStableId]) => ({
+      id: sourceName,
+      label: sourceName,
+      chordsByClipStableId,
+    }))
+    .sort((a, b) => a.label.localeCompare(b.label))
+}
+
 function parseSection(
   entry: Record<string, unknown>,
   songStableId: string,
@@ -188,9 +310,13 @@ function parseSection(
     throw new JamCatalogError("malformed", `Clip ${stableId}.clip_order is invalid.`)
   }
   const main = parseArrangerMain(clip.style_variation, `clip ${stableId}.style_variation`)
-  const sectionChords = chords.filter(
+  let sectionChords = chords.filter(
     (chord) => chord.sectionLabel === name || chord.sectionLabel === main,
   )
+  // Jam-songs imports may omit separate chord_block rows; clip.chord_timings is enough.
+  if (sectionChords.length === 0) {
+    sectionChords = chordsFromClipTimings(clip, name, stableId)
+  }
   if (sectionChords.length > JAM_CATALOG_MAX_CHORDS_PER_SECTION) {
     throw new JamCatalogError(
       "limit_exceeded",
@@ -212,6 +338,7 @@ function parseSong(
   songEntry: Record<string, unknown>,
   clipEntries: Record<string, unknown>[],
   chordEntries: Record<string, unknown>[],
+  variationEntries: RawClipVariation[] = [],
 ): JamSongSummary {
   const stableId = requireString(songEntry.stableId, "factory_song.stableId")
   const metadata = songEntry.metadata
@@ -224,11 +351,14 @@ function parseSong(
     throw new JamCatalogError("malformed", `Song ${stableId} song object is missing.`)
   }
   const title = requireString(song.name, `song ${stableId}.name`)
-  const category = requireString(song.category, `song ${stableId}.category`)
+  // Fold EZkeys pack labels onto desktop Tyros categories (Pop/Rock/Ballad/…).
+  const rawCategory = optionalString(song.category) || "User"
+  const category = mapToTyrosCategory(rawCategory)
   if (!isFiniteNumber(song.bpm) || song.bpm <= 0) {
     throw new JamCatalogError("malformed", `Song ${stableId}.bpm is invalid.`)
   }
-  const key = requireString(song.key, `song ${stableId}.key`)
+  // Some factory rows ship with null/empty key — default so the index still loads.
+  const key = optionalString(song.key) || "C"
   const timeSignature = parseTimeSignature(song, `song ${stableId}`)
   const description = optionalString(song.description)
 
@@ -243,6 +373,14 @@ function parseSong(
     .map((entry) => parseSection(entry, stableId, chords))
     .sort((a, b) => a.order - b.order || a.stableId.localeCompare(b.stableId))
 
+  const clipCountMeta = metadata.clip_count
+  const sectionCount =
+    sections.length > 0
+      ? sections.length
+      : typeof clipCountMeta === "number" && Number.isFinite(clipCountMeta)
+        ? Math.max(0, Math.trunc(clipCountMeta))
+        : 0
+
   return {
     stableId,
     title,
@@ -251,7 +389,13 @@ function parseSong(
     key,
     timeSignature,
     ...(description ? { description } : {}),
+    sectionCount,
     sections,
+    reharmonizations: buildReharmonizations(
+      sections,
+      variationEntries,
+      timeSignature[0],
+    ),
   }
 }
 
@@ -351,14 +495,6 @@ function parseStylesFromKeyboardEntry(entry: Record<string, unknown>): {
   return { model, styles }
 }
 
-type RawEntry = {
-  stableId: string
-  section: string
-  kind: string
-  metadata: Record<string, unknown>
-  hasAsset: boolean
-}
-
 function parsePublicEntry(raw: unknown, index: number): RawEntry {
   if (!isPlainObject(raw)) {
     throw new JamCatalogError("malformed", `entries[${index}] must be an object.`)
@@ -424,6 +560,7 @@ export function parseJamCatalogResponse(raw: unknown): JamCatalogSnapshot {
   const songsRaw: RawEntry[] = []
   const clipsBySong = new Map<string, RawEntry[]>()
   const chordsBySong = new Map<string, RawEntry[]>()
+  const variationsBySong = new Map<string, RawClipVariation[]>()
   const keyboardEntries: RawEntry[] = []
 
   for (const entry of entries) {
@@ -458,11 +595,16 @@ export function parseJamCatalogResponse(raw: unknown): JamCatalogSnapshot {
         chordsBySong.set(songId, list)
         continue
       }
-      // roman_progression_pattern and clip variations are ignored for Jam summaries.
-      if (
-        entry.kind === "roman_progression_pattern" ||
-        entry.kind === "factory_clip_variation"
-      ) {
+      if (entry.kind === "factory_clip_variation") {
+        const parsed = parseClipVariation(entry)
+        if (!parsed) continue
+        const list = variationsBySong.get(parsed.songStableId) ?? []
+        list.push(parsed)
+        variationsBySong.set(parsed.songStableId, list)
+        continue
+      }
+      // roman_progression_pattern rows are ignored for Jam summaries.
+      if (entry.kind === "roman_progression_pattern") {
         continue
       }
       throw new JamCatalogError(
@@ -494,13 +636,21 @@ export function parseJamCatalogResponse(raw: unknown): JamCatalogSnapshot {
   }
 
   const songs = songsRaw
-    .map((songEntry) =>
-      parseSong(
-        songEntry,
-        clipsBySong.get(songEntry.stableId) ?? [],
-        chordsBySong.get(songEntry.stableId) ?? [],
-      ),
-    )
+    .flatMap((songEntry) => {
+      try {
+        return [
+          parseSong(
+            songEntry,
+            clipsBySong.get(songEntry.stableId) ?? [],
+            chordsBySong.get(songEntry.stableId) ?? [],
+            variationsBySong.get(songEntry.stableId) ?? [],
+          ),
+        ]
+      } catch {
+        // Skip corrupt factory rows instead of blanking the whole library.
+        return []
+      }
+    })
     .sort((a, b) => a.title.localeCompare(b.title) || a.stableId.localeCompare(b.stableId))
 
   const stylesByModel: Record<YamahaModelId, JamStyleSummary[]> = {

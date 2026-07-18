@@ -271,7 +271,8 @@ export function createProductionBassDrumsAdapters(options: {
   const projectAdapter = createRhythmProjectAdapter(projectSession)
   const api = createRhythmApi(fetchImpl)
   const midiSession = options.midiSession ?? getMidiSession()
-  const model =
+  // Resolve at call time — localStorage must not be read during SSR adapter init.
+  const resolveModel = (): KeyboardModel =>
     options.model ??
     getPreferredKeyboardModel() ??
     midiSession.state.profile?.id ??
@@ -357,7 +358,7 @@ export function createProductionBassDrumsAdapters(options: {
           projectId: input.projectId,
           sectionId: input.sectionId,
           contextRevision: input.contextRevision,
-          model,
+          model: resolveModel(),
           operation: "audition",
           part: input.source.part,
           candidateId: input.source.candidateId,
@@ -383,7 +384,7 @@ export function createProductionBassDrumsAdapters(options: {
           projectId: request.projectId,
           sectionId: request.sectionId,
           contextRevision: request.contextRevision,
-          model,
+          model: resolveModel(),
           operation: "apply",
           ...(request.bassCandidateId ? { bassCandidateId: request.bassCandidateId } : {}),
           ...(request.drumCandidateId ? { drumCandidateId: request.drumCandidateId } : {}),
@@ -430,7 +431,7 @@ export function createProductionBassDrumsAdapters(options: {
         if (options.playAudition) await options.playAudition(render, label)
         else {
           if (!midiSession.state.connected) {
-            const connected = await midiSession.requestAccess(model)
+            const connected = await midiSession.requestAccess(resolveModel())
             if (!connected.connected) {
               throw new RhythmAdapterError(
                 "unavailable",

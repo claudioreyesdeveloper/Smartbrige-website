@@ -144,7 +144,7 @@ export function createProductionSoloAdapters(options: {
   const projects = options.projects ?? createProjectSession({ fetch: fetchImpl })
   const api = createApi(fetchImpl)
   const midiSession = options.midiSession ?? getMidiSession()
-  const model =
+  const resolveModel = (): KeyboardModel =>
     options.model ??
     getPreferredKeyboardModel() ??
     midiSession.state.profile?.id ??
@@ -168,7 +168,7 @@ export function createProductionSoloAdapters(options: {
     audition: {
       async play(render: SoloRenderResponse) {
         if (!midiSession.state.connected) {
-          const state = await midiSession.requestAccess(model)
+          const state = await midiSession.requestAccess(resolveModel())
           if (!state.connected) {
             throw new SoloAdapterError("unavailable", state.error || "Connect the Yamaha keyboard first.")
           }

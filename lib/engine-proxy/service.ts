@@ -1,7 +1,4 @@
-import {
-  requireProjectOwner,
-  requireServiceEntitlement,
-} from "@/lib/auth/entitlements"
+import { requireServiceEntitlement } from "@/lib/auth/entitlements"
 import { AuthorizationError } from "@/lib/auth/owner"
 import { PrivateEngineClient } from "@/lib/engine-proxy/client"
 import { readEngineProxyConfig, type EngineProxyConfig } from "@/lib/engine-proxy/env"
@@ -28,6 +25,7 @@ export type JamEngineServiceDependencies = {
   engineClient?: PrivateEngineClient
   config?: EngineProxyConfig
   requireEntitlement?: (userId: string) => Promise<void>
+  /** @deprecated Ignored — jam no longer gates on cloud project ownership. */
   requireOwner?: (userId: string, projectId: string) => Promise<void>
   now?: () => Date
   createId?: () => string
@@ -38,7 +36,6 @@ export class JamEngineService {
   private readonly engineClient: PrivateEngineClient
   private readonly config: EngineProxyConfig
   private readonly requireEntitlement: (userId: string) => Promise<void>
-  private readonly requireOwner: (userId: string, projectId: string) => Promise<void>
   private readonly now: () => Date
   private readonly createId: () => string
 
@@ -53,11 +50,6 @@ export class JamEngineService {
     this.requireEntitlement =
       deps.requireEntitlement ??
       ((userId) => requireServiceEntitlement(userId, "jam-player"))
-    this.requireOwner =
-      deps.requireOwner ??
-      (async (userId, projectId) => {
-        await requireProjectOwner(userId, projectId)
-      })
     this.now = deps.now ?? (() => new Date())
     this.createId = deps.createId ?? (() => crypto.randomUUID())
   }
@@ -86,8 +78,9 @@ export class JamEngineService {
     invoke: () => Promise<T>,
   ): Promise<T> {
     try {
+      // Entitlement + quota only. projectId is a client correlation id for audit —
+      // not a cloud project (desktop has Save/Load files, not a project list).
       await this.requireEntitlement(userId)
-      await this.requireOwner(userId, projectId)
     } catch (error) {
       if (error instanceof AuthorizationError) {
         throw new JamError(
@@ -103,6 +96,10 @@ export class JamEngineService {
     }
 
     const startedAt = this.now()
+    // Usage audit only — jam no longer requires a cloud project row. Never write
+    // a client session id into project_id (FK to projects) or Play returns 500.
+    void projectId
+    const auditProjectId: string | null = null
     try {
       await assertWithinQuota({
         userId,
@@ -115,7 +112,7 @@ export class JamEngineService {
         await this.usageStore.record({
           id: this.createId(),
           userId,
-          projectId,
+          projectId: auditProjectId,
           operation,
           status: "rejected",
           errorCode: "quota_exceeded",
@@ -132,7 +129,7 @@ export class JamEngineService {
       await this.usageStore.record({
         id: this.createId(),
         userId,
-        projectId,
+        projectId: auditProjectId,
         operation,
         status: "completed",
         durationMs: Math.max(0, finishedAt.getTime() - startedAt.getTime()),
@@ -148,16 +145,20 @@ export class JamEngineService {
             ? error.code
             : "unavailable"
       // Failed backend calls are audited but do not consume completed daily quota.
-      await this.usageStore.record({
-        id: this.createId(),
-        userId,
-        projectId,
-        operation,
-        status: "failed",
-        errorCode,
-        durationMs: Math.max(0, finishedAt.getTime() - startedAt.getTime()),
-        createdAt: finishedAt,
-      })
+      try {
+        await this.usageStore.record({
+          id: this.createId(),
+          userId,
+          projectId: auditProjectId,
+          operation,
+          status: "failed",
+          errorCode,
+          durationMs: Math.max(0, finishedAt.getTime() - startedAt.getTime()),
+          createdAt: finishedAt,
+        })
+      } catch {
+        // Never mask the original engine/auth failure with an audit insert error.
+      }
       throw error
     }
   }

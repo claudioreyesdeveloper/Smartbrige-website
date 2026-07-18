@@ -18,7 +18,7 @@ test.beforeEach(async ({ page }, testInfo) => {
 test("generate takes, audition, save one, and restore project state", async ({
   page,
 }) => {
-  await page.goto("/app/solo-phrases")
+  await page.goto("/app/jam-player/solo")
 
   await expect(
     page.getByRole("heading", { name: "Solo Phrases", level: 1 }),

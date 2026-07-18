@@ -245,7 +245,7 @@ test("section to bass, audition, suggested drums, fill, and Apply to Song", asyn
       renderRequests.push(request.postDataJSON() as Record<string, unknown>)
     }
   })
-  await page.goto("/app/bass-drums")
+  await page.goto("/app/jam-player/bass")
 
   await expect(page.getByRole("heading", { name: "Bass & Drums", level: 1 })).toBeVisible()
   await expect(page.getByRole("navigation", { name: "SmartBridge services" })).toBeVisible()

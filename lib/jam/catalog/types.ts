@@ -29,6 +29,18 @@ export type JamSectionSummary = {
   chords: JamChordSummary[]
 }
 
+/**
+ * Named factory reharm style (desktop Basic/Pop/Rock/…), assembled from
+ * `factory_clip_variation` rows for one song.
+ */
+export type JamReharmonizationSummary = {
+  /** Stable UI id — typically the variation source_name. */
+  id: string
+  label: string
+  /** Clip stableId → alternate chords for that section. */
+  chordsByClipStableId: Record<string, JamChordSummary[]>
+}
+
 /** Safe factory song summary — no filesystem paths or internal DB ids. */
 export type JamSongSummary = {
   /** Opaque factory_song stable id. */
@@ -39,7 +51,14 @@ export type JamSongSummary = {
   key: string
   timeSignature: [number, number]
   description?: string
+  /**
+   * Clip/section count. Prefer `sections.length` when sections are loaded;
+   * browse index may set this from catalog `clip_count` with empty sections.
+   */
+  sectionCount: number
   sections: JamSectionSummary[]
+  /** Present when getSong requested factory_clip_variation (empty for browse index). */
+  reharmonizations: JamReharmonizationSummary[]
 }
 
 /** Model-specific style row from keyboard_catalog. */
@@ -73,9 +92,19 @@ export type JamCatalogPage<T> = {
   hasMore: boolean
 }
 
+/** Desktop JamPlayerScreen filter bands — same cutoffs as SmartBridge. */
+export type JamSongKeyTonality = "any" | "major" | "minor"
+export type JamSongTempoBand = "any" | "slow" | "medium" | "fast"
+
 export type JamSongQuery = {
   search?: string
   category?: string
+  /** Major / minor tonality (trailing "m" = minor), matching desktop. */
+  keyTonality?: JamSongKeyTonality
+  /** Slow <90, Medium 90–130, Fast >130. */
+  tempoBand?: JamSongTempoBand
+  /** Exact meter string e.g. "4/4"; omit or empty = any. */
+  timeSignature?: string
   page?: number
   pageSize?: number
 }

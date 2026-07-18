@@ -2,7 +2,7 @@ import { assertAuthenticatedUserId, AuthorizationError } from "@/lib/auth/owner"
 import { CatalogError } from "@/lib/catalog/errors"
 import { activateCatalogVersion } from "@/lib/catalog/import"
 import { assertCatalogServiceAvailable } from "@/lib/catalog/mapping"
-import type { CatalogStore } from "@/lib/catalog/store"
+import type { CatalogStore, ListCatalogEntriesOptions } from "@/lib/catalog/store"
 import type {
   CatalogActivationRecord,
   CatalogEntryPublic,
@@ -59,6 +59,62 @@ function toPublicEntry(entry: {
   }
 }
 
+/** Map desktop model_key values onto Jam-supported Yamaha ids. */
+function resolveYamahaModelKey(modelKey: string): string | null {
+  const normalized = modelKey.toLowerCase().replace(/[^a-z0-9]/g, "")
+  if (normalized === "genos2") return "genos2"
+  if (normalized === "genos" || normalized === "genos1") return "genos"
+  if (normalized === "tyros5") return "tyros5"
+  if (normalized === "tyros4") return "tyros4"
+  return null
+}
+
+/** Drop unused style fields / unsupported models so browse payloads stay small. */
+function slimKeyboardMetadata(
+  metadata: Record<string, unknown>,
+  modelKey?: string,
+): Record<string, unknown> | null {
+  const modelObj = metadata.model
+  if (!modelObj || typeof modelObj !== "object" || Array.isArray(modelObj)) {
+    return metadata
+  }
+  const rawKey =
+    typeof (modelObj as { model_key?: unknown }).model_key === "string"
+      ? (modelObj as { model_key: string }).model_key
+      : ""
+  const resolved = resolveYamahaModelKey(rawKey)
+  if (!resolved) {
+    return null
+  }
+  if (modelKey) {
+    const wanted = resolveYamahaModelKey(modelKey) ?? modelKey
+    if (resolved !== wanted) return null
+  }
+  const stylesRaw = metadata.styles
+  if (!Array.isArray(stylesRaw)) {
+    return { model: modelObj, styles: [] }
+  }
+  const styles = stylesRaw
+    .filter((row): row is Record<string, unknown> =>
+      Boolean(row) && typeof row === "object" && !Array.isArray(row),
+    )
+    .map((row) => ({
+      name: row.name,
+      style_number: row.style_number,
+      category: row.category,
+      bpm: row.bpm,
+      time_signature: row.time_signature,
+    }))
+  return { model: modelObj, styles }
+}
+
+export type CatalogListOptions = ListCatalogEntriesOptions & {
+  /** When set, only keyboard_model rows for this model_key are returned (styles slimmed). */
+  modelKey?: string
+  /** Strip bulky style fields on keyboard_model rows. */
+  slimStyles?: boolean
+}
+
 export class CatalogService {
   private readonly now: () => Date
 
@@ -69,6 +125,7 @@ export class CatalogService {
   async listForService(
     userId: string | undefined | null,
     serviceKeyRaw: string,
+    options: CatalogListOptions = {},
   ): Promise<CatalogListResult> {
     const actorId = requireUserId(userId)
     const serviceKey = assertCatalogServiceAvailable(serviceKeyRaw)
@@ -84,14 +141,34 @@ export class CatalogService {
       throw new CatalogError("unavailable", "Active catalog version is not ready.")
     }
 
-    const entries = await this.deps.store.listEntriesForService(version.id, serviceKey)
+    const entries = await this.deps.store.listEntriesForService(version.id, serviceKey, {
+      kinds: options.kinds,
+      songStableId: options.songStableId,
+    })
+
+    const publicEntries: CatalogEntryPublic[] = []
+    for (const entry of entries) {
+      if (entry.kind === "keyboard_model" && (options.slimStyles || options.modelKey)) {
+        const slimmed = slimKeyboardMetadata(entry.metadata, options.modelKey)
+        if (!slimmed) continue
+        publicEntries.push(
+          toPublicEntry({
+            ...entry,
+            metadata: slimmed,
+          }),
+        )
+        continue
+      }
+      publicEntries.push(toPublicEntry(entry))
+    }
+
     return {
       serviceKey,
       catalogVersionId: version.id,
       contentTreeSha256: version.contentTreeSha256,
       catalogExportVersion: version.catalogExportVersion,
       schemaVersion: version.schemaVersion,
-      entries: entries.map(toPublicEntry),
+      entries: publicEntries,
     }
   }
 

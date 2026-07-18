@@ -5,6 +5,12 @@ import { useMemo, type ReactNode } from "react"
 import { usePathname } from "next/navigation"
 import { AppKeyboardBar } from "@/components/keyboard/app-keyboard-bar"
 import { EntitlementProviderBoundary, useEntitlements } from "./entitlement-context"
+import {
+  isJamPlayerFamilyPath,
+  resolveJamPlayerSubTab,
+  resolveServiceKeyForPath,
+} from "./jam-player-routes"
+import { SERVICE_CATALOG } from "./service-catalog"
 import { ServiceNav } from "./service-nav"
 import { StaticEntitlementProvider } from "./static-entitlement-provider"
 import type { ServiceEntitlement } from "./types"
@@ -14,12 +20,44 @@ type AppShellFrameProps = {
   email: string | null
 }
 
+function resolveContextTitle(pathname: string, entitlements: ServiceEntitlement[]) {
+  const jamTab = resolveJamPlayerSubTab(pathname)
+  if (jamTab) {
+    if (jamTab.id === "song") {
+      const jam = entitlements.find((service) => service.key === "jam-player")
+      return {
+        eyebrow: jam?.tagline ?? SERVICE_CATALOG["jam-player"].tagline,
+        title: jam?.name ?? "Jam Player",
+      }
+    }
+    if (jamTab.id === "bass") {
+      return { eyebrow: "Jam Player", title: "Bass" }
+    }
+    if (jamTab.id === "drums") {
+      return { eyebrow: "Jam Player", title: "Drums" }
+    }
+    const child = entitlements.find((service) => service.key === jamTab.serviceKey)
+    return {
+      eyebrow: "Jam Player",
+      title: child?.name ?? jamTab.label,
+    }
+  }
+
+  const key = resolveServiceKeyForPath(pathname)
+  if (key) {
+    const service = entitlements.find((item) => item.key === key)
+    if (service) {
+      return { eyebrow: service.tagline, title: service.name }
+    }
+  }
+
+  return null
+}
+
 function AppShellFrame({ children, email }: AppShellFrameProps) {
   const entitlements = useEntitlements()
   const pathname = usePathname()
-  const activeService = entitlements.find(
-    (service) => service.access === "active" && service.path === pathname,
-  )
+  const context = resolveContextTitle(pathname, entitlements)
 
   return (
     <div className="app-shell-root">
@@ -72,10 +110,10 @@ function AppShellFrame({ children, email }: AppShellFrameProps) {
 
           <div className="app-shell-context-bar">
             <div>
-              {activeService ? (
+              {context ? (
                 <>
-                  <p className="app-shell-topbar-eyebrow">{activeService.tagline}</p>
-                  <h1 className="app-shell-topbar-title">{activeService.name}</h1>
+                  <p className="app-shell-topbar-eyebrow">{context.eyebrow}</p>
+                  <h1 className="app-shell-topbar-title">{context.title}</h1>
                 </>
               ) : pathname === "/app/settings" ? (
                 <>
@@ -91,6 +129,11 @@ function AppShellFrame({ children, email }: AppShellFrameProps) {
                 <>
                   <p className="app-shell-topbar-eyebrow">Billing</p>
                   <h1 className="app-shell-topbar-title">Checkout & portal</h1>
+                </>
+              ) : isJamPlayerFamilyPath(pathname) ? (
+                <>
+                  <p className="app-shell-topbar-eyebrow">Play & arrange</p>
+                  <h1 className="app-shell-topbar-title">Jam Player</h1>
                 </>
               ) : (
                 <>

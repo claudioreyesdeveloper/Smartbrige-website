@@ -99,8 +99,8 @@ type PendingResponse = {
 }
 
 const initialSnapshot = (): MidiSessionSnapshot => ({
-  supported: typeof navigator !== "undefined" && "requestMIDIAccess" in navigator,
-  secure: typeof window !== "undefined" && window.isSecureContext,
+  supported: false,
+  secure: false,
   connected: false,
   connecting: false,
   inputName: "",
@@ -123,6 +123,19 @@ export class YamahaMidiSession extends EventTarget {
 
   get state(): MidiSessionSnapshot {
     return this.snapshot
+  }
+
+  hydrateEnvironment(): void {
+    const supported =
+      typeof navigator !== "undefined" && "requestMIDIAccess" in navigator
+    const secure = typeof window !== "undefined" && window.isSecureContext
+    if (
+      this.snapshot.supported === supported &&
+      this.snapshot.secure === secure
+    ) {
+      return
+    }
+    this.publish({ supported, secure })
   }
 
   private publish(update: Partial<MidiSessionSnapshot>) {

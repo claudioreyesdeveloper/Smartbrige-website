@@ -198,11 +198,15 @@ export class CatalogImporter {
           completed.add(item.stableId)
           importedEntryCount += 1
 
-          version = await this.deps.store.updateVersion(version.id, {
-            importCheckpoint: { completedStableIds: [...completed].sort() },
-            sectionCounts,
-            updatedAt: this.now(),
-          })
+          // Checkpoint every 100 inserts — per-row writes of the full ID list
+          // dominate import time on large factory catalogs.
+          if (importedEntryCount % 100 === 0) {
+            version = await this.deps.store.updateVersion(version.id, {
+              importCheckpoint: { completedStableIds: [...completed].sort() },
+              sectionCounts,
+              updatedAt: this.now(),
+            })
+          }
         }
       }
 

@@ -266,6 +266,8 @@ test.beforeEach(async ({ page }) => {
     })
   })
   await page.route("**/api/engine/jam/prepare", async (route) => {
+    // Intro bar shifts fullSong past content-only length; durationMs must cover it
+    // (regression for "fullSong[n].atMs exceeds display.durationMs").
     await route.fulfill({
       status: 200,
       contentType: "application/json",
@@ -276,7 +278,7 @@ test.beforeEach(async ({ page }) => {
           tempoBpm: 112,
           key: "C",
           timeSignature: { numerator: 4, denominator: 4 },
-          durationMs: 1000,
+          durationMs: 3000,
           sections: [
             { id: "factory_clip:verse", name: "Verse", startBar: 0, barCount: 4 },
             { id: "factory_clip:chorus", name: "Chorus", startBar: 4, barCount: 4 },
@@ -287,7 +289,10 @@ test.beforeEach(async ({ page }) => {
           ],
         },
         dispatch: {
-          fullSong: [{ atMs: 0, target: "port1", bytes: "+g==" }],
+          fullSong: [
+            { atMs: 0, target: "port1", bytes: "+g==" },
+            { atMs: 2140, target: "port1", bytes: "+g==" },
+          ],
           sections: {
             "factory_clip:verse": [{ atMs: 0, target: "port1", bytes: "+g==" }],
             "factory_clip:chorus": [{ atMs: 0, target: "port1", bytes: "+g==" }],
@@ -399,6 +404,7 @@ test("paid Jam Player loads songs, timeline, and transport controls", async ({
     await expect(page.getByText(/Playing full arrangement/i)).toBeVisible({
       timeout: 10_000,
     })
+    await expect(page.getByText(/exceeds display\.durationMs/i)).toHaveCount(0)
     const saveIndex = requests.findIndex(
       (request) => request.path === "/api/projects/proj_browser_1" && request.method === "PUT",
     )

@@ -24,13 +24,41 @@ test("Purchased Jam Player opens paid workspace", async ({ page }) => {
   await page.goto("/app/jam-player")
 
   await expect(page.getByRole("heading", { name: "Jam Player", level: 1 })).toBeVisible()
+  await expect(page.getByRole("navigation", { name: "Jam Player tools" })).toBeVisible()
+  await expect(page.getByRole("link", { name: "Song & Chords" })).toHaveAttribute(
+    "aria-current",
+    "page",
+  )
   await expect(page.getByText(/Three steps: choose a song/i)).toBeVisible()
   await expect(page.getByRole("button", { name: /Play arrangement/i })).toBeVisible()
+})
+
+test("Top nav keeps Jam Player active on nested Bass route", async ({ page }) => {
+  await page.goto("/app/jam-player")
+
+  const services = page.getByRole("navigation", { name: "SmartBridge services" })
+  await expect(services.getByRole("link", { name: "Jam Player" })).toHaveAttribute(
+    "aria-current",
+    "page",
+  )
+  await expect(services.getByRole("link", { name: "Genos Mixer" })).toBeVisible()
+  await expect(services.getByRole("link", { name: "Bass & Drums" })).toHaveCount(0)
+
+  await page.getByRole("link", { name: "Bass" }).click()
+  await expect(page).toHaveURL("/app/jam-player/bass")
+  await expect(services.getByRole("link", { name: "Jam Player" })).toHaveAttribute(
+    "aria-current",
+    "page",
+  )
+  await expect(page.locator(".app-shell-upgrade-panel")).toContainText(
+    "Bass & Drums is not in your plan",
+  )
 })
 
 test("Unpurchased service route shows upgrade panel", async ({ page }) => {
   await page.goto("/app/bass-drums")
 
+  await expect(page).toHaveURL("/app/jam-player/bass")
   await expect(page.locator(".app-shell-upgrade-panel")).toContainText(
     "Bass & Drums is not in your plan",
   )

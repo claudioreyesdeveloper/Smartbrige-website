@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server"
+import { ensureFixtureUserExists } from "@/lib/access/ensure-fixture-user"
 import { getSessionUserId } from "@/lib/auth"
 import { jamErrorResponse, readJamJsonBody } from "@/lib/engine-proxy/http"
 import { getJamEngineService } from "@/lib/engine-proxy/runtime"
@@ -17,6 +18,15 @@ export async function POST(request: Request) {
     const userId = await getSessionUserId()
     if (!userId) {
       throw new JamError("unauthenticated", "Authentication is required.")
+    }
+    if (userId === "preview-user" || userId === "fixture-user") {
+      await ensureFixtureUserExists({
+        userId,
+        email:
+          userId === "preview-user"
+            ? "preview@thesmartbridge.io"
+            : "fixture@example.com",
+      })
     }
     const body = await readJamJsonBody(request)
     const parsed = parseJamPrepareRequest(body)

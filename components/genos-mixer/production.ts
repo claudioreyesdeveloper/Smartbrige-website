@@ -339,16 +339,12 @@ class ProductionMixerDevice {
 }
 
 export function createProductionGenosMixerAdapters(options: {
-  fetch?: FetchLike
-  projects?: ProjectSession
   midiSession?: YamahaMidiSession
 } = {}): GenosMixerAdapters {
   const session = options.midiSession ?? getMidiSession()
   const device = new ProductionMixerDevice(session)
-  const projectSession = options.projects ?? createProjectSession({ fetch: options.fetch })
   return {
     device,
-    projects: createMixerProjectAdapter(projectSession),
     voices: {
       async search(query) {
         return device.searchVoices(query)
@@ -356,7 +352,6 @@ export function createProductionGenosMixerAdapters(options: {
     },
     dispose() {
       device.dispose()
-      if (!options.projects) projectSession.dispose()
     },
   }
 }

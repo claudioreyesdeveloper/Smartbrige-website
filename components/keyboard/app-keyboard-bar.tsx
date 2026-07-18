@@ -5,9 +5,11 @@ import Link from "next/link"
 import { useEffect, useState } from "react"
 import {
   getPreferredKeyboardModel,
+  setKeyboardAutoConnect,
   setPreferredKeyboardModel,
 } from "@/lib/yamaha/preferred-model"
 import { KEYBOARD_PROFILES } from "@/lib/yamaha/profiles"
+import { useKeyboardAutoConnect } from "@/lib/yamaha/use-keyboard-auto-connect"
 import { useMidiSession } from "@/lib/yamaha/use-midi-session"
 import type { YamahaModelId } from "@/lib/yamaha/types"
 
@@ -15,15 +17,29 @@ const MODEL_OPTIONS = ["genos", "genos2", "tyros4", "tyros5"] as const satisfies
 
 /**
  * Global keyboard controls in the app shell — one model + connection for every paid feature.
- * Preferred model is stored in localStorage (browser stand-in for desktop keyboard_model_key).
+ * Preferred model + auto-connect intent are stored in localStorage.
+ *
+ * Browser-only bits (Web MIDI support, saved model) apply after mount so SSR HTML
+ * matches the first client paint.
  */
 export function AppKeyboardBar() {
   const [session, midi] = useMidiSession()
   const [model, setModel] = useState<YamahaModelId | null>(null)
+  const [mounted, setMounted] = useState(false)
+  useKeyboardAutoConnect()
 
   useEffect(() => {
-    setModel(getPreferredKeyboardModel() ?? midi.profile?.id ?? null)
+    setMounted(true)
+    setModel(getPreferredKeyboardModel() ?? null)
+  }, [])
+
+  useEffect(() => {
+    if (midi.profile?.id) setModel(midi.profile.id)
   }, [midi.profile?.id])
+
+  useEffect(() => {
+    if (midi.connected) setKeyboardAutoConnect(true)
+  }, [midi.connected])
 
   const selectModel = (id: YamahaModelId) => {
     setModel(id)
@@ -33,12 +49,24 @@ export function AppKeyboardBar() {
   const connect = async () => {
     if (!model) return
     setPreferredKeyboardModel(model)
+    setKeyboardAutoConnect(true)
     await session.requestAccess(model)
   }
 
   const disconnect = async () => {
+    setKeyboardAutoConnect(false)
     await session.disconnect()
   }
+
+  const showConnected = mounted && midi.connected
+  const connectDisabled = !mounted || !model || midi.connecting || !midi.supported
+  const connectLabel = !mounted
+    ? "Choose model"
+    : midi.connecting
+      ? "Connecting…"
+      : model
+        ? "Connect my keyboard"
+        : "Choose model"
 
   return (
     <div className="app-keyboard-bar" aria-label="Keyboard for all features">
@@ -52,9 +80,9 @@ export function AppKeyboardBar() {
           <button
             key={id}
             type="button"
-            className={model === id ? "is-selected" : ""}
-            aria-pressed={model === id}
-            disabled={midi.connecting}
+            className={mounted && model === id ? "is-selected" : ""}
+            aria-pressed={mounted && model === id}
+            disabled={!mounted || midi.connecting}
             onClick={() => selectModel(id)}
           >
             {KEYBOARD_PROFILES[id].displayName}
@@ -62,7 +90,7 @@ export function AppKeyboardBar() {
         ))}
       </div>
 
-      {midi.connected ? (
+      {showConnected ? (
         <div className="app-keyboard-bar-status is-connected" role="status">
           <ShieldCheck size={14} aria-hidden="true" />
           <span>{midi.profile?.displayName || midi.modelName || "Connected"}</span>
@@ -75,11 +103,11 @@ export function AppKeyboardBar() {
         <button
           type="button"
           className="app-keyboard-bar-button is-primary"
-          disabled={!model || midi.connecting || !midi.supported}
+          disabled={connectDisabled}
           onClick={() => void connect()}
         >
           <Plug size={14} aria-hidden="true" />
-          {midi.connecting ? "Connecting…" : model ? "Connect my keyboard" : "Choose model"}
+          {connectLabel}
         </button>
       )}
 
@@ -87,7 +115,7 @@ export function AppKeyboardBar() {
         Settings
       </Link>
 
-      {midi.error ? (
+      {mounted && midi.error ? (
         <p className="app-keyboard-bar-error" role="alert">
           {midi.error}
         </p>

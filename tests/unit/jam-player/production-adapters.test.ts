@@ -29,6 +29,7 @@ const song: JamSong = {
     variation: "A",
     chords: [{ beat: 0, duration: 4, name: "C" }],
   }],
+  reharmonizations: [],
 }
 
 function response(body: unknown, status = 200) {

@@ -37,6 +37,9 @@ export function middleware(request: NextRequest) {
   }
 
   if (isAccessFixtureEnabled()) {
+    // Same-URL redirect once to attach the fixture cookie. Use secure only on
+    // HTTPS — Secure cookies over http://localhost / 127.0.0.1 often never stick
+    // and the browser loops forever on the marketing site instead of entering /app.
     const response = NextResponse.redirect(request.nextUrl)
     response.cookies.set(
       ACCESS_FIXTURE_COOKIE,
@@ -56,7 +59,7 @@ export function middleware(request: NextRequest) {
         maxAge: 60 * 60 * 8,
         path: "/",
         sameSite: "lax",
-        secure: true,
+        secure: request.nextUrl.protocol === "https:",
       },
     )
     return response

@@ -223,7 +223,16 @@ export function parseJamReharmonizeRequest(value: unknown): JamReharmonizeReques
   if (!isPlainObject(value)) fail("Request body must be a JSON object.")
   assertExactKeys(
     value,
-    ["projectId", "model", "scope", "sectionId", "key", "chords", "candidateCount"],
+    [
+      "projectId",
+      "model",
+      "scope",
+      "sectionId",
+      "key",
+      "chords",
+      "candidateCount",
+      "category",
+    ],
     "body",
   )
   if (value.scope !== "section" && value.scope !== "song") {
@@ -250,6 +259,9 @@ export function parseJamReharmonizeRequest(value: unknown): JamReharmonizeReques
       max: MAX_REHARMONIZE_CANDIDATES,
     })
   }
+  if (value.category !== undefined) {
+    request.category = assertString(value.category, "category", { max: 64 })
+  }
   if (request.scope === "section" && !request.sectionId) {
     fail("sectionId is required when scope is section")
   }
@@ -271,6 +283,7 @@ export function toEngineReharmonizeRequest(
   }
   if (request.sectionId !== undefined) engine.sectionId = request.sectionId
   if (request.candidateCount !== undefined) engine.candidateCount = request.candidateCount
+  if (request.category !== undefined) engine.category = request.category
   return engine
 }
 

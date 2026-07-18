@@ -30,6 +30,13 @@ export type InsertCatalogEntryInput = {
   createdAt: Date
 }
 
+/** Optional filters for browse / song-detail catalog reads (avoids full 11MB dumps). */
+export type ListCatalogEntriesOptions = {
+  kinds?: string[]
+  /** Include the song row plus entries whose metadata.song_stable_id matches. */
+  songStableId?: string
+}
+
 export type CatalogStore = {
   findVersionByContentTreeSha256: (
     contentTreeSha256: string,
@@ -55,6 +62,7 @@ export type CatalogStore = {
   listEntriesForService: (
     catalogVersionId: string,
     serviceKey: ServiceKey,
+    options?: ListCatalogEntriesOptions,
   ) => Promise<CatalogEntryRecord[]>
   insertEntry: (input: InsertCatalogEntryInput) => Promise<CatalogEntryRecord>
   getActivation: (serviceKey: ServiceKey) => Promise<CatalogActivationRecord | null>

@@ -471,6 +471,69 @@ describe("createJamCatalogClient", () => {
     ).rejects.toMatchObject({ code: "limit_exceeded" })
   })
 
+  it("filters by key tonality, tempo band, and meter like desktop Jam Player", async () => {
+    const entries = [
+      songEntry({
+        stableId: "factory_song:slow-minor",
+        name: "Slow Minor",
+        category: "Ballad",
+        bpm: 70,
+        key: "Am",
+        ts_num: 3,
+        ts_den: 4,
+      }),
+      songEntry({
+        stableId: "factory_song:fast-major",
+        name: "Fast Major",
+        category: "Pop",
+        bpm: 150,
+        key: "G",
+        ts_num: 4,
+        ts_den: 4,
+      }),
+      songEntry({
+        stableId: "factory_song:mid-major",
+        name: "Mid Major",
+        category: "Pop",
+        bpm: 110,
+        key: "C",
+        ts_num: 4,
+        ts_den: 4,
+      }),
+      clipEntry({ songStableId: "factory_song:slow-minor" }),
+      clipEntry({
+        stableId: "factory_clip:fast",
+        songStableId: "factory_song:fast-major",
+      }),
+      clipEntry({
+        stableId: "factory_clip:mid",
+        songStableId: "factory_song:mid-major",
+      }),
+      chordEntry({ songStableId: "factory_song:slow-minor" }),
+      keyboardModelEntry("keyboard_model:genos2", {
+        model_key: "genos2",
+        display_name: "Genos2",
+        styles: [{ id: 9, name: "EasyPop", style_number: 100, category: "Pop", bpm: 100 }],
+      }),
+    ]
+    const { fetchImpl } = createFetchMock({
+      catalog: () => jsonResponse(200, catalogPayload(entries)),
+    })
+    const client = createJamCatalogClient({ fetch: fetchImpl })
+
+    const minors = await client.listSongs({ keyTonality: "minor" })
+    expect(minors.items.map((song) => song.title)).toEqual(["Slow Minor"])
+
+    const slow = await client.listSongs({ tempoBand: "slow" })
+    expect(slow.items.map((song) => song.title)).toEqual(["Slow Minor"])
+
+    const fourFour = await client.listSongs({ timeSignature: "4/4" })
+    expect(fourFour.items.map((song) => song.title).sort()).toEqual([
+      "Fast Major",
+      "Mid Major",
+    ])
+  })
+
   it("lists model-specific styles for Genos/Genos2/Tyros4/Tyros5", async () => {
     const entries = [
       songEntry(),

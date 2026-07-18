@@ -21,6 +21,14 @@ export type JamSongSection = {
   chords: DisplayChord[]
 }
 
+export type ReharmonizeCandidate = {
+  /** Opaque candidate id — never a pattern name or score. */
+  id: string
+  /** Short user-facing label only. */
+  label: string
+  chordsBySection: Record<string, DisplayChord[]>
+}
+
 export type JamSong = {
   id: string
   title: string
@@ -31,7 +39,12 @@ export type JamSong = {
   timeSignature: readonly [number, number]
   accent: string
   sections: JamSongSection[]
+  /** Named factory reharms from catalog `factory_clip_variation` (not live Suggest). */
+  reharmonizations: ReharmonizeCandidate[]
 }
+
+export type JamSongKeyTonality = "any" | "major" | "minor"
+export type JamSongTempoBand = "any" | "slow" | "medium" | "fast"
 
 export type JamSongSummary = {
   id: string
@@ -39,6 +52,7 @@ export type JamSongSummary = {
   category: string
   tempo: number
   key: string
+  timeSignature: readonly [number, number]
   sectionCount: number
   accent: string
 }
@@ -63,14 +77,6 @@ export type JamPrepareRequest = {
   /** Opaque selected reharmonization candidate, if any. */
   candidateId?: string | null
   generationId?: string | null
-}
-
-export type ReharmonizeCandidate = {
-  /** Opaque candidate id — never a pattern name or score. */
-  id: string
-  /** Short user-facing label only. */
-  label: string
-  chordsBySection: Record<string, DisplayChord[]>
 }
 
 export type JamReharmonizeRequest = {
@@ -109,9 +115,22 @@ export type JamEngineClient = {
   reharmonize(request: JamReharmonizeRequest): Promise<JamReharmonizeResponse>
 }
 
+export type JamLibraryFacets = {
+  categories: string[]
+  categoryCounts: Record<string, number>
+  meters: string[]
+}
+
 export type JamCatalogClient = {
   listCategories(): Promise<string[]>
-  listSongs(options?: { category?: string; search?: string }): Promise<JamSongSummary[]>
+  listLibraryFacets(): Promise<JamLibraryFacets>
+  listSongs(options?: {
+    category?: string
+    search?: string
+    keyTonality?: JamSongKeyTonality
+    tempoBand?: JamSongTempoBand
+    timeSignature?: string
+  }): Promise<JamSongSummary[]>
   getSong(songId: string): Promise<JamSong>
   listStyles(options: {
     model: YamahaModelId
@@ -204,6 +223,8 @@ export type JamConnectionClient = {
   disconnect(): Promise<void>
   /** Reconnect using the preferred/saved model when possible. */
   refresh(): Promise<void>
+  /** Send style-select SysEx now (demo parity — no re-prepare required). */
+  changeStyle(style: Pick<JamStyleSummary, "name" | "category" | "styleNumber" | "bpm">): void
 }
 
 export type JamPlayerAdapters = {

@@ -5,6 +5,7 @@ import { useEffect, useState } from "react"
 import { KEYBOARD_PROFILES } from "@/lib/yamaha/profiles"
 import {
   getPreferredKeyboardModel,
+  setKeyboardAutoConnect,
   setPreferredKeyboardModel,
 } from "@/lib/yamaha/preferred-model"
 import { useMidiSession } from "@/lib/yamaha/use-midi-session"
@@ -41,11 +42,13 @@ export function KeyboardSetupPanel({
   const connect = async () => {
     if (!model) return
     setPreferredKeyboardModel(model)
+    setKeyboardAutoConnect(true)
     await session.requestAccess(model)
   }
 
   const disconnect = async () => {
     onSafeStop?.()
+    setKeyboardAutoConnect(false)
     await session.disconnect()
   }
 

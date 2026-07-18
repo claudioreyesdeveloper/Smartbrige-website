@@ -2,27 +2,42 @@
 
 import {
   LoaderCircle,
+  Pause,
   Play,
-  Save,
+  Plug,
+  RotateCcw,
+  Sparkles,
   Square,
   TriangleAlert,
 } from "lucide-react"
-import { useCallback, useEffect, useMemo, useRef, useState } from "react"
-import { GlobalKeyboardStatus } from "@/components/keyboard/global-keyboard-status"
-import { createProductionJamAdapters } from "./production"
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type CSSProperties,
+} from "react"
+import { KEYBOARD_PROFILES } from "@/lib/yamaha/profiles"
+import {
+  createProductionJamAdapters,
+  SSR_SAFE_CONNECTION_STATE,
+} from "./production"
 import { prepareAndPlay } from "./prepare-flow"
+import { SectionRecordDialog } from "./section-record-dialog"
 import { SongTimeline } from "./song-timeline"
 import type {
   DispatchPlaybackState,
   DisplayChord,
   JamPlayerAdapters,
-  JamProjectRecord,
   JamSong,
+  JamSongKeyTonality,
   JamSongSummary,
+  JamSongTempoBand,
   JamStyleSummary,
   ReharmonizeCandidate,
+  YamahaModelId,
 } from "./types"
-import { JamEngineError } from "./types"
 import "./jam-player.css"
 
 type JamPlayerWorkspaceProps = {
@@ -33,13 +48,7 @@ const KEY_OPTIONS = [
   "C", "C#", "Db", "D", "Eb", "E", "F", "F#", "Gb", "G", "Ab", "A", "Bb", "B",
 ] as const
 
-const SAVE_LABELS: Record<string, string> = {
-  clean: "All changes saved",
-  dirty: "Unsaved changes",
-  saving: "Saving…",
-  saved: "Saved",
-  error: "Save failed",
-}
+const MODEL_OPTIONS = ["genos", "genos2", "tyros4", "tyros5"] as const satisfies readonly YamahaModelId[]
 
 function applyCandidateChords(
   song: JamSong,
@@ -68,15 +77,47 @@ function idlePlayback(): DispatchPlaybackState {
   }
 }
 
+/** Next chord symbol for the live readout (demo parity). */
+function upcomingChordLabel(
+  song: JamSong | null,
+  positionMs: number,
+  tempo: number,
+): string {
+  if (!song || tempo <= 0) return ""
+  const beat = (positionMs / 60_000) * tempo
+  const beatsPerBar = song.timeSignature[0] || 4
+  let cursor = beatsPerBar
+  const flat: Array<{ start: number; name: string }> = []
+  for (const section of song.sections) {
+    for (const chord of section.chords) {
+      flat.push({ start: cursor + chord.beat, name: chord.name })
+    }
+    cursor += section.bars * beatsPerBar
+  }
+  if (flat.length === 0) return ""
+  let currentIndex = 0
+  for (let i = 0; i < flat.length; i += 1) {
+    if (flat[i]!.start <= beat) currentIndex = i
+    else break
+  }
+  return flat[currentIndex + 1]?.name ?? ""
+}
+
 export function JamPlayerWorkspace({ adapters: injected }: JamPlayerWorkspaceProps) {
   const adaptersRef = useRef(injected ?? createProductionJamAdapters())
   const adapters = adaptersRef.current
   const loopGuardRef = useRef(false)
+  const didAutoLoadRef = useRef(false)
 
   const [categories, setCategories] = useState<string[]>([])
-  const [category, setCategory] = useState("All")
+  const [category, setCategory] = useState("Pop")
   const [songSearch, setSongSearch] = useState("")
-  const [summaries, setSummaries] = useState<JamSongSummary[]>([])
+  const [keyTonality, setKeyTonality] = useState<JamSongKeyTonality>("any")
+  const [tempoBand, setTempoBand] = useState<JamSongTempoBand>("any")
+  const [meterFilter, setMeterFilter] = useState("")
+  const [meterOptions, setMeterOptions] = useState<string[]>(["4/4"])
+  const [categoryCounts, setCategoryCounts] = useState<Record<string, number>>({})
+  const [librarySongs, setLibrarySongs] = useState<JamSongSummary[]>([])
   const [song, setSong] = useState<JamSong | null>(null)
   const [styles, setStyles] = useState<JamStyleSummary[]>([])
   const [styleCategory, setStyleCategory] = useState("All")
@@ -85,18 +126,17 @@ export function JamPlayerWorkspace({ adapters: injected }: JamPlayerWorkspacePro
   const [key, setKey] = useState("C")
   const [tempo, setTempo] = useState(112)
   const [loop, setLoop] = useState(false)
+  const [pickedModel, setPickedModel] = useState<YamahaModelId | null>(null)
 
-  const [projects, setProjects] = useState<JamProjectRecord[]>([])
-  const [projectId, setProjectId] = useState<string | null>(null)
-  const [projectTitle, setProjectTitle] = useState("")
-  const [saveState, setSaveState] = useState(adapters.projects.getSaveState())
-  const [saveError, setSaveError] = useState<string | null>(null)
+  // Correlation id for engine audit only — not a saved cloud project.
+  const [engineSessionId] = useState(() => crypto.randomUUID())
 
-  const [connection, setConnection] = useState(adapters.connection.getState())
+  // Stable SSR/client first paint — live MIDI + localStorage preferred model
+  // arrive via connection.subscribe in useEffect (see production adapter).
+  const [connection, setConnection] = useState(SSR_SAFE_CONNECTION_STATE)
   const [playback, setPlayback] = useState<DispatchPlaybackState>(idlePlayback())
 
   const [candidates, setCandidates] = useState<ReharmonizeCandidate[]>([])
-  const [generationId, setGenerationId] = useState<string | null>(null)
   const [candidateId, setCandidateId] = useState<string | null>(null)
   const [chordsBySection, setChordsBySection] = useState<Record<
     string,
@@ -105,17 +145,25 @@ export function JamPlayerWorkspace({ adapters: injected }: JamPlayerWorkspacePro
 
   const [planFingerprint, setPlanFingerprint] = useState<string | null>(null)
 
-  const [loadingSongs, setLoadingSongs] = useState(true)
+  const [loadingLibrary, setLoadingLibrary] = useState(true)
   const [loadingSong, setLoadingSong] = useState(false)
   const [preparing, setPreparing] = useState(false)
-  const [reharmonizing, setReharmonizing] = useState(false)
   const [statusMessage, setStatusMessage] = useState("")
   const [errorMessage, setErrorMessage] = useState("")
   const [quotaMessage, setQuotaMessage] = useState("")
+  const [recordSectionId, setRecordSectionId] = useState<string | null>(null)
 
   const displaySong = useMemo(
     () => (song ? applyCandidateChords(song, chordsBySection) : null),
     [song, chordsBySection],
+  )
+
+  const recordSection = useMemo(
+    () =>
+      displaySong && recordSectionId
+        ? displaySong.sections.find((item) => item.id === recordSectionId) ?? null
+        : null,
+    [displaySong, recordSectionId],
   )
 
   const fingerprint = useMemo(() => {
@@ -127,9 +175,8 @@ export function JamPlayerWorkspace({ adapters: injected }: JamPlayerWorkspacePro
       styleId,
       loop,
       candidateId,
-      generationId,
     })
-  }, [song, key, tempo, styleId, loop, candidateId, generationId])
+  }, [song, key, tempo, styleId, loop, candidateId])
 
   const planMatchesRequest = Boolean(
     planFingerprint &&
@@ -148,114 +195,74 @@ export function JamPlayerWorkspace({ adapters: injected }: JamPlayerWorkspacePro
   )
 
   const filteredStyles = useMemo(() => {
-    const q = styleSearch.trim().toLowerCase()
+    const search = styleSearch.trim().toLowerCase()
     return styles.filter(
       (style) =>
         (styleCategory === "All" || style.category === styleCategory) &&
-        (!q ||
-          style.name.toLowerCase().includes(q) ||
-          style.category.toLowerCase().includes(q)),
+        (!search || style.name.toLowerCase().includes(search)),
     )
   }, [styles, styleCategory, styleSearch])
 
+  const selectedStyleVisible =
+    Boolean(selectedStyle) &&
+    filteredStyles.some((style) => style.id === selectedStyle?.id)
+
   const markDirty = useCallback(() => {
-    adapters.projects.markDirty()
-    setSaveState(adapters.projects.getSaveState())
     setPlanFingerprint(null)
-  }, [adapters.projects])
-
-  const ensureOwnedProject = useCallback(async (): Promise<string> => {
-    if (projectId) return projectId
-    if (!displaySong) throw new Error("Load a song before creating a project.")
-
-    const created = await adapters.projects.create(
-      projectTitle || displaySong.title || "Jam Project",
-    )
-    const saved = await adapters.projects.save({
-      ...created,
-      title: projectTitle || displaySong.title,
-      songId: displaySong.id,
-      key,
-      tempo,
-      styleId,
-      model: connection.model ?? "genos",
-      loop,
-      generationId,
-      candidateId,
-      chordsBySection,
-      song: displaySong,
-    })
-    setProjectId(saved.id)
-    setProjectTitle(saved.title)
-    setProjects(await adapters.projects.list())
-    return saved.id
-  }, [
-    adapters.projects,
-    candidateId,
-    chordsBySection,
-    connection.model,
-    displaySong,
-    generationId,
-    key,
-    loop,
-    projectId,
-    projectTitle,
-    styleId,
-    tempo,
-  ])
+  }, [])
 
   useEffect(() => adapters.connection.subscribe(setConnection), [adapters.connection])
+  useEffect(() => {
+    if (connection.model) setPickedModel(connection.model)
+  }, [connection.model])
+  useEffect(() => {
+    // Sticky play/connect banners must not outlive a real connection change.
+    if (connection.connected) {
+      setErrorMessage("")
+      setStatusMessage((current) =>
+        current === connection.guidance ? "" : current,
+      )
+      return
+    }
+    if (connection.error) {
+      setStatusMessage(connection.error)
+    }
+  }, [connection.connected, connection.error, connection.guidance])
   useEffect(() => adapters.dispatcher.subscribe(setPlayback), [adapters.dispatcher])
-  useEffect(
-    () =>
-      adapters.projects.subscribe(() => {
-        setSaveState(adapters.projects.getSaveState())
-        setSaveError(adapters.projects.getLastError())
-      }),
-    [adapters.projects],
-  )
 
   useEffect(() => {
     let cancelled = false
     ;(async () => {
-      setLoadingSongs(true)
-      setErrorMessage("")
+      setLoadingLibrary(true)
       try {
-        const [cats, list, projectList] = await Promise.all([
-          adapters.catalog.listCategories(),
-          adapters.catalog.listSongs(),
-          adapters.projects.list(),
+        const [facets, songs] = await Promise.all([
+          adapters.catalog.listLibraryFacets(),
+          adapters.catalog.listSongs({}),
         ])
         if (cancelled) return
-        setCategories(["All", ...cats])
-        setSummaries(list)
-        setProjects(projectList)
-        if (list[0]) {
-          setLoadingSong(true)
-          const first = await adapters.catalog.getSong(list[0].id)
-          if (cancelled) return
-          setSong(first)
-          setKey(first.key)
-          setTempo(first.tempo)
-          setProjectTitle(first.title)
-        }
+        setCategories(facets.categories)
+        setCategoryCounts(facets.categoryCounts)
+        setMeterOptions(facets.meters.length > 0 ? facets.meters : ["4/4"])
+        setLibrarySongs(songs)
+        setCategory((current) => {
+          if (current && facets.categories.includes(current)) return current
+          if (facets.categories.includes("Pop")) return "Pop"
+          return facets.categories[0] ?? "Pop"
+        })
       } catch (error) {
         if (!cancelled) {
           setErrorMessage(
-            error instanceof Error ? error.message : "Could not load songs.",
+            error instanceof Error ? error.message : "Could not load song library.",
           )
         }
       } finally {
-        if (!cancelled) {
-          setLoadingSongs(false)
-          setLoadingSong(false)
-        }
+        if (!cancelled) setLoadingLibrary(false)
       }
     })()
     return () => {
       cancelled = true
     }
-  }, [adapters.catalog, adapters.projects])
+  }, [adapters.catalog])
 
   useEffect(() => {
     let cancelled = false
@@ -267,58 +274,108 @@ export function JamPlayerWorkspace({ adapters: injected }: JamPlayerWorkspacePro
       setStyleId((current) => {
         if (current && list.some((style) => style.id === current)) return current
         const easy = list.find((s) => s.name === "EasyPop") ?? list[0]
-        if (easy) setStyleSearch(easy.name)
         return easy?.id ?? ""
       })
+      setStyleSearch("")
     })()
     return () => {
       cancelled = true
     }
   }, [adapters.catalog, connection.model])
 
-  useEffect(() => {
-    let cancelled = false
-    ;(async () => {
-      const list = await adapters.catalog.listSongs({
-        category: category === "All" ? undefined : category,
-        search: songSearch,
-      })
-      if (!cancelled) setSummaries(list)
-    })()
-    return () => {
-      cancelled = true
+  const visibleSongs = useMemo(() => {
+    const q = songSearch.trim().toLowerCase()
+    return librarySongs.filter((item) => {
+      if (category && item.category !== category) return false
+      if (keyTonality !== "any") {
+        const isMinor = item.key.trim().toLowerCase().endsWith("m")
+        if (keyTonality === "major" && isMinor) return false
+        if (keyTonality === "minor" && !isMinor) return false
+      }
+      if (tempoBand === "slow" && !(item.tempo < 90)) return false
+      if (tempoBand === "medium" && !(item.tempo >= 90 && item.tempo <= 130)) {
+        return false
+      }
+      if (tempoBand === "fast" && !(item.tempo > 130)) return false
+      if (meterFilter) {
+        const meter = `${item.timeSignature[0]}/${item.timeSignature[1]}`
+        if (meter !== meterFilter) return false
+      }
+      if (!q) return true
+      return (
+        item.title.toLowerCase().includes(q) ||
+        item.category.toLowerCase().includes(q) ||
+        item.key.toLowerCase().includes(q)
+      )
+    })
+  }, [librarySongs, category, songSearch, keyTonality, tempoBand, meterFilter])
+
+  const loadSong = useCallback(async (songId: string) => {
+    adapters.dispatcher.stop()
+    setLoadingSong(true)
+    setErrorMessage("")
+    setQuotaMessage("")
+    setCandidates([])
+    setCandidateId(null)
+    setChordsBySection(null)
+    setPlanFingerprint(null)
+    setStatusMessage("")
+    try {
+      const next = await adapters.catalog.getSong(songId)
+      setSong(next)
+      setKey(next.key)
+      setTempo(next.tempo)
+      setCandidates(next.reharmonizations ?? [])
+      setPlanFingerprint(null)
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : "Could not load song.")
+    } finally {
+      setLoadingSong(false)
     }
-  }, [adapters.catalog, category, songSearch])
+  }, [adapters.catalog, adapters.dispatcher])
+
+  // Demo parity: first song is ready as soon as the library arrives.
+  useEffect(() => {
+    if (didAutoLoadRef.current || loadingLibrary || song || librarySongs.length === 0) {
+      return
+    }
+    const inCategory = librarySongs.filter((item) => item.category === category)
+    const first = inCategory[0] ?? librarySongs[0]
+    if (!first) return
+    didAutoLoadRef.current = true
+    void loadSong(first.id)
+  }, [category, librarySongs, loadSong, loadingLibrary, song])
+
+  // Keep a song selected when switching categories (demo behavior).
+  useEffect(() => {
+    if (!song || loadingLibrary || librarySongs.length === 0) return
+    const visible = librarySongs.filter((item) => !category || item.category === category)
+    if (visible.some((item) => item.id === song.id)) return
+    const next = visible[0]
+    if (next) void loadSong(next.id)
+  }, [category, librarySongs, loadSong, loadingLibrary, song])
 
   const playArrangement = useCallback(
     async (mode: "full" | "section", sectionId?: string) => {
       setErrorMessage("")
       setQuotaMessage("")
       if (!connection.browserSupported || !connection.connected || !connection.model) {
-        setErrorMessage(connection.guidance)
+        setStatusMessage(
+          "Connect a supported Yamaha keyboard before starting the arrangement.",
+        )
         return
       }
       if (!displaySong || !styleId) {
-        setErrorMessage("Load a song and choose a style before playing.")
+        setStatusMessage("Pick a song and style, then play.")
         return
       }
       if (!selectedStyle) {
-        setErrorMessage("Choose a Yamaha style before playing.")
-        return
-      }
-
-      let ownedProjectId: string
-      try {
-        ownedProjectId = await ensureOwnedProject()
-      } catch (error) {
-        setErrorMessage(
-          error instanceof Error ? error.message : "Create a project before playing.",
-        )
+        setStatusMessage("Choose a Yamaha style before playing.")
         return
       }
 
       const request = {
-        projectId: ownedProjectId,
+        projectId: engineSessionId,
         model: connection.model,
         song: displaySong,
         key,
@@ -327,7 +384,6 @@ export function JamPlayerWorkspace({ adapters: injected }: JamPlayerWorkspacePro
         styleNumber: selectedStyle.styleNumber,
         loop,
         candidateId,
-        generationId,
       }
       const selection =
         mode === "section" && sectionId
@@ -374,8 +430,7 @@ export function JamPlayerWorkspace({ adapters: injected }: JamPlayerWorkspacePro
       connection,
       displaySong,
       fingerprint,
-      generationId,
-      ensureOwnedProject,
+      engineSessionId,
       key,
       loop,
       planMatchesRequest,
@@ -393,79 +448,24 @@ export function JamPlayerWorkspace({ adapters: injected }: JamPlayerWorkspacePro
     void playArrangement("full")
   }, [playback.status, playback.selection, loop, playArrangement])
 
-  const loadSong = async (songId: string) => {
-    adapters.dispatcher.stop()
-    setLoadingSong(true)
-    setErrorMessage("")
-    setQuotaMessage("")
-    setCandidates([])
-    setCandidateId(null)
-    setGenerationId(null)
-    setChordsBySection(null)
-    setPlanFingerprint(null)
-    setStatusMessage("")
-    try {
-      const next = await adapters.catalog.getSong(songId)
-      setSong(next)
-      setKey(next.key)
-      setTempo(next.tempo)
-      if (!projectId) setProjectTitle(next.title)
-      markDirty()
-    } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : "Could not load song.")
-    } finally {
-      setLoadingSong(false)
-    }
-  }
-
   const stopPlayback = () => {
+    // production dispatcher.stop sends ARRANGER_COMMANDS.stop + MIDI Stop + panic
     adapters.dispatcher.stop()
     loopGuardRef.current = true
-    setStatusMessage("Stopped.")
+    setStatusMessage("")
   }
 
-  const runReharmonize = async () => {
-    if (!displaySong || !connection.model) {
-      setErrorMessage("Load a song and connect a keyboard before reharmonizing.")
+  const togglePlay = () => {
+    if (playing) {
+      stopPlayback()
       return
     }
-    let ownedProjectId: string
-    try {
-      ownedProjectId = await ensureOwnedProject()
-    } catch (error) {
-      setErrorMessage(
-        error instanceof Error ? error.message : "Create a project before reharmonizing.",
-      )
-      return
-    }
-    setReharmonizing(true)
-    setErrorMessage("")
-    setQuotaMessage("")
-    setStatusMessage("Requesting chord candidates…")
-    try {
-      const response = await adapters.engine.reharmonize({
-        projectId: ownedProjectId,
-        model: connection.model,
-        song: displaySong,
-        key,
-        scope: "song",
-      })
-      setGenerationId(response.generationId)
-      setCandidates(response.candidates)
-      setStatusMessage("Choose a candidate to hear different chords.")
-      markDirty()
-    } catch (error) {
-      if (error instanceof JamEngineError && error.code === "quota_exceeded") {
-        setQuotaMessage(error.message)
-      } else {
-        setErrorMessage(
-          error instanceof Error ? error.message : "Reharmonization failed.",
-        )
-      }
-      setStatusMessage("")
-    } finally {
-      setReharmonizing(false)
-    }
+    void playArrangement("full")
+  }
+
+  const restartPlayback = () => {
+    stopPlayback()
+    void playArrangement("full")
   }
 
   const selectCandidate = (id: string | null) => {
@@ -476,109 +476,73 @@ export function JamPlayerWorkspace({ adapters: injected }: JamPlayerWorkspacePro
     } else {
       const found = candidates.find((item) => item.id === id)
       setChordsBySection(found?.chordsBySection ?? null)
-      setStatusMessage(found ? `${found.label} chords selected.` : "Candidate selected.")
+      setStatusMessage(
+        found ? `${found.label} reharmonization selected.` : "Candidate selected.",
+      )
     }
     markDirty()
   }
 
-  const saveProject = async () => {
-    if (!song) return
-    setErrorMessage("")
+  const connectKeyboard = async () => {
+    const model = pickedModel ?? connection.model
+    if (!model) {
+      setStatusMessage("Choose Genos, Genos2, Tyros4, or Tyros5, then connect.")
+      return
+    }
+    setStatusMessage("Connecting…")
     try {
-      let record: JamProjectRecord
-      if (projectId) {
-        record = await adapters.projects.save({
-          id: projectId,
-          title: projectTitle || song.title,
-          version: projects.find((p) => p.id === projectId)?.version ?? 1,
-          songId: song.id,
-          key,
-          tempo,
-          styleId,
-          model: connection.model ?? "genos",
-          loop,
-          generationId,
-          candidateId,
-          chordsBySection,
-          song: displaySong,
-        })
-      } else {
-        const created = await adapters.projects.create(projectTitle || song.title)
-        record = await adapters.projects.save({
-          ...created,
-          songId: song.id,
-          key,
-          tempo,
-          styleId,
-          model: connection.model ?? "genos",
-          loop,
-          generationId,
-          candidateId,
-          chordsBySection,
-          song: displaySong,
-        })
-        setProjectId(record.id)
-      }
-      setProjects(await adapters.projects.list())
-      setProjectTitle(record.title)
-      setStatusMessage("Project saved. You can reopen it anytime.")
+      await adapters.connection.connect(model)
+      setStatusMessage("")
     } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : "Save failed.")
+      setStatusMessage(
+        error instanceof Error ? error.message : "Could not connect the keyboard.",
+      )
     }
   }
 
-  const openProject = async (id: string) => {
-    adapters.dispatcher.stop()
-    setLoadingSong(true)
-    setErrorMessage("")
-    try {
-      const record = await adapters.projects.open(id)
-      const next = await adapters.catalog.getSong(record.songId)
-      setProjectId(record.id)
-      setProjectTitle(record.title)
-      setSong(next)
-      setKey(record.key)
-      setTempo(record.tempo)
-      setStyleId(record.styleId)
-      const style = styles.find((item) => item.id === record.styleId)
-      if (style) setStyleSearch(style.name)
-      setLoop(record.loop)
-      setGenerationId(record.generationId)
-      setCandidateId(record.candidateId)
-      setChordsBySection(record.chordsBySection)
-      setCandidates([])
-      setPlanFingerprint(null)
-      setStatusMessage(`Reopened “${record.title}”.`)
-    } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : "Could not open project.")
-    } finally {
-      setLoadingSong(false)
-    }
-  }
-
-  const createProject = async () => {
-    const created = await adapters.projects.create(
-      projectTitle || song?.title || "Jam Project",
-    )
-    setProjectId(created.id)
-    setProjectTitle(created.title)
-    setProjects(await adapters.projects.list())
-    markDirty()
-    setStatusMessage("New project created. Save when you are ready.")
-  }
-
-  const busy = preparing || reharmonizing || loadingSong
+  const busy = preparing || loadingSong
   const playing = playback.status === "playing"
+  const nextChord = upcomingChordLabel(displaySong, playback.positionMs, tempo)
+
+  /** Demo parity: send style SysEx immediately; keep styleId for the next prepare. */
+  const applyStyle = useCallback(
+    (style: JamStyleSummary, options?: { syncSearch?: boolean }) => {
+      setStyleId(style.id)
+      if (options?.syncSearch) setStyleSearch(style.name)
+      else setStyleSearch("")
+      markDirty()
+      if (!connection.connected) {
+        setStatusMessage(`${style.name} selected. Connect your keyboard to hear it.`)
+        return
+      }
+      try {
+        adapters.connection.changeStyle(style)
+        setStatusMessage(
+          playing
+            ? `Same arrangement, now playing ${style.name} on ${connection.displayName ?? "your keyboard"}.`
+            : `${style.name} selected on your ${connection.displayName ?? "keyboard"}.`,
+        )
+      } catch (error) {
+        setStatusMessage(
+          error instanceof Error ? error.message : "Could not change style.",
+        )
+      }
+    },
+    [
+      adapters.connection,
+      connection.connected,
+      connection.displayName,
+      markDirty,
+      playing,
+    ],
+  )
+  const totalSongs = categoryCounts.All ?? librarySongs.length
+  const activeModel = pickedModel ?? connection.model
 
   return (
     <div
       className={`paid-jam app-shell-workspace${connection.browserSupported ? "" : " is-unsupported"}`}
     >
-      <p className="paid-jam-lead">
-        Choose a song, connect your Yamaha, shape the arrangement, then play from the
-        timeline.
-      </p>
-
       {!connection.browserSupported && (
         <div className="paid-jam-banner paid-jam-banner-warning" role="alert">
           <TriangleAlert size={22} aria-hidden="true" />
@@ -609,55 +573,52 @@ export function JamPlayerWorkspace({ adapters: injected }: JamPlayerWorkspacePro
         </div>
       )}
 
-      <div className="paid-jam-layout">
-        <aside className="paid-jam-library" aria-label="Songs and projects">
-          <div className="paid-jam-panel-heading">
+      <div className="jam-layout paid-jam-demo-shell">
+        <aside className="jam-library" aria-label="Song library">
+          <div className="panel-heading">
             <span>Song library</span>
-            <strong>Factory songs</strong>
+            <strong>
+              {totalSongs
+                ? `${totalSongs} complete arrangements`
+                : "Factory arrangements"}
+            </strong>
           </div>
-
-          <label className="paid-jam-field">
-            <span>Find a song</span>
-            <input
-              type="search"
-              value={songSearch}
-              onChange={(event) => setSongSearch(event.target.value)}
-              placeholder="Type a title"
-              aria-label="Find a song"
-            />
-          </label>
-
-          <div className="paid-jam-category-tabs" role="tablist" aria-label="Song categories">
-            {categories.map((item) => (
-              <button
-                key={item}
-                type="button"
-                role="tab"
-                aria-selected={item === category}
-                className={item === category ? "is-active" : ""}
-                onClick={() => setCategory(item)}
-              >
-                {item}
-              </button>
-            ))}
-          </div>
-
-          <div className="paid-jam-song-list">
-            {loadingSongs ? (
+          <div className="category-tabs" role="tablist" aria-label="Song categories">
+            {loadingLibrary && categories.length === 0 ? (
               <p className="paid-jam-muted">
-                <LoaderCircle className="paid-jam-spin" size={18} aria-hidden="true" />
-                Loading songs…
+                <LoaderCircle className="paid-jam-spin" size={16} aria-hidden="true" />
+                Loading…
               </p>
-            ) : summaries.length === 0 ? (
-              <p className="paid-jam-muted">No songs match your search.</p>
             ) : (
-              summaries.map((item) => (
+              categories.map((item) => (
+                <button
+                  key={item}
+                  type="button"
+                  className={item === category ? "is-active" : ""}
+                  onClick={() => setCategory(item)}
+                >
+                  {item}
+                  <span>{categoryCounts[item] ?? 0}</span>
+                </button>
+              ))
+            )}
+          </div>
+          <div className="song-list">
+            {loadingLibrary ? (
+              <p className="paid-jam-muted">Loading songs…</p>
+            ) : visibleSongs.length === 0 ? (
+              <p className="paid-jam-muted">No songs in this category.</p>
+            ) : (
+              visibleSongs.map((item) => (
                 <button
                   key={item.id}
                   type="button"
                   className={item.id === song?.id ? "is-active" : ""}
-                  onClick={() => void loadSong(item.id)}
-                  disabled={busy}
+                  onClick={() => {
+                    stopPlayback()
+                    void loadSong(item.id)
+                  }}
+                  disabled={busy && item.id !== song?.id}
                 >
                   <i style={{ background: item.accent }} />
                   <span>
@@ -670,50 +631,34 @@ export function JamPlayerWorkspace({ adapters: injected }: JamPlayerWorkspacePro
               ))
             )}
           </div>
-
-          <div className="paid-jam-panel-heading paid-jam-panel-heading-tight">
-            <span>Your projects</span>
-            <strong>Save & reopen</strong>
-          </div>
-          <div className="paid-jam-project-actions">
-            <button type="button" onClick={() => void createProject()} disabled={busy}>
-              New project
-            </button>
-            <button type="button" onClick={() => void saveProject()} disabled={busy || !song}>
-              <Save size={16} aria-hidden="true" /> Save
-            </button>
-          </div>
-          <p className="paid-jam-save-status" role="status" data-state={saveState}>
-            {SAVE_LABELS[saveState] ?? saveState}
-            {saveError ? ` — ${saveError}` : ""}
-          </p>
-          <ul className="paid-jam-project-list">
-            {projects.map((project) => (
-              <li key={project.id}>
-                <button
-                  type="button"
-                  className={project.id === projectId ? "is-active" : ""}
-                  onClick={() => void openProject(project.id)}
-                  disabled={busy}
-                >
-                  <strong>{project.title}</strong>
-                  <small>v{project.version}</small>
-                </button>
-              </li>
-            ))}
-          </ul>
         </aside>
 
-        <section className="paid-jam-stage">
-          <header className="paid-jam-song-header">
-            <div>
-              <span className="paid-jam-eyebrow">
-                {song?.category ?? "Song"} · Exact source sections
-              </span>
-              <h2>{loadingSong ? "Loading…" : song?.title ?? "Choose a song"}</h2>
-              <p>{song?.subtitle ?? "Pick a factory song from the library."}</p>
+        <section className="jam-stage">
+          <header className="jam-song-header">
+            <div
+              className="song-art"
+              style={
+                {
+                  "--song-accent": displaySong?.accent ?? "#4db8ff",
+                } as CSSProperties
+              }
+            >
+              <Sparkles size={26} aria-hidden="true" />
+              <span>SB</span>
             </div>
-            <div className="paid-jam-facts" aria-label="Song facts">
+            <div>
+              <span className="demo-eyebrow">
+                {displaySong?.category ?? "Song"} · Original progression
+              </span>
+              <h1>
+                {loadingSong ? "Loading…" : displaySong?.title ?? "Loading song…"}
+              </h1>
+              <p>
+                {displaySong?.subtitle ??
+                  "Connect your keyboard, then press Play arrangement."}
+              </p>
+            </div>
+            <div className="song-facts">
               <span>
                 <small>Tempo</small>
                 <strong>{tempo}</strong>
@@ -725,61 +670,124 @@ export function JamPlayerWorkspace({ adapters: injected }: JamPlayerWorkspacePro
               <span>
                 <small>Meter</small>
                 <strong>
-                  {song ? `${song.timeSignature[0]}/${song.timeSignature[1]}` : "—"}
+                  {displaySong
+                    ? `${displaySong.timeSignature[0]}/${displaySong.timeSignature[1]}`
+                    : "—"}
                 </strong>
               </span>
             </div>
           </header>
 
-          <GlobalKeyboardStatus />
-
-          <section
-            className="paid-jam-transform-panel"
-            aria-labelledby="paid-jam-transform-title"
-          >
-            <div className="paid-jam-workflow-heading">
-              <span>2 · Shape the arrangement</span>
+          {!connection.connected && connection.browserSupported && (
+            <div className="paid-jam-connect-strip" role="region" aria-label="Connect keyboard">
               <div>
-                <h3 id="paid-jam-transform-title">Choose the musical feel</h3>
-                <p>Keep the song structure and hear it with a Yamaha factory style.</p>
+                <span className="demo-eyebrow">Step 1</span>
+                <strong>Connect your Yamaha keyboard</strong>
+                <p>Choose a model, then connect over USB. Same flow as the live demo.</p>
               </div>
-            </div>
-            <div className="paid-jam-controls" aria-label="Arrangement controls">
-            <label className="paid-jam-field">
-              <span>Key</span>
-              <select
-                value={key}
-                aria-label="Key"
-                onChange={(event) => {
-                  setKey(event.target.value)
-                  markDirty()
-                }}
-              >
-                {KEY_OPTIONS.map((option) => (
-                  <option key={option} value={option}>
-                    {option}
-                  </option>
+              <div className="paid-jam-connect-models" role="group" aria-label="Keyboard model">
+                {MODEL_OPTIONS.map((id) => (
+                  <button
+                    key={id}
+                    type="button"
+                    className={activeModel === id ? "is-selected" : ""}
+                    aria-pressed={activeModel === id}
+                    disabled={connection.connecting}
+                    onClick={() => setPickedModel(id)}
+                  >
+                    {KEYBOARD_PROFILES[id].displayName}
+                  </button>
                 ))}
-              </select>
-            </label>
+              </div>
+              <button
+                type="button"
+                className="paid-jam-connect-action"
+                disabled={connection.connecting || !activeModel}
+                onClick={() => void connectKeyboard()}
+              >
+                <Plug size={16} aria-hidden="true" />
+                {connection.connecting ? "Connecting…" : "Connect my keyboard"}
+              </button>
+            </div>
+          )}
 
-            <label className="paid-jam-field">
-              <span>Tempo</span>
-              <input
-                type="number"
-                min={40}
-                max={300}
-                value={tempo}
-                aria-label="Tempo"
-                onChange={(event) => {
-                  setTempo(Number(event.target.value) || tempo)
-                  markDirty()
-                }}
-              />
-            </label>
+          <div className="performance-strip">
+            <button
+              className="transport-main"
+              type="button"
+              onClick={togglePlay}
+              disabled={(busy && !playing) || !displaySong}
+            >
+              {preparing ? (
+                <LoaderCircle className="paid-jam-spin" size={22} aria-hidden="true" />
+              ) : playing ? (
+                <Pause size={22} aria-hidden="true" />
+              ) : (
+                <Play size={22} fill="currentColor" aria-hidden="true" />
+              )}
+              {preparing ? "Starting…" : playing ? "Pause" : "Play arrangement"}
+            </button>
+            <button
+              className="transport-stop"
+              type="button"
+              onClick={stopPlayback}
+              disabled={!playing && playback.status !== "completed"}
+            >
+              <Square size={17} fill="currentColor" aria-hidden="true" /> Stop
+            </button>
+            <button
+              className="transport-stop"
+              type="button"
+              onClick={restartPlayback}
+              disabled={!playing && !planMatchesRequest}
+            >
+              <RotateCcw size={17} aria-hidden="true" /> Restart
+            </button>
+            <div className="live-readout" aria-live="polite">
+              <span>
+                <small>Now</small>
+                <strong>{playback.currentChord || "—"}</strong>
+              </span>
+              <span>
+                <small>Next</small>
+                <strong>{nextChord || "—"}</strong>
+              </span>
+              <span>
+                <small>Arranger</small>
+                <strong>
+                  {playing ? "Playing" : connection.connected ? "Ready" : "Idle"}
+                </strong>
+              </span>
+            </div>
+          </div>
 
-            <label className="paid-jam-field paid-jam-field-grow">
-              <span>Style search</span>
+          <div className="genre-transform">
+            <div>
+              <span className="demo-eyebrow">Transform the keyboard</span>
+              <strong>
+                Choose any factory style on your{" "}
+                {connection.displayName ?? "Yamaha keyboard"}.
+              </strong>
+              <label className="reharm-control">
+                <span>Reharmonization</span>
+                <select
+                  value={candidateId ?? ""}
+                  aria-label="Reharmonization"
+                  disabled={!song || candidates.length === 0}
+                  onChange={(event) =>
+                    selectCandidate(event.target.value ? event.target.value : null)
+                  }
+                >
+                  <option value="">Original</option>
+                  {candidates.map((candidate) => (
+                    <option key={candidate.id} value={candidate.id}>
+                      {candidate.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            </div>
+            <div className="style-catalog-controls">
               <input
                 type="search"
                 list="paid-jam-style-suggestions"
@@ -794,10 +802,7 @@ export function JamPlayerWorkspace({ adapters: injected }: JamPlayerWorkspacePro
                     (style) =>
                       style.name.toLowerCase() === value.trim().toLowerCase(),
                   )
-                  if (exact) {
-                    setStyleId(exact.id)
-                    markDirty()
-                  }
+                  if (exact) applyStyle(exact, { syncSearch: true })
                 }}
               />
               <datalist id="paid-jam-style-suggestions">
@@ -807,35 +812,32 @@ export function JamPlayerWorkspace({ adapters: injected }: JamPlayerWorkspacePro
                   </option>
                 ))}
               </datalist>
-            </label>
-
-            <label className="paid-jam-field">
-              <span>Style category</span>
               <select
                 value={styleCategory}
                 aria-label="Style category"
-                onChange={(event) => setStyleCategory(event.target.value)}
+                onChange={(event) => {
+                  setStyleCategory(event.target.value)
+                  setStyleSearch("")
+                }}
               >
                 {styleCategories.map((item) => (
                   <option key={item}>{item}</option>
                 ))}
               </select>
-            </label>
-
-            <label className="paid-jam-field paid-jam-field-grow">
-              <span>Yamaha style</span>
               <select
-                value={selectedStyle?.id ?? ""}
+                value={
+                  selectedStyleVisible && selectedStyle ? selectedStyle.id : ""
+                }
                 aria-label="Yamaha style"
                 onChange={(event) => {
-                  setStyleId(event.target.value)
-                  const next = styles.find((s) => s.id === event.target.value)
-                  if (next) setStyleSearch(next.name)
-                  markDirty()
+                  const next = styles.find((style) => style.id === event.target.value)
+                  if (next) applyStyle(next)
                 }}
               >
                 <option value="" disabled>
-                  {filteredStyles.length ? "Choose a style" : "No matching styles"}
+                  {filteredStyles.length
+                    ? "Choose a matching style"
+                    : "No matching styles"}
                 </option>
                 {filteredStyles.map((style) => (
                   <option key={style.id} value={style.id}>
@@ -844,118 +846,61 @@ export function JamPlayerWorkspace({ adapters: injected }: JamPlayerWorkspacePro
                   </option>
                 ))}
               </select>
-            </label>
-
-            <label className="paid-jam-loop">
-              <input
-                type="checkbox"
-                checked={loop}
-                aria-label="Loop full song"
-                onChange={(event) => {
-                  setLoop(event.target.checked)
-                  markDirty()
-                }}
-              />
-              <span>Loop full song</span>
-            </label>
+              <span>{selectedStyle?.name || "No style available"}</span>
             </div>
-          </section>
-
-          <section
-            className={`paid-jam-performance-panel${playing ? " is-playing" : ""}`}
-            aria-labelledby="paid-jam-performance-title"
-          >
-            <div className="paid-jam-workflow-heading">
-              <span>3 · Play</span>
-              <div>
-                <h3 id="paid-jam-performance-title">Play the full song or one section</h3>
-                <p>Double-click a section below, or focus it and press Enter.</p>
-              </div>
-            </div>
-            <div className="paid-jam-transport">
-            <button
-              className="paid-jam-transport-main"
-              type="button"
-              onClick={() => {
-                if (playing) stopPlayback()
-                else void playArrangement("full")
-              }}
-              disabled={busy && !playing}
-            >
-              {preparing ? (
-                <LoaderCircle className="paid-jam-spin" size={22} aria-hidden="true" />
-              ) : playing ? (
-                <Square size={22} fill="currentColor" aria-hidden="true" />
-              ) : (
-                <Play size={22} fill="currentColor" aria-hidden="true" />
-              )}
-              {preparing ? "Preparing…" : playing ? "Stop" : "Play arrangement"}
-            </button>
-            <div className="paid-jam-readout" aria-live="polite">
-              <span>
-                <small>Now</small>
-                <strong>{playback.currentChord || "—"}</strong>
-              </span>
-              <span>
-                <small>Section</small>
-                <strong>{playback.currentSectionLabel || "—"}</strong>
-              </span>
-              <span>
-                <small>Plan</small>
-                <strong>{planMatchesRequest ? "Ready" : "Needs prepare"}</strong>
-              </span>
-            </div>
-            </div>
-          </section>
-
-          <div className="paid-jam-reharm">
-            <div>
-              <span className="paid-jam-eyebrow">Optional musical variation</span>
-              <strong>Would you like to hear another chord color?</strong>
-              <p>Ask for a few safe choices, then compare them with the original chords.</p>
-            </div>
-            <button
-              type="button"
-              onClick={() => void runReharmonize()}
-              disabled={busy || !song}
-            >
-              {reharmonizing ? "Finding choices…" : "Suggest chord choices"}
-            </button>
-            <label className="paid-jam-field">
-              <span>Chord choice</span>
-              <select
-                value={candidateId ?? ""}
-                aria-label="Reharmonization candidate"
-                onChange={(event) =>
-                  selectCandidate(event.target.value ? event.target.value : null)
-                }
-                disabled={!candidates.length && !candidateId}
-              >
-                <option value="">Original chords</option>
-                {candidates.map((candidate) => (
-                  <option key={candidate.id} value={candidate.id}>
-                    {candidate.label}
-                  </option>
-                ))}
-              </select>
-            </label>
           </div>
 
-          <label className="paid-jam-field paid-jam-project-title">
-            <span>Project name</span>
-            <input
-              type="text"
-              value={projectTitle}
-              aria-label="Project name"
-              onChange={(event) => {
-                setProjectTitle(event.target.value)
-                markDirty()
-              }}
-            />
-          </label>
+          <details className="paid-jam-more">
+            <summary>Adjust key, tempo, or loop</summary>
+            <div className="paid-jam-compact-controls">
+              <label>
+                <span>Key</span>
+                <select
+                  value={key}
+                  aria-label="Key"
+                  onChange={(event) => {
+                    setKey(event.target.value)
+                    markDirty()
+                  }}
+                >
+                  {KEY_OPTIONS.map((option) => (
+                    <option key={option} value={option}>
+                      {option}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label>
+                <span>Tempo</span>
+                <input
+                  type="number"
+                  min={40}
+                  max={300}
+                  value={tempo}
+                  aria-label="Tempo"
+                  onChange={(event) => {
+                    setTempo(Number(event.target.value) || tempo)
+                    markDirty()
+                  }}
+                />
+              </label>
+              <label className="paid-jam-loop">
+                <input
+                  type="checkbox"
+                  checked={loop}
+                  aria-label="Loop full song"
+                  onChange={(event) => {
+                    setLoop(event.target.checked)
+                    markDirty()
+                  }}
+                />
+                <span>Loop full song</span>
+              </label>
+            </div>
+          </details>
 
           {statusMessage && (
-            <div className="paid-jam-status" role="status">
+            <div className="demo-status" role="status">
               {statusMessage}
             </div>
           )}
@@ -966,17 +911,30 @@ export function JamPlayerWorkspace({ adapters: injected }: JamPlayerWorkspacePro
               playback={playback}
               disabled={busy && !playing}
               onPlaySection={(sectionId) => void playArrangement("section", sectionId)}
+              onRecordSection={(sectionId) => {
+                adapters.dispatcher.stop()
+                setRecordSectionId(sectionId)
+              }}
             />
           ) : (
-            <p className="paid-jam-muted">Select a song to see its section timeline.</p>
+            <p className="paid-jam-muted">
+              <LoaderCircle className="paid-jam-spin" size={16} aria-hidden="true" />
+              Loading arrangement…
+            </p>
           )}
-
-          <p className="paid-jam-hint">
-            Tip: double-click any section (or press Enter when focused) to play just that
-            section. Playback always uses a prepared plan.
-          </p>
         </section>
       </div>
+
+      {displaySong && recordSection ? (
+        <SectionRecordDialog
+          open
+          section={recordSection}
+          songTitle={displaySong.title}
+          tempo={tempo}
+          beatsPerBar={displaySong.timeSignature[0]}
+          onClose={() => setRecordSectionId(null)}
+        />
+      ) : null}
     </div>
   )
 }

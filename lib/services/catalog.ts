@@ -19,6 +19,16 @@ export type SharedServiceCatalogEntry = {
   sortOrder: number
 }
 
+/** Top-level product tabs in the app shell (Jam Player nests the rest). */
+export const PRIMARY_NAV_KEYS = ["jam-player", "genos-mixer"] as const satisfies readonly ServiceKey[]
+
+/** Entitlement keys reached via Jam Player sub-tabs. */
+export const JAM_CHILD_SERVICE_KEYS = [
+  "bass-drums",
+  "solo-phrases",
+  "lyrics",
+] as const satisfies readonly ServiceKey[]
+
 export const SHARED_SERVICE_CATALOG: readonly SharedServiceCatalogEntry[] = [
   {
     key: "jam-player",
@@ -76,8 +86,22 @@ export function getSharedServiceCatalogEntry(key: ServiceKey): SharedServiceCata
   return entry
 }
 
+/** Full catalog order for entitlements / account rows. */
 export function getServiceNavOrder(): ServiceKey[] {
   return [...SHARED_SERVICE_CATALOG]
     .sort((left, right) => left.sortOrder - right.sortOrder)
     .map((entry) => entry.key)
+}
+
+/** Top-level ServiceNav product tabs only. */
+export function getPrimaryNavOrder(): ServiceKey[] {
+  return [...PRIMARY_NAV_KEYS]
+}
+
+export function isPrimaryNavKey(key: ServiceKey): boolean {
+  return (PRIMARY_NAV_KEYS as readonly ServiceKey[]).includes(key)
+}
+
+export function isJamChildServiceKey(key: ServiceKey): boolean {
+  return (JAM_CHILD_SERVICE_KEYS as readonly ServiceKey[]).includes(key)
 }

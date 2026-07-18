@@ -1,30 +1,29 @@
 "use client"
 
 import {
-  Check,
+  FolderOpen,
   LoaderCircle,
   Music2,
   RefreshCw,
+  Save,
   Search,
   TriangleAlert,
-  Volume2,
-  VolumeX,
   X,
 } from "lucide-react"
-import { useEffect, useMemo, useReducer, useState } from "react"
+import { useEffect, useMemo, useReducer, useRef, useState } from "react"
 import {
   channelsForPage,
   initialMixerWorkspaceState,
   mixerWorkspaceReducer,
   supportsGenosMixer,
 } from "./state"
+import { downloadMixFile, readMixFile } from "./mix-file"
 import { createProductionGenosMixerAdapters } from "./production"
 import { GlobalKeyboardStatus } from "@/components/keyboard/global-keyboard-status"
 import type {
   GenosMixerAdapters,
   MixerChannel,
   MixerConnectionState,
-  MixerProject,
   MixerVoice,
 } from "./types"
 import "./genos-mixer.css"
@@ -45,13 +44,12 @@ export function GenosMixerWorkspace({ adapters: injected }: { adapters?: GenosMi
   const [connection, setConnection] = useState<MixerConnectionState>(
     adapters.device.getState(),
   )
-  const [projects, setProjects] = useState<MixerProject[]>([])
-  const [projectId, setProjectId] = useState("")
-  const [projectStatus, setProjectStatus] = useState("Opening project…")
+  const [status, setStatus] = useState("Refresh from the keyboard, or load a mix file.")
   const [error, setError] = useState("")
   const [voiceQuery, setVoiceQuery] = useState("")
   const [voiceResults, setVoiceResults] = useState<readonly MixerVoice[]>([])
   const [voiceLoading, setVoiceLoading] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   const visibleChannels = useMemo(() => channelsForPage(state), [state])
   const voiceChannel = state.channels.find(
@@ -70,35 +68,6 @@ export function GenosMixerWorkspace({ adapters: injected }: { adapters?: GenosMi
   useEffect(() => () => {
     if (!injected) adapters.dispose?.()
   }, [adapters, injected])
-
-  useEffect(() => {
-    let cancelled = false
-    ;(async () => {
-      try {
-        const available = await adapters.projects.list()
-        if (cancelled) return
-        setProjects(available)
-        const first = available[0]
-        if (!first) {
-          setProjectStatus("No project available")
-          return
-        }
-        const opened = await adapters.projects.open(first.id)
-        if (cancelled) return
-        setProjectId(opened.id)
-        dispatch({ type: "replace-channels", channels: opened.channels })
-        setProjectStatus(`${opened.title} open`)
-      } catch (cause) {
-        if (!cancelled) {
-          setError(cause instanceof Error ? cause.message : "Project could not be opened.")
-          setProjectStatus("Project unavailable")
-        }
-      }
-    })()
-    return () => {
-      cancelled = true
-    }
-  }, [adapters.projects])
 
   useEffect(() => {
     if (state.selectedVoicePart === null) return
@@ -142,7 +111,7 @@ export function GenosMixerWorkspace({ adapters: injected }: { adapters?: GenosMi
     try {
       adapters.device.updateChannel(next, field)
       dispatch({ type: "change-level", part: channel.part, field, value })
-      setProjectStatus("Unsaved mixer changes")
+      setStatus("Unsaved mixer changes")
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Mixer control failed.")
     }
@@ -153,7 +122,7 @@ export function GenosMixerWorkspace({ adapters: injected }: { adapters?: GenosMi
     try {
       adapters.device.updateChannel(next, "mute")
       dispatch({ type: "toggle-mute", part: channel.part })
-      setProjectStatus("Unsaved mixer changes")
+      setStatus("Unsaved mixer changes")
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Mixer mute failed.")
     }
@@ -164,36 +133,49 @@ export function GenosMixerWorkspace({ adapters: injected }: { adapters?: GenosMi
     try {
       const channels = await adapters.device.refresh()
       dispatch({ type: "replace-channels", channels })
+      setStatus("Mixer refreshed from keyboard")
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Mixer refresh failed.")
     }
   }
 
-  const save = async () => {
-    if (!projectId) return
+  const saveMix = () => {
     setError("")
-    setProjectStatus("Saving mixer…")
     try {
-      const saved = await adapters.projects.save(projectId, state.channels)
-      setProjects((items) => items.map((item) => item.id === saved.id ? saved : item))
-      setProjectStatus("Mixer saved in project")
+      downloadMixFile(state.channels)
+      setStatus("Mix saved to file")
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "Mixer could not be saved.")
-      setProjectStatus("Save failed")
+      setError(cause instanceof Error ? cause.message : "Mix could not be saved.")
+      setStatus("Save failed")
     }
   }
 
-  const reopen = async () => {
-    if (!projectId) return
+  const loadMixFromPicker = async (file: File | null) => {
+    if (!file) return
     setError("")
-    setProjectStatus("Reopening mixer…")
+    setStatus("Loading mix…")
     try {
-      const opened = await adapters.projects.open(projectId)
-      dispatch({ type: "replace-channels", channels: opened.channels })
-      setProjectStatus("Saved mixer reopened")
+      const channels = await readMixFile(file)
+      dispatch({ type: "replace-channels", channels })
+      for (const channel of channels) {
+        if (!channel.known) continue
+        try {
+          adapters.device.updateChannel(channel, "volume")
+          adapters.device.updateChannel(channel, "pan")
+          adapters.device.updateChannel(channel, "reverb")
+          adapters.device.updateChannel(channel, "chorus")
+          adapters.device.updateChannel(channel, "mute")
+          if (channel.voiceId) adapters.device.updateChannel(channel, "voice")
+        } catch {
+          // Keep UI values even if the keyboard rejects a field.
+        }
+      }
+      setStatus(`Mix loaded: ${file.name}`)
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "Mixer could not be reopened.")
-      setProjectStatus("Reopen failed")
+      setError(cause instanceof Error ? cause.message : "Mix could not be loaded.")
+      setStatus("Load failed")
+    } finally {
+      if (fileInputRef.current) fileInputRef.current.value = ""
     }
   }
 
@@ -208,7 +190,7 @@ export function GenosMixerWorkspace({ adapters: injected }: { adapters?: GenosMi
     try {
       adapters.device.updateChannel(next, "voice")
       dispatch({ type: "select-voice", part: voiceChannel.part, voice })
-      setProjectStatus("Unsaved mixer changes")
+      setStatus("Unsaved mixer changes")
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Voice selection failed.")
     }
@@ -217,7 +199,7 @@ export function GenosMixerWorkspace({ adapters: injected }: { adapters?: GenosMi
   return (
     <div className="genos-mixer">
       <GlobalKeyboardStatus />
-      <section className="mixer-command-bar" aria-label="Mixer status and project">
+      <section className="mixer-command-bar" aria-label="Mixer status and files">
         <div className={`mixer-device-status is-${connection.phase}`} role="status">
           <span className="mixer-device-light" aria-hidden="true" />
           <div>
@@ -236,40 +218,40 @@ export function GenosMixerWorkspace({ adapters: injected }: { adapters?: GenosMi
         )}
 
         <div className="mixer-project-controls">
-          <label>
-            <span>Project</span>
-            <select
-              aria-label="Project"
-              value={projectId}
-              onChange={async (event) => {
-                const opened = await adapters.projects.open(event.target.value)
-                setProjectId(opened.id)
-                dispatch({ type: "replace-channels", channels: opened.channels })
-                setProjectStatus(`${opened.title} open`)
-              }}
-            >
-              {projects.map((project) => (
-                <option key={project.id} value={project.id}>{project.title}</option>
-              ))}
-            </select>
-          </label>
-          <button type="button" className="mixer-button" onClick={refresh} disabled={connection.phase === "refreshing"}>
+          <button
+            type="button"
+            className="mixer-button"
+            onClick={refresh}
+            disabled={connection.phase === "refreshing"}
+          >
             {connection.phase === "refreshing"
               ? <LoaderCircle className="mixer-spin" size={16} />
               : <RefreshCw size={16} />}
             Refresh
           </button>
-          <button type="button" className="mixer-button is-primary" onClick={save} disabled={!projectId}>
-            <Check size={16} /> Save Mixer
+          <button type="button" className="mixer-button is-primary" onClick={saveMix}>
+            <Save size={16} /> Save Mix
           </button>
-          <button type="button" className="mixer-button" onClick={reopen} disabled={!projectId}>
-            Reopen
+          <button
+            type="button"
+            className="mixer-button"
+            onClick={() => fileInputRef.current?.click()}
+          >
+            <FolderOpen size={16} /> Load Mix
           </button>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".tyrosmix,application/json"
+            className="visually-hidden"
+            aria-label="Load mix file"
+            onChange={(event) => void loadMixFromPicker(event.target.files?.[0] ?? null)}
+          />
         </div>
       </section>
 
       <div className="mixer-feedback-row">
-        <p role="status">{projectStatus}</p>
+        <p role="status">{status}</p>
         {error && <p className="mixer-error" role="alert"><TriangleAlert size={16} /> {error}</p>}
       </div>
 
@@ -294,122 +276,93 @@ export function GenosMixerWorkspace({ adapters: injected }: { adapters?: GenosMi
         </button>
       </div>
 
-      <section
+      <div
         className="mixer-console"
-        aria-label={state.page === "style" ? "Style channels 1 to 16" : "Song channels 17 to 32"}
+        role="region"
+        aria-label={state.page === "style" ? "Style channels" : "Song channels"}
       >
         <div className="mixer-console-scroll">
           {visibleChannels.map((channel) => (
             <article
-              className={`mixer-channel${channel.mute ? " is-muted" : ""}${channel.known ? "" : " is-unknown"}`}
               key={channel.part}
-              aria-label={`Channel ${channel.part}, ${channel.label}`}
+              className={`mixer-channel${channel.mute ? " is-muted" : ""}${channel.known ? "" : " is-unknown"}`}
             >
               <header>
-                <span className="mixer-channel-number">{channel.part}</span>
                 <strong>{channel.label}</strong>
+                <span>Ch {channel.part}</span>
               </header>
-
               <button
                 type="button"
-                className="mixer-voice"
-                onClick={() => {
-                  setVoiceQuery("")
-                  dispatch({ type: "open-voice", part: channel.part })
-                }}
-                aria-label={`Choose voice for ${channel.label}`}
+                className="mixer-voice-button"
+                onClick={() => dispatch({ type: "open-voice", part: channel.part })}
               >
-                <Music2 size={17} aria-hidden="true" />
-                <span>{channel.voiceName}</span>
-                <Search size={14} aria-hidden="true" />
+                <Music2 size={16} aria-hidden="true" />
+                <span>{channel.voiceName || "Unknown"}</span>
               </button>
-
-              <label className="mixer-fader">
-                <span>Volume</span>
-                <output>{channel.volume}</output>
-                <input
-                  aria-label={`${channel.label} volume`}
-                  type="range"
-                  min="0"
-                  max="127"
-                  value={channel.volume}
-                  onChange={(event) => changeLevel(channel, "volume", Number(event.target.value))}
-                />
-              </label>
-
-              <div className="mixer-send-controls">
-                {(["pan", "reverb", "chorus"] as const).map((field) => (
-                  <label key={field}>
-                    <span>{levelLabels[field]}</span>
-                    <output>{channel[field]}</output>
-                    <input
-                      aria-label={`${channel.label} ${field}`}
-                      type="range"
-                      min="0"
-                      max="127"
-                      value={channel[field]}
-                      onChange={(event) => changeLevel(channel, field, Number(event.target.value))}
-                    />
-                  </label>
-                ))}
-              </div>
-
+              {(Object.keys(levelLabels) as LevelField[]).map((field) => (
+                <label key={field} className="mixer-fader">
+                  <span>{levelLabels[field]}</span>
+                  <input
+                    type="range"
+                    min={0}
+                    max={127}
+                    value={channel[field]}
+                    aria-label={`${channel.label} ${levelLabels[field]}`}
+                    onChange={(event) =>
+                      changeLevel(channel, field, Number(event.target.value))
+                    }
+                  />
+                  <strong>{channel[field]}</strong>
+                </label>
+              ))}
               <button
                 type="button"
-                className={`mixer-mute${channel.mute ? " is-active" : ""}`}
+                className={`mixer-mute${channel.mute ? " is-on" : ""}`}
                 aria-pressed={channel.mute}
                 onClick={() => toggleMute(channel)}
               >
-                {channel.mute ? <VolumeX size={17} /> : <Volume2 size={17} />}
-                {channel.mute ? "Muted" : "Mute"}
+                Mute
               </button>
             </article>
           ))}
         </div>
-      </section>
+      </div>
 
       {voiceChannel && (
-        <div className="mixer-dialog-backdrop" role="presentation">
-          <section className="mixer-voice-dialog" role="dialog" aria-modal="true" aria-labelledby="voice-dialog-title">
-            <header>
-              <div>
-                <p>Channel {voiceChannel.part} · {voiceChannel.label}</p>
-                <h2 id="voice-dialog-title">Select Voice</h2>
-              </div>
-              <button type="button" aria-label="Close voice search" onClick={() => dispatch({ type: "close-voice" })}>
-                <X />
-              </button>
-            </header>
-            <label className="mixer-voice-search">
-              <Search size={18} aria-hidden="true" />
-              <input
-                autoFocus
-                aria-label="Search voices"
-                placeholder="Search voice or category"
-                value={voiceQuery}
-                onChange={(event) => setVoiceQuery(event.target.value)}
-              />
-            </label>
-            <div className="mixer-voice-results" role="listbox" aria-label="Voice results">
-              {voiceLoading ? (
-                <p><LoaderCircle className="mixer-spin" size={18} /> Searching voices…</p>
-              ) : voiceResults.length === 0 ? (
-                <p>No voices found.</p>
-              ) : voiceResults.map((voice) => (
-                <button
-                  type="button"
-                  role="option"
-                  aria-selected={voice.id === voiceChannel.voiceId}
-                  key={voice.id}
-                  onClick={() => selectVoice(voice)}
-                >
-                  <Music2 size={20} />
-                  <span><strong>{voice.name}</strong><small>{voice.category}</small></span>
-                  {voice.id === voiceChannel.voiceId && <Check size={18} />}
-                </button>
-              ))}
+        <div className="mixer-voice-drawer" role="dialog" aria-label="Voice search">
+          <header>
+            <div>
+              <span>Voice for {voiceChannel.label}</span>
+              <strong>{voiceChannel.voiceName}</strong>
             </div>
-          </section>
+            <button type="button" onClick={() => dispatch({ type: "close-voice" })}>
+              <X size={16} /> Close
+            </button>
+          </header>
+          <label className="mixer-voice-search">
+            <Search size={16} aria-hidden="true" />
+            <input
+              type="search"
+              value={voiceQuery}
+              placeholder="Search voices"
+              aria-label="Search voices"
+              onChange={(event) => setVoiceQuery(event.target.value)}
+            />
+          </label>
+          <ul>
+            {voiceLoading && <li className="mixer-muted">Searching…</li>}
+            {!voiceLoading && voiceResults.length === 0 && (
+              <li className="mixer-muted">No voices match.</li>
+            )}
+            {voiceResults.map((voice) => (
+              <li key={voice.id}>
+                <button type="button" onClick={() => selectVoice(voice)}>
+                  <strong>{voice.name}</strong>
+                  <small>{voice.category}</small>
+                </button>
+              </li>
+            ))}
+          </ul>
         </div>
       )}
     </div>

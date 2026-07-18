@@ -94,5 +94,11 @@ export function createFakeConnectionClient(
       })
       emit()
     },
+
+    changeStyle() {
+      if (!state.connected) {
+        throw new Error("Connect a Yamaha keyboard before changing style.")
+      }
+    },
   }
 }

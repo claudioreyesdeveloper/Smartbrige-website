@@ -174,6 +174,7 @@ export class PlanDispatcher {
       status: "stopped",
       generation: this.generation,
       selection: null,
+      positionMs: 0,
       error: null,
     })
   }
@@ -260,7 +261,8 @@ export class PlanDispatcher {
       this.handleDisconnect()
       return
     }
-    const horizon = this.clock.now() + this.lookaheadMs
+    const now = this.clock.now()
+    const horizon = now + this.lookaheadMs
     while (this.cursor < this.events.length) {
       if (generation !== this.generation) return
       const event = this.events[this.cursor]
@@ -268,15 +270,17 @@ export class PlanDispatcher {
       if (timestamp > horizon) break
       this.session.send(event.bytes, timestamp, event.target)
       this.cursor += 1
-      this.publish({
-        ...this.state,
-        positionMs: event.atMs,
-        sentCount: this.cursor,
-      })
     }
     if (generation !== this.generation) return
+    // Drive UI from wall-clock tempo, not MIDI event sparsity.
+    const elapsed = Math.min(this.endMs, Math.max(0, now - this.anchorMs))
+    this.publish({
+      ...this.state,
+      positionMs: elapsed,
+      sentCount: this.cursor,
+    })
     if (this.cursor >= this.events.length) {
-      const remaining = Math.max(0, this.anchorMs + this.endMs - this.clock.now())
+      const remaining = Math.max(0, this.anchorMs + this.endMs - now)
       this.completeHandle = this.timer.setTimeout(() => this.finish(generation), remaining)
       return
     }

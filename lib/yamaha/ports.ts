@@ -14,8 +14,14 @@ export function isYamahaArrangerPort(
   if (!/yamaha|digital keyboard|digital workstation|genos|tyros/i.test(identity)) {
     return false
   }
-  const tag = portNumber === 1 ? /(?:port\s*1|[- ]1)$/i : /(?:port\s*2|[- ]2)$/i
-  return tag.test(port.name)
+  // Tolerate "Port 1", "Port1", trailing "-1"/" 1", and "MIDIIN2 (Genos2)" style tags.
+  const tag =
+    portNumber === 1
+      ? /(?:port\s*1|midi\s*in\s*1|midi\s*out\s*1|[-_]1|\b1\b)\s*$/i.test(port.name) ||
+        /port\s*1/i.test(port.name)
+      : /(?:port\s*2|midi\s*in\s*2|midi\s*out\s*2|[-_]2|\b2\b)\s*$/i.test(port.name) ||
+        /port\s*2/i.test(port.name)
+  return tag
 }
 
 /** @deprecated Prefer isYamahaArrangerPort(port, 2). */

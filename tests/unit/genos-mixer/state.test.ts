@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from "vitest"
 import { createDisplaySafeMixerFakes } from "@/components/genos-mixer/fakes"
+import { parseMixFile, serializeMixFile } from "@/components/genos-mixer/mix-file"
 import {
   channelsForPage,
   initialMixerWorkspaceState,
@@ -54,19 +55,9 @@ describe("Genos Mixer state", () => {
   })
 })
 
-describe("display-safe mixer adapters", () => {
-  it("saves and reopens essential mixer values in the project document", async () => {
-    vi.useFakeTimers()
-    const adapters = createDisplaySafeMixerFakes({ refreshDelayMs: 0 })
-    const listPromise = adapters.projects.list()
-    await vi.runAllTimersAsync()
-    const [summary] = await listPromise
-    expect(summary).toBeDefined()
-
-    const openPromise = adapters.projects.open(summary!.id)
-    await vi.runAllTimersAsync()
-    const opened = await openPromise
-    const changed = opened.channels.map((channel) =>
+describe("mix file save/load", () => {
+  it("round-trips essential mixer values", () => {
+    const channels = initialMixerWorkspaceState.channels.map((channel) =>
       channel.part === 11
         ? {
             ...channel,
@@ -77,29 +68,19 @@ describe("display-safe mixer adapters", () => {
             mute: true,
             voiceId: "genos-finger-bass",
             voiceName: "MegaVoice Finger Bass",
+            known: true,
           }
         : channel,
     )
-    const savePromise = adapters.projects.save(opened.id, changed)
-    await vi.runAllTimersAsync()
-    const saved = await savePromise
-    expect(saved.document.mixer?.channels.find((channel) => channel.part === 11))
-      .toEqual({
-        part: 11,
-        volume: 73,
-        pan: 41,
-        reverb: 55,
-        chorus: 17,
-        mute: true,
-        voiceId: "genos-finger-bass",
-      })
-
-    const reopenPromise = adapters.projects.open(opened.id)
-    await vi.runAllTimersAsync()
-    const reopened = await reopenPromise
-    expect(reopened.channels.find((channel) => channel.part === 11))
-      .toMatchObject({ volume: 73, pan: 41, reverb: 55, chorus: 17, mute: true })
-    vi.useRealTimers()
+    const reopened = parseMixFile(serializeMixFile(channels))
+    expect(reopened.find((channel) => channel.part === 11)).toMatchObject({
+      volume: 73,
+      pan: 41,
+      reverb: 55,
+      chorus: 17,
+      mute: true,
+      voiceId: "genos-finger-bass",
+    })
   })
 
   it("publishes refresh progress and a typed error state", async () => {

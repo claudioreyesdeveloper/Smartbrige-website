@@ -98,6 +98,8 @@ export type JamReharmonizeRequest = {
   key: string
   chords: DisplayChord[]
   candidateCount?: number
+  /** Song library category — improves pattern corpus matching. */
+  category?: string
 }
 
 export type JamReharmonizeCandidate = {

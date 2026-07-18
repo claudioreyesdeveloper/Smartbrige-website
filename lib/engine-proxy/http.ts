@@ -40,7 +40,10 @@ export function jamErrorResponse(error: unknown): NextResponse {
       responseOptions(401),
     )
   }
-  console.error("Unexpected jam engine API error")
+  console.error(
+    "Unexpected jam engine API error",
+    error instanceof Error ? error.message : error,
+  )
   return NextResponse.json(
     { error: abuseSafeJamMessage("internal"), code: "internal" },
     responseOptions(500),

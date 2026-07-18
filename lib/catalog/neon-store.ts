@@ -1,4 +1,4 @@
-import { and, asc, eq } from "drizzle-orm"
+import { and, asc, eq, inArray, or, sql } from "drizzle-orm"
 import { getDb, type AppDatabase } from "@/lib/db"
 import {
   catalogEntries,
@@ -10,6 +10,7 @@ import type {
   CatalogStore,
   InsertCatalogEntryInput,
   InsertCatalogVersionInput,
+  ListCatalogEntriesOptions,
 } from "@/lib/catalog/store"
 import type {
   CatalogActivationRecord,
@@ -147,16 +148,27 @@ export class NeonCatalogStore implements CatalogStore {
   async listEntriesForService(
     catalogVersionId: string,
     serviceKey: ServiceKey,
+    options?: ListCatalogEntriesOptions,
   ): Promise<CatalogEntryRecord[]> {
+    const conditions = [
+      eq(catalogEntries.catalogVersionId, catalogVersionId),
+      eq(catalogEntries.serviceKey, serviceKey),
+    ]
+    if (options?.kinds && options.kinds.length > 0) {
+      conditions.push(inArray(catalogEntries.kind, options.kinds))
+    }
+    if (options?.songStableId) {
+      conditions.push(
+        or(
+          eq(catalogEntries.stableId, options.songStableId),
+          sql`${catalogEntries.metadata}->>'song_stable_id' = ${options.songStableId}`,
+        )!,
+      )
+    }
     const rows = await this.db
       .select()
       .from(catalogEntries)
-      .where(
-        and(
-          eq(catalogEntries.catalogVersionId, catalogVersionId),
-          eq(catalogEntries.serviceKey, serviceKey),
-        ),
-      )
+      .where(and(...conditions))
       .orderBy(asc(catalogEntries.stableId))
     return rows.map(mapEntry)
   }

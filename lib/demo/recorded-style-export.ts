@@ -93,12 +93,12 @@ export function filterAndRenumberSectionCapture(
 }
 
 /**
- * Desktop export ticksPerSecond for section takes:
- * PPQ * bpm / 120  (= PPQ * (bpm/60) / 2 Tyros double-rate correction).
+ * Wall-clock capture → PPQ * (BPM / 60). Same as JamPlayerMotifScreen / RiffMaker.
+ * (Do not use JamPlayerScreen_Recording’s /120 — that doubles tempo on real seconds.)
  */
 export function sectionCaptureTicksPerSecond(bpm: number, ppq = 480): number {
   const exportBpm = bpm > 0 ? bpm : 120
-  return (ppq * exportBpm) / 120
+  return (ppq * exportBpm) / 60
 }
 
 export function secondsToSectionTicks(

@@ -1,6 +1,10 @@
 "use client"
 
-import { createJamCatalogClient, type JamCatalogClient as DomainCatalogClient } from "@/lib/jam/catalog"
+import {
+  createJamCatalogClient,
+  type JamCatalogClient as DomainCatalogClient,
+} from "@/lib/jam/catalog"
+import { JAM_TYROS_CATEGORIES, mapToTyrosCategory } from "@/lib/jam/catalog/categories"
 import {
   parseJamPrepareResponse,
   parseJamReharmonizeResponse,
@@ -23,9 +27,16 @@ import {
   type ProjectDocument,
   type ProjectStylePart,
 } from "@/lib/projects/document"
-import { getMidiSession, type YamahaMidiSession } from "@/lib/yamaha"
+import {
+  getMidiSession,
+  getTyrosTempoFollower,
+  type YamahaMidiSession,
+} from "@/lib/yamaha"
+import { ARRANGER_COMMANDS, styleSelectCommand } from "@/lib/yamaha/commands"
+import { styleMappingForEntry } from "@/lib/yamaha/style-catalog"
 import {
   getPreferredKeyboardModel,
+  setKeyboardAutoConnect,
   setPreferredKeyboardModel,
 } from "@/lib/yamaha/preferred-model"
 import type {
@@ -62,13 +73,24 @@ function accentFor(id: string): string {
   return ACCENTS[hash % ACCENTS.length]!
 }
 
+function mapChords(
+  chords: { startBar: number; startBeat: number; lengthBeats: number; symbol: string }[],
+  beatsPerBar: number,
+) {
+  return chords.map((chord) => ({
+    beat: chord.startBar * beatsPerBar + chord.startBeat,
+    duration: chord.lengthBeats,
+    name: chord.symbol,
+  }))
+}
+
 function mapSong(song: Awaited<ReturnType<DomainCatalogClient["getSong"]>>): JamSong {
   const beatsPerBar = song.timeSignature[0]
   return {
     id: song.stableId,
     title: song.title,
     subtitle: song.description ?? `${song.category || "Factory"} factory arrangement`,
-    category: song.category || "Uncategorized",
+    category: mapToTyrosCategory(song.category),
     tempo: song.tempo || 120,
     key: song.key || "C",
     timeSignature: song.timeSignature,
@@ -80,12 +102,18 @@ function mapSong(song: Awaited<ReturnType<DomainCatalogClient["getSong"]>>): Jam
         label: section.name,
         bars: section.bars,
         variation: section.main,
-        chords: section.chords.map((chord) => ({
-          beat: chord.startBar * beatsPerBar + chord.startBeat,
-          duration: chord.lengthBeats,
-          name: chord.symbol,
-        })),
+        chords: mapChords(section.chords, beatsPerBar),
       })),
+    reharmonizations: (song.reharmonizations ?? []).map((reharm) => ({
+      id: reharm.id,
+      label: reharm.label,
+      chordsBySection: Object.fromEntries(
+        Object.entries(reharm.chordsByClipStableId).map(([clipId, chords]) => [
+          clipId,
+          mapChords(chords, beatsPerBar),
+        ]),
+      ),
+    })),
   }
 }
 
@@ -105,21 +133,45 @@ export function createProductionCatalogAdapter(
 ): JamCatalogClient {
   return {
     async listCategories() {
-      const snapshot = await client.ensureLoaded()
-      return [...new Set(snapshot.songs.map((song) => song.category || "Uncategorized"))].sort()
+      return [...JAM_TYROS_CATEGORIES]
+    },
+    async listLibraryFacets() {
+      const all = await collectPages((page) =>
+        client.listSongs({ page, pageSize: 100 }),
+      )
+      const categoryCounts: Record<string, number> = { All: all.length }
+      for (const label of JAM_TYROS_CATEGORIES) categoryCounts[label] = 0
+      const meters = new Set<string>()
+      for (const song of all) {
+        const category = mapToTyrosCategory(song.category)
+        categoryCounts[category] = (categoryCounts[category] ?? 0) + 1
+        meters.add(`${song.timeSignature[0]}/${song.timeSignature[1]}`)
+      }
+      return {
+        categories: [...JAM_TYROS_CATEGORIES],
+        categoryCounts,
+        meters: Array.from(meters).sort(),
+      }
     },
     async listSongs(options = {}) {
+      // Song index is slim (~646 rows). Load the full index so Tyros category
+      // tabs match desktop counts; detail still loads per song.
       const songs = await collectPages((page) =>
-        client.listSongs({ ...options, page, pageSize: PAGE_SIZE }),
+        client.listSongs({
+          ...options,
+          page,
+          pageSize: PAGE_SIZE,
+        }),
       )
       return songs.map(
         (song): JamSongSummary => ({
           id: song.stableId,
           title: song.title,
-          category: song.category || "Uncategorized",
+          category: mapToTyrosCategory(song.category),
           tempo: song.tempo || 120,
           key: song.key || "C",
-          sectionCount: song.sections.length,
+          timeSignature: song.timeSignature,
+          sectionCount: song.sectionCount || song.sections.length,
           accent: accentFor(song.stableId),
         }),
       )
@@ -232,6 +284,7 @@ function toDomainReharmonize(request: JamReharmonizeRequest): DomainReharmonizeR
     ...(request.sectionId ? { sectionId: request.sectionId } : {}),
     key: request.key,
     chords: toDomainChords(request.song),
+    ...(request.song.category ? { category: request.song.category } : {}),
   }
 }
 
@@ -302,8 +355,29 @@ export function createProductionEngineClient(fetchImpl: FetchLike = fetch): JamE
   }
 }
 
-function connectionState(session: YamahaMidiSession): JamConnectionState {
+/** SSR + first client paint — never read localStorage / live Web MIDI here. */
+export const SSR_SAFE_CONNECTION_STATE: JamConnectionState = {
+  browserSupported: false,
+  secure: false,
+  connected: false,
+  connecting: false,
+  model: null,
+  displayName: null,
+  guidance:
+    "Turn on your Yamaha, plug in USB, choose your model, then Connect my keyboard.",
+  error: null,
+}
+
+function connectionState(
+  session: YamahaMidiSession,
+  options?: { includePreferredModel?: boolean },
+): JamConnectionState {
   const state = session.state
+  // Preferred model lives in localStorage — only merge it after mount (subscribe),
+  // never during useState(getState()) or SSR, or React hydration mismatches.
+  const preferred =
+    options?.includePreferredModel === true ? getPreferredKeyboardModel() : null
+  const model = state.profile?.id ?? preferred
   const guidance = !state.supported
     ? "Web MIDI is not available. Use Chrome or Edge on desktop."
     : !state.secure
@@ -315,10 +389,10 @@ function connectionState(session: YamahaMidiSession): JamConnectionState {
   return {
     browserSupported: state.supported,
     secure: state.secure,
-    connected: state.connected && state.profile !== null,
+    connected: state.connected,
     connecting: state.connecting,
-    model: state.profile?.id ?? null,
-    displayName: state.modelName || state.outputName || null,
+    model,
+    displayName: state.modelName || state.profile?.displayName || state.outputName || null,
     guidance,
     error: state.error || null,
   }
@@ -329,19 +403,35 @@ export function createYamahaConnectionAdapter(session: YamahaMidiSession): JamCo
     getState: () => connectionState(session),
     async connect(model) {
       setPreferredKeyboardModel(model)
+      setKeyboardAutoConnect(true)
       await session.requestAccess(model)
     },
     async disconnect() {
+      setKeyboardAutoConnect(false)
       await session.disconnect()
     },
     async refresh() {
       const preferred = getPreferredKeyboardModel() ?? session.state.profile?.id
       await session.requestAccess(preferred ?? undefined)
     },
+    changeStyle(style) {
+      const profile = session.state.profile
+      if (!session.state.connected || !profile) {
+        throw new Error("Connect a Yamaha keyboard before changing style.")
+      }
+      const mapping = styleMappingForEntry(profile, {
+        name: style.name,
+        category: style.category,
+        styleNumber: style.styleNumber,
+        bpm: style.bpm,
+      })
+      session.sendBoth(styleSelectCommand(mapping))
+    },
     subscribe(listener) {
-      const handle = () => listener(connectionState(session))
+      const handle = () => listener(connectionState(session, { includePreferredModel: true }))
       session.addEventListener("statechange", handle)
-      listener(connectionState(session))
+      // Client-only (called from useEffect): safe to read localStorage here.
+      listener(connectionState(session, { includePreferredModel: true }))
       return () => session.removeEventListener("statechange", handle)
     },
   }
@@ -378,6 +468,7 @@ export function createProductionPlanDispatcher(
   session: YamahaMidiSession,
 ): PlanDispatcher {
   const listeners = new Set<(state: DispatchPlaybackState) => void>()
+  const follower = getTyrosTempoFollower(session)
   let plan: PreparedPerformancePlan | null = null
   let state: DispatchPlaybackState = {
     status: "idle",
@@ -389,15 +480,49 @@ export function createProductionPlanDispatcher(
     currentSectionLabel: "",
     error: null,
   }
+  // Desktop Slave playhead: integrate beats with Tyros F8 BPM (not fixed song tempo).
+  let transportBeats = 0
+  let lastSampleMs = 0
+  let fallbackBpm = 120
+
+  function playbackPositionMs(domainPositionMs: number, status: string, durationMs: number) {
+    if (status !== "playing") {
+      transportBeats = 0
+      lastSampleMs = 0
+      return domainPositionMs
+    }
+    const now = performance.now()
+    const planBpm = Math.max(20, plan?.display.tempoBpm || fallbackBpm)
+    if (lastSampleMs <= 0) {
+      lastSampleMs = now
+      transportBeats = 0
+      return 0
+    }
+    const dtSec = Math.max(0, (now - lastSampleMs) / 1000)
+    lastSampleMs = now
+    const followed = follower.getCurrentBPM()
+    const bpm =
+      followed >= 30 && followed <= 300 ? followed : fallbackBpm
+    transportBeats += dtSec * (bpm / 60)
+    // Expose ms on the plan-tempo scale so displayAt / timeline beat math stay consistent.
+    return Math.min(durationMs, (transportBeats * 60_000) / planBpm)
+  }
+
   const domain = new DomainPlanDispatcher({
     session,
     onStateChange(next) {
-      const display = displayAt(plan, next)
+      const positionMs = playbackPositionMs(
+        next.positionMs,
+        next.status,
+        next.durationMs,
+      )
+      const mapped = { ...next, positionMs }
+      const display = displayAt(plan, mapped)
       state = {
         status: next.status,
         planId: next.planId,
         selection: next.selection,
-        positionMs: next.positionMs,
+        positionMs,
         durationMs: next.durationMs,
         currentChord: display.chord,
         currentSectionLabel: display.section,
@@ -410,17 +535,38 @@ export function createProductionPlanDispatcher(
     loadPlan(next) {
       domain.load(next)
       plan = next
+      fallbackBpm = next.display.tempoBpm || 120
       const current = domain.playbackState
       state = { ...state, status: current.status, planId: current.planId, durationMs: current.durationMs }
       for (const listener of listeners) listener({ ...state })
     },
     play(selection) {
+      // Desktop startPlayback / playClip: reset follower + fast-lock before transport.
+      follower.reset()
+      follower.enableFastLock()
+      transportBeats = 0
+      lastSampleMs = 0
+      fallbackBpm = plan?.display.tempoBpm || 120
       domain.start(selection)
     },
     stop() {
+      // Same sequence as demo JamScheduler.stop:
+      // style-engine Stop SysEx → MIDI Stop → then cancel schedule / All Notes Off.
+      if (session.state.connected) {
+        session.sendBoth(ARRANGER_COMMANDS.stop)
+        session.sendPort1(ARRANGER_COMMANDS.midiStop)
+      }
+      transportBeats = 0
+      lastSampleMs = 0
       domain.stop()
     },
     panic() {
+      if (session.state.connected) {
+        session.sendBoth(ARRANGER_COMMANDS.stop)
+        session.sendPort1(ARRANGER_COMMANDS.midiStop)
+      }
+      transportBeats = 0
+      lastSampleMs = 0
       domain.panic()
     },
     getState: () => ({ ...state }),

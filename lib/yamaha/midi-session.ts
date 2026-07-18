@@ -53,8 +53,9 @@ type PendingResponse = {
 }
 
 const initialSnapshot = (): MidiSessionSnapshot => ({
-  supported: typeof navigator !== "undefined" && "requestMIDIAccess" in navigator,
-  secure: typeof window !== "undefined" && window.isSecureContext,
+  // Keep SSR and the first client paint identical — real values hydrate in useMidiSession.
+  supported: false,
+  secure: false,
   connected: false,
   connecting: false,
   inputName: "",
@@ -79,6 +80,20 @@ export class YamahaMidiSession extends EventTarget {
     return this.snapshot
   }
 
+  /** Call once on the client after mount so Web MIDI capability matches the browser. */
+  hydrateEnvironment(): void {
+    const supported =
+      typeof navigator !== "undefined" && "requestMIDIAccess" in navigator
+    const secure = typeof window !== "undefined" && window.isSecureContext
+    if (
+      this.snapshot.supported === supported &&
+      this.snapshot.secure === secure
+    ) {
+      return
+    }
+    this.publish({ supported, secure })
+  }
+
   private publish(update: Partial<MidiSessionSnapshot>) {
     this.snapshot = { ...this.snapshot, ...update }
     this.dispatchEvent(new CustomEvent("statechange", { detail: this.snapshot }))
@@ -95,6 +110,26 @@ export class YamahaMidiSession extends EventTarget {
     }
 
     const chosenProfile = modelId ? KEYBOARD_PROFILES[modelId] : this.snapshot.profile
+
+    // Already live — do not flicker into "connecting" or reopen ports on tab switches.
+    if (
+      this.snapshot.connected &&
+      this.input1 &&
+      this.input2 &&
+      this.output1 &&
+      this.output2
+    ) {
+      if (chosenProfile) {
+        this.publish({
+          profile: chosenProfile,
+          modelName: chosenProfile.displayName,
+          error: "",
+          connecting: false,
+        })
+      }
+      return this.snapshot
+    }
+
     this.publish({
       connecting: true,
       error: "",
@@ -110,10 +145,12 @@ export class YamahaMidiSession extends EventTarget {
       this.access = await request.call(navigator, { sysex: true })
       this.access.onstatechange = () => {
         this.refreshPorts()
-        const ports = [this.input1, this.input2, this.output1, this.output2]
-        if (ports.some((port) => port && port.state !== "connected")) {
-          void this.disconnect("Keyboard disconnected.")
-        }
+        // Only drop a live session when one of OUR open ports actually disconnects.
+        // Opening ports and unrelated device churn must not tear the session down.
+        if (!this.snapshot.connected) return
+        const owned = [this.input1, this.input2, this.output1, this.output2]
+        const lost = owned.some((port) => port != null && port.state === "disconnected")
+        if (lost) void this.disconnect("Keyboard disconnected.")
       }
       this.refreshPorts()
       const pair = findYamahaPortPair(this.snapshot.inputs, this.snapshot.outputs)
@@ -234,14 +271,22 @@ export class YamahaMidiSession extends EventTarget {
       const modelName = text(decodePayload7(response.slice(8, -1)))
       const profile = detectProfile(modelName)
       this.publish({
-        modelName,
-        profile,
-        error: profile
+        modelName: modelName || this.snapshot.modelName,
+        profile: profile ?? this.snapshot.profile,
+        error: profile || this.snapshot.profile
           ? ""
           : `Connected to unsupported Yamaha model: ${modelName || "unknown"}.`,
       })
-      return profile
+      return profile ?? this.snapshot.profile
     } catch {
+      // Keep the user-selected model if ports are already open. Identity probe
+      // failures must not make the rest of the app think we are disconnected.
+      if (this.snapshot.profile) {
+        this.publish({
+          error: "",
+        })
+        return this.snapshot.profile
+      }
       this.publish({
         modelName: "",
         profile: null,

@@ -18,7 +18,7 @@ test.beforeEach(async ({ page }, testInfo) => {
 test("project melody to edited lyrics, re-fit, audition, export, save, and reopen", async ({
   page,
 }) => {
-  await page.goto("/app/lyrics")
+  await page.goto("/app/jam-player/lyrics")
 
   await expect(page.getByRole("heading", { name: "Lyrics", level: 1 })).toBeVisible()
   await expect(page.getByRole("navigation", { name: "SmartBridge services" })).toBeVisible()

@@ -43,7 +43,17 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en" className={`${dmSans.variable} ${instrumentSerif.variable}`}>
+    <html
+      lang="en"
+      className={`${dmSans.variable} ${instrumentSerif.variable}`}
+      // Required when globals.css sets scroll-behavior: smooth — without this,
+      // Next.js injects style="scroll-behavior: auto" on the client and React
+      // reports a hydration attribute mismatch on <html>.
+      data-scroll-behavior="smooth"
+      // Browser extensions (e.g. Scribe) inject attributes like
+      // data-scribe-recorder-ready onto <html> before React hydrates.
+      suppressHydrationWarning
+    >
       <body className="antialiased">
         <SiteHeader />
         <main>{children}</main>

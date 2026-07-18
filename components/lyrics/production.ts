@@ -356,7 +356,7 @@ export function createProductionLyricsWorkspaceAdapters(options: {
   const base = createProductionLyricsAdapters(options)
   const projects = base.projects
   const midiSession = options.midiSession ?? getMidiSession()
-  const preferredModel =
+  const resolveModel = (): KeyboardModel =>
     options.model ??
     getPreferredKeyboardModel() ??
     midiSession.state.profile?.id ??
@@ -501,7 +501,7 @@ export function createProductionLyricsWorkspaceAdapters(options: {
           editedLines(context, input.assignments),
         )
         if (!midiSession.state.connected) {
-          const connected = await midiSession.requestAccess(preferredModel)
+          const connected = await midiSession.requestAccess(resolveModel())
           if (!connected.connected) {
             throw new LyricsAdapterError(
               "unavailable",

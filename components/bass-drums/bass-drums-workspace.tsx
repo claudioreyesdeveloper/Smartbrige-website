@@ -41,13 +41,28 @@ const EMPTY_OPTIONS: RhythmFilterOptions = {
   feels: ["All Feels"],
 }
 
-export function BassDrumsWorkspace({ adapters: injected }: { adapters?: BassDrumsAdapters }) {
+type BassDrumsWorkspaceProps = {
+  adapters?: BassDrumsAdapters
+  /** Initial Bass / Drums tab (defaults to bass). */
+  initialTab?: RhythmPart
+  /**
+   * `local` — in-panel tab buttons (legacy).
+   * `route` — Jam Player sub-routes own the tab; clicking switches URL.
+   */
+  partTabs?: "local" | "route"
+}
+
+export function BassDrumsWorkspace({
+  adapters: injected,
+  initialTab = "bass",
+  partTabs = "local",
+}: BassDrumsWorkspaceProps) {
   const adaptersRef = useRef(injected ?? createProductionBassDrumsAdapters())
   const adapters = adaptersRef.current
-  const [state, dispatch] = useReducer(
-    rhythmWorkspaceReducer,
-    initialRhythmWorkspaceState,
-  )
+  const [state, dispatch] = useReducer(rhythmWorkspaceReducer, initialTab, (tab) => ({
+    ...initialRhythmWorkspaceState,
+    activeTab: tab,
+  }))
   const [supported, setSupported] = useState<boolean | null>(null)
   const [projects, setProjects] = useState<RhythmProject[]>([])
   const [filters, setFilters] = useState<Record<RhythmPart, RhythmFilters>>({
@@ -379,24 +394,26 @@ export function BassDrumsWorkspace({ adapters: injected }: { adapters?: BassDrum
       {quota && <div className="rhythm-alert is-quota" role="alert"><TriangleAlert size={18} /> <strong>Quota reached:</strong> {quota}</div>}
       {error && <div className="rhythm-alert" role="alert"><TriangleAlert size={18} /> {error}</div>}
 
-      <div className="rhythm-tabs" role="tablist" aria-label="Performance type">
-        {(["bass", "drums"] as const).map((part) => (
-          <button
-            key={part}
-            type="button"
-            role="tab"
-            aria-selected={state.activeTab === part}
-            className={state.activeTab === part ? "is-active" : ""}
-            onClick={() => {
-              adapters.audition.stop()
-              dispatch({ type: "select-tab", tab: part })
-            }}
-          >
-            {part === "bass" ? <Music2 size={17} /> : <Disc3 size={17} />}
-            {part === "bass" ? "Bass Performance" : "Drum Performance"}
-          </button>
-        ))}
-      </div>
+      {partTabs === "local" ? (
+        <div className="rhythm-tabs" role="tablist" aria-label="Performance type">
+          {(["bass", "drums"] as const).map((part) => (
+            <button
+              key={part}
+              type="button"
+              role="tab"
+              aria-selected={state.activeTab === part}
+              className={state.activeTab === part ? "is-active" : ""}
+              onClick={() => {
+                adapters.audition.stop()
+                dispatch({ type: "select-tab", tab: part })
+              }}
+            >
+              {part === "bass" ? <Music2 size={17} /> : <Disc3 size={17} />}
+              {part === "bass" ? "Bass Performance" : "Drum Performance"}
+            </button>
+          ))}
+        </div>
+      ) : null}
 
       <div className="rhythm-panel-grid">
         <section className="rhythm-card rhythm-library-card">
