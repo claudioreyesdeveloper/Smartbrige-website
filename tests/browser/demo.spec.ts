@@ -130,7 +130,7 @@ test("Style Maker clearly requires a user donor file", async ({ page }, testInfo
   await expect(page.getByText(/Nothing is uploaded to a server/)).toBeVisible()
 })
 
-test("Style Maker previews voices on Port 2 and notes on channels 9-16", async ({
+test("Style Maker previews voices and channels 9-16 on Port 2", async ({
   page,
 }, testInfo) => {
   test.skip(testInfo.project.name !== "desktop", "Web MIDI routing is checked in Chromium")
@@ -153,7 +153,7 @@ test("Style Maker previews voices on Port 2 and notes on channels 9-16", async (
     data.slice(0, 7).join(",") === "240,67,16,76,8,10,1",
   )).toBe(true)
   expect(sends.some(({ port, data }) =>
-    port.endsWith("Port 1") && (data[0] === 0x98 || data[0] === 0x9a),
+    port.endsWith("Port 2") && (data[0] === 0x98 || data[0] === 0x9a),
   )).toBe(true)
 })
 

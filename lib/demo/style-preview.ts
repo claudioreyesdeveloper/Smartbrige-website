@@ -14,9 +14,8 @@ export class StylePreviewPlayer {
     const kind = event.status & 0xf0
     const channel = event.status & 0x0f
 
-    // Yamaha style parts are channels 9-16. Match the desktop engine's exact
-    // XG multi-part voice path on Port 2 instead of relying on whatever voices
-    // happen to be selected on the keyboard.
+    // Yamaha style parts are channels 9-16 on Port 2. Match the desktop
+    // StyleMakerAudition path for both XG voice setup and performance data.
     if (channel >= 8 && channel <= 15) {
       let parameter = 0
       let value = 0
@@ -39,7 +38,7 @@ export class StylePreviewPlayer {
       }
     }
 
-    this.session.sendPort1(Uint8Array.of(event.status, ...event.data))
+    this.session.sendPort2(Uint8Array.of(event.status, ...event.data))
   }
 
   play(
