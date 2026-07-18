@@ -62,6 +62,7 @@ export type AuditionPlayerDeps = {
   scheduleIntervalMs?: number
   onStateChange?: (state: AuditionPlaybackState) => void
   onComplete?: () => void
+  onError?: (error: unknown) => void
 }
 
 export type ScheduledAuditionEvent = {

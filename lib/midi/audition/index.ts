@@ -3,6 +3,18 @@ export {
   createAuditionPlayer,
 } from "./player"
 export {
+  MAX_RENDERED_AUDITION_DURATION_MS,
+  MAX_RENDERED_AUDITION_SMF_BYTES,
+  RhythmRenderedAuditionPlayer,
+  type RhythmRenderedAuditionPayload,
+  type RhythmRenderedAuditionPlayerDeps,
+  type RhythmRenderedAuditionState,
+  type RhythmRenderedAuditionStatus,
+  type RhythmRenderedPart,
+  type RhythmRenderedPlaybackDescriptor,
+  type RhythmRenderedPlaybackKind,
+} from "./rhythm-rendered-player"
+export {
   prepareAuditionSchedule,
   type PreparedAudition,
 } from "./schedule"

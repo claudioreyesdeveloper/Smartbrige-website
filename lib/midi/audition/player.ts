@@ -59,6 +59,7 @@ export class AuditionPlayer {
   private readonly defaultScheduleIntervalMs: number
   private readonly onStateChange?: (state: AuditionPlaybackState) => void
   private readonly onComplete?: () => void
+  private readonly onError?: (error: unknown) => void
 
   private state: AuditionPlaybackState = idleState()
   private generation = 0
@@ -80,6 +81,7 @@ export class AuditionPlayer {
     this.defaultScheduleIntervalMs = deps.scheduleIntervalMs ?? DEFAULT_SCHEDULE_INTERVAL_MS
     this.onStateChange = deps.onStateChange
     this.onComplete = deps.onComplete
+    this.onError = deps.onError
   }
 
   get playbackState(): AuditionPlaybackState {
@@ -167,7 +169,13 @@ export class AuditionPlayer {
       const event = this.events[this.cursor]
       const absTime = origin + event.absMs
       if (absTime > horizon) break
-      this.sendEvent(event, absTime)
+      try {
+        this.sendEvent(event, absTime)
+      } catch (error) {
+        this.stopInternal({ panic: true, status: "stopped", notifyComplete: false })
+        this.onError?.(error)
+        return
+      }
       this.cursor += 1
       this.publish({
         ...this.state,
