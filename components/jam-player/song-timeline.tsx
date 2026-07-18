@@ -1,7 +1,6 @@
 "use client"
 
-import { useEffect, useState, type CSSProperties, type MouseEvent } from "react"
-import { getTyrosTempoFollower } from "@/lib/yamaha/tyros-tempo-follower"
+import type { CSSProperties, MouseEvent } from "react"
 import { desktopSectionAccent } from "./section-colors"
 import type { DispatchPlaybackState, JamSong } from "./types"
 
@@ -15,8 +14,8 @@ type SongTimelineProps = {
 }
 
 /**
- * Demo-style chord blocks + section rows. Playhead advances like desktop Slave
- * mode: wall-clock × Tyros F8 BPM (TyrosTempoFollower), not a fixed song tempo.
+ * Demo-style chord blocks + section rows. Playhead uses dispatcher positionMs
+ * (Keyboard Master / F8-integrated in the production adapter) — one clock with MIDI.
  */
 export function SongTimeline({
   song,
@@ -33,45 +32,8 @@ export function SongTimeline({
   const sectionMode =
     playback.selection?.mode === "section" ? playback.selection.sectionId : null
 
-  const [positionMs, setPositionMs] = useState(playback.positionMs)
-
-  useEffect(() => {
-    if (!playing) {
-      setPositionMs(playback.positionMs)
-      return
-    }
-    // Dispatcher position is already F8-scaled (production adapter). Reseed on
-    // each ~25 ms update, then integrate with live Tyros BPM until the next one.
-    let beats = (playback.positionMs / 60_000) * planTempo
-    let last = performance.now()
-    let frame = 0
-    const follower = getTyrosTempoFollower()
-    const tick = () => {
-      const now = performance.now()
-      const followed = follower.getCurrentBPM()
-      const bpm = followed >= 30 && followed <= 300 ? followed : planTempo
-      beats += ((now - last) / 1000) * (bpm / 60)
-      last = now
-      setPositionMs(Math.min(playback.durationMs, (beats * 60_000) / planTempo))
-      frame = requestAnimationFrame(tick)
-    }
-    frame = requestAnimationFrame(tick)
-    return () => cancelAnimationFrame(frame)
-  }, [
-    playing,
-    playback.positionMs,
-    playback.durationMs,
-    playback.selection,
-    playback.status,
-    planTempo,
-  ])
-
   // Full-song plans include a 1-bar intro before section content.
-  const playbackBeat =
-    sectionMode != null
-      ? // Section slices start at 0 for that section only — map later per section.
-        positionMs / beatMs
-      : positionMs / beatMs
+  const playbackBeat = playback.positionMs / beatMs
 
   let sectionOffset = introBeats
 
@@ -184,18 +146,34 @@ export function SongTimeline({
                     chord.beat + (chord.duration || 0.25) > rowStart,
                 )
 
+                const barWidthPercent = (beatsPerBar / rowBeats) * 100
+                const beatWidthPercent = (1 / rowBeats) * 100
+
                 return (
                   <div className="timeline-row" key={`${section.id}-${row}`}>
-                    <div className="timeline-bar-numbers" aria-hidden="true">
-                      {Array.from(
-                        { length: Math.ceil(rowBeats / beatsPerBar) },
-                        (_, bar) => (
-                          <span key={bar}>{row * 4 + bar + 1}</span>
-                        ),
-                      )}
-                    </div>
-                    <div className="timeline-chord-lane">
+                    <div
+                      className="timeline-chord-lane"
+                      style={
+                        {
+                          "--bar-w": `${barWidthPercent}%`,
+                          "--beat-w": `${beatWidthPercent}%`,
+                        } as CSSProperties
+                      }
+                    >
                       <div className="timeline-beat-grid" />
+                      <div className="timeline-bar-numbers" aria-hidden="true">
+                        {Array.from(
+                          { length: Math.ceil(rowBeats / beatsPerBar) },
+                          (_, bar) => (
+                            <span
+                              key={bar}
+                              style={{ left: `${bar * barWidthPercent}%` }}
+                            >
+                              {row * 4 + bar + 1}
+                            </span>
+                          ),
+                        )}
+                      </div>
                       {rowChords.map((chord, chordIndex) => {
                         const visibleStart = Math.max(rowStart, chord.beat)
                         const visibleEnd = Math.min(

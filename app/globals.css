@@ -1513,25 +1513,31 @@ body:has(.demo-station) .site-footer {
 
 .timeline-row {
   display: grid;
-  grid-template-columns: 2rem minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr);
   gap: 0.45rem;
 }
 
 .timeline-bar-numbers {
-  display: grid;
-  grid-template-rows: repeat(4, 1fr);
-  color: #405a70;
-  font-size: 0.5rem;
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 1.1rem;
+  z-index: 3;
+  pointer-events: none;
 }
 
 .timeline-bar-numbers span {
-  display: flex;
-  align-items: center;
+  position: absolute;
+  top: 0.15rem;
+  padding-left: 0.32rem;
+  color: rgba(206, 228, 245, 0.55);
+  font-size: 0.58rem;
+  font-weight: 700;
+  line-height: 1;
 }
 
 .timeline-chord-lane {
   position: relative;
-  height: 3.35rem;
+  height: 4.1rem;
   overflow: hidden;
   border: 1px solid rgba(83, 137, 177, 0.12);
   border-radius: 0.45rem;
@@ -1542,14 +1548,14 @@ body:has(.demo-station) .site-footer {
   position: absolute;
   inset: 0;
   background-image:
-    linear-gradient(90deg, rgba(134, 178, 211, 0.14) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(134, 178, 211, 0.05) 1px, transparent 1px);
-  background-size: 25% 100%, 6.25% 100%;
+    linear-gradient(90deg, rgba(148, 197, 232, 0.4) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(134, 178, 211, 0.1) 1px, transparent 1px);
+  background-size: var(--bar-w, 25%) 100%, var(--beat-w, 6.25%) 100%;
 }
 
 .timeline-chord {
   position: absolute;
-  top: 0.38rem;
+  top: 1.15rem;
   bottom: 0.38rem;
   min-width: 2.2rem;
   padding: 0 0.42rem;

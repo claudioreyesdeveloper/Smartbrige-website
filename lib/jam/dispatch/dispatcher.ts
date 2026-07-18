@@ -53,6 +53,7 @@ export class PlanDispatcher {
   private readonly clock: DispatchClock
   private readonly timer: DispatchTimer
   private readonly wallClock: DispatchWallClock
+  private readonly getElapsedMs?: () => number
   private readonly defaultLookaheadMs: number
   private readonly defaultScheduleIntervalMs: number
   private readonly onStateChange?: (state: DispatchPlaybackState) => void
@@ -76,11 +77,20 @@ export class PlanDispatcher {
     this.clock = deps.clock ?? browserClock
     this.timer = deps.timer ?? browserTimer
     this.wallClock = deps.wallClock ?? browserWallClock
+    this.getElapsedMs = deps.getElapsedMs
     this.defaultLookaheadMs = deps.lookaheadMs ?? DEFAULT_LOOKAHEAD_MS
     this.defaultScheduleIntervalMs =
       deps.scheduleIntervalMs ?? DEFAULT_SCHEDULE_INTERVAL_MS
     this.onStateChange = deps.onStateChange
     this.onComplete = deps.onComplete
+  }
+
+  /** Plan-timeline elapsed ms used for event due checks. */
+  private elapsedPlanMs(wallNow: number): number {
+    if (this.getElapsedMs) {
+      return Math.max(0, this.getElapsedMs())
+    }
+    return Math.max(0, wallNow - this.anchorMs)
   }
 
   get playbackState(): DispatchPlaybackState {
@@ -261,26 +271,47 @@ export class PlanDispatcher {
       this.handleDisconnect()
       return
     }
-    const now = this.clock.now()
-    const horizon = now + this.lookaheadMs
+    const wallNow = this.clock.now()
+    const elapsed = this.elapsedPlanMs(wallNow)
+    // Musical clock (F8 / Keyboard Master): fire only when due — never schedule
+    // ahead on wall-clock MIDI timestamps. Wall lookahead assumes 1 plan-ms ==
+    // 1 wall-ms, which drifts vs the style engine and sends chords early.
+    const musicalClock = this.getElapsedMs != null
+    const horizon = musicalClock ? elapsed : elapsed + this.lookaheadMs
     while (this.cursor < this.events.length) {
       if (generation !== this.generation) return
       const event = this.events[this.cursor]
-      const timestamp = this.anchorMs + event.atMs
-      if (timestamp > horizon) break
-      this.session.send(event.bytes, timestamp, event.target)
+      if (event.atMs > horizon) break
+      if (musicalClock) {
+        this.session.send(event.bytes, undefined, event.target)
+      } else {
+        // Wall-clock mode: map plan due-time → wall send time.
+        const midiTs = wallNow + Math.max(0, event.atMs - elapsed)
+        this.session.send(event.bytes, midiTs, event.target)
+      }
       this.cursor += 1
     }
     if (generation !== this.generation) return
-    // Drive UI from wall-clock tempo, not MIDI event sparsity.
-    const elapsed = Math.min(this.endMs, Math.max(0, now - this.anchorMs))
+    const positionMs = Math.min(this.endMs, elapsed)
     this.publish({
       ...this.state,
-      positionMs: elapsed,
+      positionMs,
       sentCount: this.cursor,
     })
     if (this.cursor >= this.events.length) {
-      const remaining = Math.max(0, this.anchorMs + this.endMs - now)
+      if (musicalClock) {
+        // endMs is on the plan timeline; keep polling until musical elapsed catches it.
+        if (elapsed >= this.endMs) {
+          this.finish(generation)
+          return
+        }
+        this.pumpHandle = this.timer.setTimeout(
+          () => this.pump(generation),
+          this.scheduleIntervalMs,
+        )
+        return
+      }
+      const remaining = Math.max(0, this.endMs - elapsed)
       this.completeHandle = this.timer.setTimeout(() => this.finish(generation), remaining)
       return
     }

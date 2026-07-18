@@ -273,17 +273,21 @@ describe("production Jam adapters", () => {
     const target = Object.assign(new EventTarget(), {
       state: { connected: true },
       send: (bytes: Uint8Array) => sent.push(bytes),
+      sendPort1: (bytes: Uint8Array) => sent.push(bytes),
+      sendBoth: (bytes: Uint8Array) => sent.push(bytes),
       panic: vi.fn(),
     }) as unknown as YamahaMidiSession
     const dispatcher = createProductionPlanDispatcher(target)
     dispatcher.loadPlan(preparedPlan)
     dispatcher.play({ mode: "full" })
-    expect([...sent[0]!]).toEqual([0xfa])
     expect(dispatcher.getState()).toMatchObject({
       status: "playing",
       currentSectionLabel: "Verse 1",
       currentChord: "C",
     })
+    // Fixture plan may contain 0xFA bytes; play() itself must not start a clock timer
+    // (Keyboard Master / desktop Slave — no outgoing clock).
+    expect(sent.filter((bytes) => bytes.length === 1 && bytes[0] === 0xf8).length).toBe(0)
     expect(() =>
       dispatcher.loadPlan({
         ...preparedPlan,
@@ -297,7 +301,10 @@ describe("production Jam adapters", () => {
       ...preparedPlan,
       display: {
         ...preparedPlan.display,
-        durationMs: 4000,
+        tempoBpm: 120,
+        timeSignature: { numerator: 4, denominator: 4 },
+        // Intro bar (2000ms) + two content bars (4000ms).
+        durationMs: 6000,
         sections: [
           { id: "s1", name: "Verse", startBar: 0, barCount: 1 },
           { id: "s2", name: "Chorus", startBar: 1, barCount: 1 },
@@ -312,16 +319,17 @@ describe("production Jam adapters", () => {
       status: "playing",
       generation: 1,
       planId: timelinePlan.planId,
-      selection: { mode: "full" },
-      positionMs: 1999,
-      durationMs: 4000,
+      selection: { mode: "full" as const },
+      // Content timeline starts after the 1-bar intro (2000ms @ 120).
+      positionMs: 2000 + 1999,
+      durationMs: 6000,
       scheduledCount: 2,
       sentCount: 1,
       expiresAt: timelinePlan.expiresAt,
       error: null,
-    } as const
+    }
     expect(displayAt(timelinePlan, state)).toEqual({ section: "Verse", chord: "C" })
-    expect(displayAt(timelinePlan, { ...state, positionMs: 2000 })).toEqual({
+    expect(displayAt(timelinePlan, { ...state, positionMs: 2000 + 2000 })).toEqual({
       section: "Chorus",
       chord: "F",
     })

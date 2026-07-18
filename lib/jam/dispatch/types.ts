@@ -133,6 +133,11 @@ export type PlanDispatcherDeps = {
   clock?: DispatchClock
   timer?: DispatchTimer
   wallClock?: DispatchWallClock
+  /**
+   * Optional musical elapsed time on the plan timeline (ms at plan tempo).
+   * When set, events fire by this clock (desktop Slave / F8) instead of wall time.
+   */
+  getElapsedMs?: () => number
   lookaheadMs?: number
   scheduleIntervalMs?: number
   onStateChange?: (state: DispatchPlaybackState) => void

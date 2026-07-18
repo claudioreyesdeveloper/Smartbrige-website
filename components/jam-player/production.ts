@@ -27,13 +27,10 @@ import {
   type ProjectDocument,
   type ProjectStylePart,
 } from "@/lib/projects/document"
-import {
-  getMidiSession,
-  getTyrosTempoFollower,
-  type YamahaMidiSession,
-} from "@/lib/yamaha"
+import { getMidiSession, type YamahaMidiSession } from "@/lib/yamaha"
 import { ARRANGER_COMMANDS, styleSelectCommand } from "@/lib/yamaha/commands"
 import { styleMappingForEntry } from "@/lib/yamaha/style-catalog"
+import { getTyrosTempoFollower } from "@/lib/yamaha/tyros-tempo-follower"
 import {
   getPreferredKeyboardModel,
   setKeyboardAutoConnect,
@@ -240,7 +237,7 @@ function toDomainChords(song: JamSong): Array<{ symbol: string; startBar: number
     for (const chord of section.chords) {
       chords.push({
         symbol: chord.name,
-        startBar: sectionStartBar + Math.floor(chord.beat / beatsPerBar),
+        startBar: sectionStartBar + chord.beat / beatsPerBar,
         durationBars: chord.duration / beatsPerBar,
       })
     }
@@ -266,9 +263,11 @@ function toDomainPrepare(request: JamPrepareRequest): DomainPrepareRequest {
         name: section.label,
         barCount: section.bars,
         styleNumber: request.styleNumber,
+        // Keep fractional bars — Math.floor collapsed two chords onto the same
+        // startBar so the later symbol (e.g. Cmaj9) overwrote the section opener.
         chords: section.chords.map((chord) => ({
           symbol: chord.name,
-          startBar: Math.floor(chord.beat / beatsPerBar),
+          startBar: chord.beat / beatsPerBar,
           durationBars: chord.duration / beatsPerBar,
         })),
       })),
@@ -447,17 +446,21 @@ export function displayAt(
     (60_000 / plan.display.tempoBpm) *
     (4 / plan.display.timeSignature.denominator)
   const barMs = beatMs * plan.display.timeSignature.numerator
+  // Full-song dispatch/playhead include a 1-bar Intro before content; display
+  // section/chord bars are content-relative (desktop grid after intro).
+  const introBars = selection.mode === "full" ? 1 : 0
+  const contentMs = Math.max(0, state.positionMs - introBars * barMs)
   const section =
     selection.mode === "section"
       ? plan.display.sections.find((item) => item.id === selection.sectionId)
       : [...plan.display.sections]
           .reverse()
-          .find((item) => item.startBar * barMs <= state.positionMs)
+          .find((item) => item.startBar * barMs <= contentMs)
   if (!section) return { chord: "", section: "" }
   const absoluteBar =
     selection.mode === "section"
       ? section.startBar + state.positionMs / barMs
-      : state.positionMs / barMs
+      : contentMs / barMs
   const chord = [...plan.display.chords]
     .reverse()
     .find((item) => item.startBar <= absoluteBar)
@@ -480,91 +483,127 @@ export function createProductionPlanDispatcher(
     currentSectionLabel: "",
     error: null,
   }
-  // Desktop Slave playhead: integrate beats with Tyros F8 BPM (not fixed song tempo).
+  // Desktop Keyboard Master (TempoSyncMode::Slave): use F8 only to estimate
+  // BPM, then advance a free-running beat counter from wall-clock elapsed time.
+  // The keyboard's actual beat/bar phase is deliberately not followed.
+  let rafHandle = 0
+  let playing = false
   let transportBeats = 0
   let lastSampleMs = 0
-  let fallbackBpm = 120
+  let currentBpm = 120
 
-  function playbackPositionMs(domainPositionMs: number, status: string, durationMs: number) {
-    if (status !== "playing") {
-      transportBeats = 0
-      lastSampleMs = 0
-      return domainPositionMs
-    }
+  function sampleTransportBeats(): number {
+    if (!playing) return transportBeats
     const now = performance.now()
-    const planBpm = Math.max(20, plan?.display.tempoBpm || fallbackBpm)
     if (lastSampleMs <= 0) {
       lastSampleMs = now
-      transportBeats = 0
-      return 0
+      return transportBeats
     }
-    const dtSec = Math.max(0, (now - lastSampleMs) / 1000)
-    lastSampleMs = now
     const followed = follower.getCurrentBPM()
-    const bpm =
-      followed >= 30 && followed <= 300 ? followed : fallbackBpm
-    transportBeats += dtSec * (bpm / 60)
-    // Expose ms on the plan-tempo scale so displayAt / timeline beat math stay consistent.
-    return Math.min(durationMs, (transportBeats * 60_000) / planBpm)
+    if (followed >= 30 && followed <= 300) {
+      const rounded = Math.round(followed)
+      if (Math.abs(rounded - currentBpm) >= 1) currentBpm = rounded
+    }
+    const elapsedSeconds = Math.max(0, now - lastSampleMs) / 1000
+    transportBeats += elapsedSeconds * (currentBpm / 60)
+    lastSampleMs = now
+    return transportBeats
+  }
+
+  /** Plan-timeline milliseconds derived from desktop's free-running beat counter. */
+  function elapsedPlanMs(): number {
+    const planBpm = Math.max(20, plan?.display.tempoBpm || currentBpm)
+    return (sampleTransportBeats() * 60_000) / planBpm
+  }
+
+  function publishFromDomain(next: DomainPlaybackState) {
+    const positionMs =
+      next.status === "playing" ? elapsedPlanMs() : next.positionMs
+    const mapped = { ...next, positionMs }
+    const display = displayAt(plan, mapped)
+    state = {
+      status: next.status,
+      planId: next.planId,
+      selection: next.selection,
+      positionMs,
+      durationMs: next.durationMs,
+      currentChord: display.chord,
+      currentSectionLabel: display.section,
+      error: next.error,
+    }
+    for (const listener of listeners) listener({ ...state })
+  }
+
+  function stopRaf() {
+    if (rafHandle) {
+      cancelAnimationFrame(rafHandle)
+      rafHandle = 0
+    }
+  }
+
+  function startRaf() {
+    stopRaf()
+    const tick = () => {
+      if (!playing) return
+      publishFromDomain(domain.playbackState)
+      rafHandle = requestAnimationFrame(tick)
+    }
+    rafHandle = requestAnimationFrame(tick)
   }
 
   const domain = new DomainPlanDispatcher({
     session,
+    getElapsedMs: elapsedPlanMs,
+    // Desktop PlaybackTimer is 50ms.
+    scheduleIntervalMs: 50,
     onStateChange(next) {
-      const positionMs = playbackPositionMs(
-        next.positionMs,
-        next.status,
-        next.durationMs,
-      )
-      const mapped = { ...next, positionMs }
-      const display = displayAt(plan, mapped)
-      state = {
-        status: next.status,
-        planId: next.planId,
-        selection: next.selection,
-        positionMs,
-        durationMs: next.durationMs,
-        currentChord: display.chord,
-        currentSectionLabel: display.section,
-        error: next.error,
+      if (next.status !== "playing") {
+        stopRaf()
+        playing = false
       }
-      for (const listener of listeners) listener({ ...state })
+      publishFromDomain(next)
     },
   })
   return {
     loadPlan(next) {
       domain.load(next)
       plan = next
-      fallbackBpm = next.display.tempoBpm || 120
       const current = domain.playbackState
-      state = { ...state, status: current.status, planId: current.planId, durationMs: current.durationMs }
+      state = {
+        ...state,
+        status: current.status,
+        planId: current.planId,
+        durationMs: current.durationMs,
+      }
       for (const listener of listeners) listener({ ...state })
     },
     play(selection) {
-      // Desktop startPlayback / playClip: reset follower + fast-lock before transport.
+      // Desktop Slave start: reset the F8 tempo estimate. No MIDI Start or F8
+      // is sent; tempo SysEx and style start are already plan events at t=0.
       follower.reset()
-      follower.enableFastLock()
+      currentBpm = plan?.display.tempoBpm || 120
       transportBeats = 0
       lastSampleMs = 0
-      fallbackBpm = plan?.display.tempoBpm || 120
+      playing = true
       domain.start(selection)
+      startRaf()
     },
     stop() {
-      // Same sequence as demo JamScheduler.stop:
-      // style-engine Stop SysEx → MIDI Stop → then cancel schedule / All Notes Off.
+      stopRaf()
       if (session.state.connected) {
         session.sendBoth(ARRANGER_COMMANDS.stop)
-        session.sendPort1(ARRANGER_COMMANDS.midiStop)
       }
+      playing = false
       transportBeats = 0
       lastSampleMs = 0
       domain.stop()
     },
     panic() {
+      stopRaf()
       if (session.state.connected) {
         session.sendBoth(ARRANGER_COMMANDS.stop)
-        session.sendPort1(ARRANGER_COMMANDS.midiStop)
       }
+      playing = false
       transportBeats = 0
       lastSampleMs = 0
       domain.panic()

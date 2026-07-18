@@ -134,9 +134,11 @@ export class SectionRecorder {
       performance.now() / 1000 - this.startSeconds,
     )
 
-    // Desktop: fill-in at start of last bar (approx. sectionBeats - beatsPerBar).
+    // Desktop JamPlayerScreen_Playback: fill at last-bar start − 0.2 beats
+    // (fillInTriggerBeat = duration − bpb − variationAnticipation).
     if (fillIn !== "Off") {
-      const fillTriggerBeats = Math.max(0, sectionBeats - 4)
+      const beatsPerBar = 4
+      const fillTriggerBeats = Math.max(0, sectionBeats - beatsPerBar - 0.2)
       const fillMs = (fillTriggerBeats * 60_000) / bpm
       this.fillTimer = setTimeout(() => {
         if (!this.recording || !this.options) return

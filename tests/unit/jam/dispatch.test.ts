@@ -130,6 +130,12 @@ describe("final prepare contract validation", () => {
     expect(plan).not.toHaveProperty("engineVersion")
   })
 
+  it("accepts fractional display chord bars", () => {
+    const plan = cloneFixture()
+    plan.display.chords[0].startBar = 0.5
+    expect(validatePreparedPlan(plan).display.chords[0].startBar).toBe(0.5)
+  })
+
   it("rejects the old invented envelope and unknown fields", () => {
     const plan = cloneFixture() as unknown as Record<string, unknown>
     plan.engineVersion = "invented"
@@ -288,6 +294,42 @@ describe("PlanDispatcher", () => {
     expect(session.sent).toHaveLength(1)
     advance(125)
     expect(session.sent).toHaveLength(2)
+  })
+
+  it("with musical getElapsedMs fires only when due (no wall lookahead)", () => {
+    const plan = cloneFixture()
+    plan.dispatch.fullSong = [
+      { atMs: 0, target: "port1", bytes: base64(0xfa) },
+      { atMs: 200, target: "port1", bytes: base64(0xfc) },
+    ]
+    let musicalMs = 0
+    const clock = new FakeClock()
+    const wallClock = new FakeWallClock()
+    const fakeTimer = new FakeTimer(clock)
+    const session = new FakeSession()
+    const dispatcher = new PlanDispatcher({
+      session,
+      clock,
+      wallClock,
+      timer: fakeTimer,
+      lookaheadMs: 100,
+      scheduleIntervalMs: 25,
+      getElapsedMs: () => musicalMs,
+    })
+    dispatcher.load(plan)
+    dispatcher.start({ mode: "full" })
+    fakeTimer.flush()
+    expect(session.sent).toHaveLength(1)
+    expect(session.sent[0]!.timestamp).toBeUndefined()
+    musicalMs = 100
+    clock.advance(25)
+    fakeTimer.flush()
+    expect(session.sent).toHaveLength(1)
+    musicalMs = 200
+    clock.advance(25)
+    fakeTimer.flush()
+    expect(session.sent).toHaveLength(2)
+    expect(session.sent[1]!.timestamp).toBeUndefined()
   })
 
   it("cancels stop/restart races and panics", () => {
