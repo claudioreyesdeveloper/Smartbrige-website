@@ -28,6 +28,8 @@ export type CatalogImporterDeps = {
   bundle: CatalogBundleReader
   /** Blob reference owner for factory rows (admin/system user id). */
   ownerUserId: string
+  /** Resolve the configured owner before any import or Blob/reference write. */
+  assertOwnerUserExists: (userId: string) => Promise<void>
   createId?: () => string
   now?: () => Date
   /** When true, activate mapped services onto this version after a successful import. */
@@ -44,6 +46,8 @@ export class CatalogImporter {
   }
 
   async importBundle(): Promise<CatalogImportResult> {
+    await this.deps.assertOwnerUserExists(this.deps.ownerUserId)
+
     const top = await this.deps.bundle.readTopManifest()
     const contentTreeSha256 = top.content_tree_sha256.toLowerCase()
     const existing = await this.deps.store.findVersionByContentTreeSha256(contentTreeSha256)

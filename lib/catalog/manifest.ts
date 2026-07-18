@@ -206,11 +206,21 @@ export function verifyRecordsChecksum(manifest: SectionManifest): void {
   }
 }
 
-export function collectAssetChecksums(records: Record<string, unknown>[]): string[] {
+/**
+ * Match A06 `_build_section`: only `record.asset.sha256` contributes to the
+ * content-tree fingerprint. Nested assets are covered by records_sha256 and
+ * are independently read and verified during import.
+ */
+export function collectTopLevelAssetChecksums(
+  records: Record<string, unknown>[],
+): string[] {
   const checksums: string[] = []
-  walkAssets(records, (asset) => {
-    checksums.push(asset.sha256.toLowerCase())
-  })
+  for (const record of records) {
+    const asset = parseAssetRef(record.asset, `${String(record.stable_id)}.asset`)
+    if (asset) {
+      checksums.push(asset.sha256)
+    }
+  }
   return checksums
 }
 
@@ -227,7 +237,7 @@ export function verifyContentTreeSha256(
       continue
     }
     contentParts.push(manifest.records_sha256.toLowerCase())
-    contentParts.push(...collectAssetChecksums(manifest.records).sort())
+    contentParts.push(...collectTopLevelAssetChecksums(manifest.records).sort())
   }
 
   const actual = canonicalJsonSha256(contentParts)

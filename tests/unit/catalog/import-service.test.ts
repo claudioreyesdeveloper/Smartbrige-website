@@ -8,6 +8,11 @@ import { CatalogService } from "@/lib/catalog/service"
 import type { ServiceKey } from "@/lib/services/catalog"
 import { createMemoryBlobStore, createMemoryReferenceStore } from "../storage/fakes"
 import { buildSection, buildTopManifest, createMinimalFactoryBundle } from "./fixtures"
+import {
+  A06_FACTORY_CLIP_BYTES,
+  A06_FACTORY_SONGS_SECTION,
+  A06_FACTORY_SONGS_TOP,
+} from "./a06-factory-songs-fixture"
 
 function createImporter(
   bundleOptions?: Parameters<typeof createMinimalFactoryBundle>[0],
@@ -28,6 +33,7 @@ function createImporter(
     assets,
     bundle: createMemoryCatalogBundle(fixture),
     ownerUserId: "catalog-system",
+    assertOwnerUserExists: async () => {},
     activateOnSuccess: options?.activateOnSuccess ?? true,
     createId: () => {
       idSeq += 1
@@ -68,6 +74,77 @@ describe("catalog import + API", () => {
     const bassEntries = await store.listEntriesForService(first.version.id, "bass-drums")
     expect(bassEntries.map((entry) => entry.stableId)).toEqual(["midi_clip:1"])
     expect(bassEntries[0]?.blobReferenceId).toBeTruthy()
+  })
+
+  it("accepts the exact A06 factory_songs nested asset manifest", async () => {
+    const store = new MemoryCatalogStore()
+    const blobs = createMemoryBlobStore()
+    const references = createMemoryReferenceStore()
+    let id = 0
+    const importer = new CatalogImporter({
+      store,
+      assets: createCatalogAssetWriter({ blobs, references }),
+      bundle: createMemoryCatalogBundle({
+        top: A06_FACTORY_SONGS_TOP,
+        sections: { factory_songs: A06_FACTORY_SONGS_SECTION },
+        assets: {
+          "factory_songs/assets/factory_clip_1.mid": A06_FACTORY_CLIP_BYTES,
+        },
+      }),
+      ownerUserId: "catalog-system",
+      assertOwnerUserExists: async () => {},
+      createId: () => `a06-id-${++id}`,
+      now: () => new Date("2026-07-18T12:00:00.000Z"),
+    })
+
+    const result = await importer.importBundle()
+    expect(result.version.status).toBe("ready")
+    expect(result.version.contentTreeSha256).toBe(
+      "a725cb8e3658f025a33498c0a48241cfca49becfad51a5a26a751f362e7d9ed9",
+    )
+    expect([...store.entries.values()].map((entry) => entry.stableId)).toContain(
+      "factory_clip:1",
+    )
+    expect(blobs.objects.size).toBe(1)
+  })
+
+  it("rejects tampered nested A06 factory clip bytes", async () => {
+    const { importer } = createAuthenticA06Importer(
+      Uint8Array.from([...A06_FACTORY_CLIP_BYTES.slice(0, -1), 0x3e]),
+    )
+
+    await expect(importer.importBundle()).rejects.toMatchObject({
+      code: "checksum_mismatch",
+      message: expect.stringContaining("asset sha256 mismatch"),
+    })
+  })
+
+  it("fails owner preflight before writing versions, blobs, or references", async () => {
+    const fixture = createMinimalFactoryBundle()
+    const store = new MemoryCatalogStore()
+    const blobs = createMemoryBlobStore()
+    const references = createMemoryReferenceStore()
+    const importer = new CatalogImporter({
+      store,
+      assets: createCatalogAssetWriter({ blobs, references }),
+      bundle: createMemoryCatalogBundle(fixture),
+      ownerUserId: "missing-system-user",
+      assertOwnerUserExists: async (userId) => {
+        throw new CatalogError(
+          "unavailable",
+          `CATALOG_SYSTEM_USER_ID does not resolve to an existing user: ${userId}`,
+        )
+      },
+    })
+
+    await expect(importer.importBundle()).rejects.toMatchObject({
+      code: "unavailable",
+      message: expect.stringContaining("does not resolve to an existing user"),
+    })
+    expect(store.versions.size).toBe(0)
+    expect(store.entries.size).toBe(0)
+    expect(blobs.objects.size).toBe(0)
+    expect(references.rows.size).toBe(0)
   })
 
   it("rejects tampered asset hashes", async () => {
@@ -124,6 +201,7 @@ describe("catalog import + API", () => {
       assets,
       bundle: createMemoryCatalogBundle(fixture),
       ownerUserId: "catalog-system",
+      assertOwnerUserExists: async () => {},
       activateOnSuccess: true,
       createId: () => {
         idSeq += 1
@@ -177,6 +255,7 @@ describe("catalog import + API", () => {
       }),
       bundle: createMemoryCatalogBundle(fixture2),
       ownerUserId: "catalog-system",
+      assertOwnerUserExists: async () => {},
       activateOnSuccess: true,
       createId: () => {
         idSeq += 1
@@ -290,3 +369,25 @@ describe("catalog import + API", () => {
     })
   })
 })
+
+function createAuthenticA06Importer(nestedAssetBytes: Uint8Array) {
+  const store = new MemoryCatalogStore()
+  const blobs = createMemoryBlobStore()
+  const references = createMemoryReferenceStore()
+  let id = 0
+  const importer = new CatalogImporter({
+    store,
+    assets: createCatalogAssetWriter({ blobs, references }),
+    bundle: createMemoryCatalogBundle({
+      top: A06_FACTORY_SONGS_TOP,
+      sections: { factory_songs: A06_FACTORY_SONGS_SECTION },
+      assets: {
+        "factory_songs/assets/factory_clip_1.mid": nestedAssetBytes,
+      },
+    }),
+    ownerUserId: "catalog-system",
+    assertOwnerUserExists: async () => {},
+    createId: () => `a06-id-${++id}`,
+  })
+  return { importer, store, blobs, references }
+}

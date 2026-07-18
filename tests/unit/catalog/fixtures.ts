@@ -27,7 +27,7 @@ export function buildTopManifest(
   const contentParts: string[] = []
 
   for (const section of sections) {
-    const assetChecksums = collectAssetChecksums(section.records).sort()
+    const assetChecksums = collectTopLevelAssetChecksums(section.records).sort()
     sectionSummaries[section.section] = {
       manifest_path: `${section.section}/manifest.json`,
       record_count: section.record_count,
@@ -52,30 +52,16 @@ export function buildTopManifest(
   }
 }
 
-function collectAssetChecksums(value: unknown): string[] {
+function collectTopLevelAssetChecksums(records: Record<string, unknown>[]): string[] {
   const out: string[] = []
-  const walk = (node: unknown) => {
-    if (Array.isArray(node)) {
-      node.forEach(walk)
-      return
-    }
-    if (!node || typeof node !== "object") {
-      return
-    }
-    const record = node as Record<string, unknown>
+  for (const record of records) {
     if (record.asset && typeof record.asset === "object" && record.asset) {
       const asset = record.asset as Record<string, unknown>
       if (typeof asset.sha256 === "string") {
         out.push(asset.sha256.toLowerCase())
       }
     }
-    for (const [key, child] of Object.entries(record)) {
-      if (key !== "asset") {
-        walk(child)
-      }
-    }
   }
-  walk(value)
   return out
 }
 
