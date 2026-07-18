@@ -1,0 +1,89 @@
+{
+  "planId": "pln_fixture_0001",
+  "expiresAt": "2026-07-18T14:00:00.000Z",
+  "display": {
+    "tempoBpm": 120,
+    "key": "C",
+    "timeSignature": {
+      "numerator": 4,
+      "denominator": 4
+    },
+    "durationMs": 32000,
+    "sections": [
+      {
+        "id": "sec-main-a",
+        "name": "Main A",
+        "startBar": 0,
+        "barCount": 8
+      },
+      {
+        "id": "sec-main-b",
+        "name": "Main B",
+        "startBar": 8,
+        "barCount": 8
+      }
+    ],
+    "chords": [
+      {
+        "symbol": "C",
+        "startBar": 0,
+        "durationBars": 2
+      },
+      {
+        "symbol": "Am",
+        "startBar": 2,
+        "durationBars": 2
+      },
+      {
+        "symbol": "F",
+        "startBar": 4,
+        "durationBars": 2
+      },
+      {
+        "symbol": "G",
+        "startBar": 6,
+        "durationBars": 2
+      },
+      {
+        "symbol": "Am",
+        "startBar": 8,
+        "durationBars": 4
+      },
+      {
+        "symbol": "G",
+        "startBar": 12,
+        "durationBars": 4
+      }
+    ]
+  },
+  "dispatch": {
+    "fullSong": [
+      {
+        "atMs": 0,
+        "target": "port1",
+        "bytes": "8EMQ9w=="
+      },
+      {
+        "atMs": 50,
+        "target": "both",
+        "bytes": "kGEA"
+      }
+    ],
+    "sections": {
+      "sec-main-a": [
+        {
+          "atMs": 0,
+          "target": "port1",
+          "bytes": "8EMQ9w=="
+        }
+      ],
+      "sec-main-b": [
+        {
+          "atMs": 0,
+          "target": "port2",
+          "bytes": "8EMR9w=="
+        }
+      ]
+    }
+  }
+}

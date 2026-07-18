@@ -9,6 +9,7 @@ import {
   catalogEntries,
   catalogServiceActivations,
   catalogVersions,
+  engineUsageEvents,
   projectRevisions,
   projects,
   servicePrices,
@@ -41,6 +42,7 @@ describe("database schema", () => {
       catalogVersions,
       catalogServiceActivations,
       catalogEntries,
+      engineUsageEvents,
     ].map(getTableName)
 
     expect(tableNames).toEqual([
@@ -54,6 +56,7 @@ describe("database schema", () => {
       "catalog_versions",
       "catalog_service_activations",
       "catalog_entries",
+      "engine_usage_events",
     ])
 
     for (const table of [users, services, projects, userEntitlements]) {

@@ -1,0 +1,59 @@
+{
+  "model": "genos2",
+  "song": {
+    "tempoBpm": 120,
+    "key": "C",
+    "timeSignature": {
+      "numerator": 4,
+      "denominator": 4
+    },
+    "sections": [
+      {
+        "id": "sec-main-a",
+        "name": "Main A",
+        "barCount": 8,
+        "chords": [
+          {
+            "symbol": "C",
+            "startBar": 0,
+            "durationBars": 2
+          },
+          {
+            "symbol": "Am",
+            "startBar": 2,
+            "durationBars": 2
+          },
+          {
+            "symbol": "F",
+            "startBar": 4,
+            "durationBars": 2
+          },
+          {
+            "symbol": "G",
+            "startBar": 6,
+            "durationBars": 2
+          }
+        ],
+        "styleNumber": 42
+      },
+      {
+        "id": "sec-main-b",
+        "name": "Main B",
+        "barCount": 8,
+        "chords": [
+          {
+            "symbol": "Am",
+            "startBar": 0,
+            "durationBars": 4
+          },
+          {
+            "symbol": "G",
+            "startBar": 4,
+            "durationBars": 4
+          }
+        ],
+        "styleNumber": 42
+      }
+    ]
+  }
+}

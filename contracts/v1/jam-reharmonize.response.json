@@ -1,0 +1,55 @@
+{
+  "generationId": "gen_fixture_0001",
+  "candidates": [
+    {
+      "id": "cand_1",
+      "chords": [
+        {
+          "symbol": "Cmaj7",
+          "startBar": 0,
+          "durationBars": 2
+        },
+        {
+          "symbol": "Am7",
+          "startBar": 2,
+          "durationBars": 2
+        },
+        {
+          "symbol": "Fmaj7",
+          "startBar": 4,
+          "durationBars": 2
+        },
+        {
+          "symbol": "G7",
+          "startBar": 6,
+          "durationBars": 2
+        }
+      ]
+    },
+    {
+      "id": "cand_2",
+      "chords": [
+        {
+          "symbol": "C6",
+          "startBar": 0,
+          "durationBars": 2
+        },
+        {
+          "symbol": "A7",
+          "startBar": 2,
+          "durationBars": 2
+        },
+        {
+          "symbol": "Dm7",
+          "startBar": 4,
+          "durationBars": 2
+        },
+        {
+          "symbol": "G7",
+          "startBar": 6,
+          "durationBars": 2
+        }
+      ]
+    }
+  ]
+}

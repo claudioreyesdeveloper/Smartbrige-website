@@ -1,0 +1,29 @@
+{
+  "model": "genos2",
+  "scope": "section",
+  "sectionId": "sec-main-a",
+  "key": "C",
+  "chords": [
+    {
+      "symbol": "C",
+      "startBar": 0,
+      "durationBars": 2
+    },
+    {
+      "symbol": "Am",
+      "startBar": 2,
+      "durationBars": 2
+    },
+    {
+      "symbol": "F",
+      "startBar": 4,
+      "durationBars": 2
+    },
+    {
+      "symbol": "G",
+      "startBar": 6,
+      "durationBars": 2
+    }
+  ],
+  "candidateCount": 3
+}

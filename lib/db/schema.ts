@@ -38,6 +38,17 @@ export const catalogImportStatusEnum = pgEnum("catalog_import_status", [
   "failed",
 ])
 
+export const engineOperationEnum = pgEnum("engine_operation", [
+  "jam_prepare",
+  "jam_reharmonize",
+])
+
+export const engineUsageStatusEnum = pgEnum("engine_usage_status", [
+  "completed",
+  "failed",
+  "rejected",
+])
+
 export const users = pgTable("user", {
   id: text("id")
     .primaryKey()
@@ -405,5 +416,47 @@ export const catalogEntriesRelations = relations(catalogEntries, ({ one }) => ({
   blobReference: one(blobReferences, {
     fields: [catalogEntries.blobReferenceId],
     references: [blobReferences.id],
+  }),
+}))
+
+/**
+ * Durable jam-engine usage/audit events.
+ * Stores operation metadata only — never raw musical content, recipes, or traces.
+ */
+export const engineUsageEvents = pgTable(
+  "engine_usage_events",
+  {
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => crypto.randomUUID()),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    projectId: text("project_id").references(() => projects.id, { onDelete: "set null" }),
+    operation: engineOperationEnum("operation").notNull(),
+    status: engineUsageStatusEnum("status").notNull(),
+    errorCode: text("error_code"),
+    durationMs: integer("duration_ms"),
+    createdAt: timestamp("created_at", { mode: "date" }).defaultNow().notNull(),
+  },
+  (table) => [
+    index("engine_usage_events_user_created_idx").on(table.userId, table.createdAt),
+    index("engine_usage_events_user_status_created_idx").on(
+      table.userId,
+      table.status,
+      table.createdAt,
+    ),
+    index("engine_usage_events_project_id_idx").on(table.projectId),
+  ],
+)
+
+export const engineUsageEventsRelations = relations(engineUsageEvents, ({ one }) => ({
+  user: one(users, {
+    fields: [engineUsageEvents.userId],
+    references: [users.id],
+  }),
+  project: one(projects, {
+    fields: [engineUsageEvents.projectId],
+    references: [projects.id],
   }),
 }))
