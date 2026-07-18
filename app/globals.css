@@ -1649,6 +1649,17 @@ body:has(.demo-station) .site-footer {
   cursor: pointer;
 }
 
+.style-dropzone.is-drop-active {
+  border-color: #4fd6c3;
+  background: linear-gradient(145deg, rgba(20, 90, 86, 0.45), rgba(7, 24, 37, 0.85));
+  box-shadow: inset 0 0 0 1px rgba(79, 214, 195, 0.35);
+}
+
+.style-dropzone:focus-visible {
+  outline: 2px solid #4fd6c3;
+  outline-offset: 3px;
+}
+
 .style-dropzone input,
 .replace-file input,
 .midi-upload input {
@@ -1733,6 +1744,123 @@ body:has(.demo-station) .site-footer {
   color: #e8f5fc;
   font: inherit;
   font-size: 0.7rem;
+}
+
+.style-section-save {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  min-height: 2.25rem;
+  padding: 0 0.85rem;
+  border: 1px solid #2f9d8f;
+  border-radius: 6px;
+  background: #0f3a36;
+  color: #b8fff4;
+  font: inherit;
+  font-size: 0.68rem;
+  font-weight: 800;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.style-section-save:hover:not(:disabled) {
+  background: #14524c;
+}
+
+.style-section-save.is-saved,
+.style-section-save:disabled {
+  border-color: #315671;
+  background: #0b2538;
+  color: #7f9bb0;
+  cursor: default;
+}
+
+.section-record-panel {
+  margin-top: 0.8rem;
+  padding: 0.85rem 1rem;
+  display: grid;
+  gap: 0.75rem;
+  border: 1px solid rgba(214, 86, 86, 0.28);
+  border-radius: 0.8rem;
+  background: rgba(36, 12, 16, 0.55);
+}
+
+.section-record-copy {
+  display: grid;
+  gap: 0.15rem;
+}
+
+.section-record-copy strong {
+  font-size: 0.85rem;
+}
+
+.section-record-copy p {
+  margin: 0;
+  color: #9a7d82;
+  font-size: 0.68rem;
+}
+
+.section-record-channels {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem 0.75rem;
+}
+
+.section-record-channels label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  color: #e7cfd3;
+  font-size: 0.65rem;
+  font-weight: 700;
+}
+
+.section-record-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+  align-items: center;
+}
+
+.section-record-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-height: 2.4rem;
+  padding: 0 1rem;
+  border: 1px solid #b33a3a;
+  border-radius: 6px;
+  background: #8f1f1f;
+  color: #fff5f5;
+  font: inherit;
+  font-size: 0.72rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.section-record-button:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.section-record-button.is-recording {
+  background: #b32626;
+  animation: section-record-pulse 1.1s ease-in-out infinite;
+}
+
+.section-record-button.is-drag {
+  cursor: grab;
+  background: #c62828;
+  border-color: #ff6b6b;
+}
+
+.section-record-button.is-drag:active {
+  cursor: grabbing;
+}
+
+@keyframes section-record-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(198, 40, 40, 0.45); }
+  50% { box-shadow: 0 0 0 6px rgba(198, 40, 40, 0); }
 }
 
 .replace-file,

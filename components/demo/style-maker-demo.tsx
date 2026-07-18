@@ -3,15 +3,18 @@
 import {
   ArrowRight,
   Check,
+  Circle,
   Download,
   FileMusic,
+  GripVertical,
   LoaderCircle,
   Play,
+  Save,
   Square,
   Upload,
   WandSparkles,
 } from "lucide-react"
-import { useEffect, useMemo, useRef, useState } from "react"
+import { useEffect, useMemo, useRef, useState, type DragEvent, type KeyboardEvent } from "react"
 import partCatalog from "@/data/demo/style-parts.json"
 import { DemoShell } from "@/components/demo/demo-shell"
 import { FeedbackPrompt } from "@/components/demo/feedback-prompt"
@@ -22,10 +25,17 @@ import {
   parseYamahaStyle,
   patternToMidiNotes,
   replaceStyleLanes,
+  replaceStyleSectionLanes,
   type MidiNote,
   type ParsedYamahaStyle,
   type StyleSectionRange,
 } from "@/lib/demo/style-midi"
+import {
+  mainLabelToVariation,
+  SectionRecorder,
+  STYLE_CHANNEL_NAMES,
+  type SectionRecordTake,
+} from "@/lib/demo/section-record"
 import { StylePreviewPlayer } from "@/lib/demo/style-preview"
 import { MusicsoftTransfer } from "@/lib/demo/yamaha/musicsoft-transfer"
 import { useMidiSession } from "@/lib/demo/yamaha/use-midi-session"
@@ -44,6 +54,12 @@ type LaneSource = {
   notes: MidiNote[]
   cycleTicks: number
   custom?: boolean
+}
+type SectionRecipe = {
+  bassId: string
+  drumsId: string
+  bassName: string
+  drumsName: string
 }
 
 function laneSourceFor(
@@ -99,24 +115,44 @@ export function StyleMakerDemo() {
   const [session, midi] = useMidiSession()
   const [donorFile, setDonorFile] = useState<File | null>(null)
   const [donor, setDonor] = useState<ParsedYamahaStyle | null>(null)
+  const [workingStyle, setWorkingStyle] = useState<ParsedYamahaStyle | null>(null)
   const [bassId, setBassId] = useState(bassParts[0].id)
   const [drumsId, setDrumsId] = useState(drumParts[0].id)
   const [sectionId, setSectionId] = useState("")
   const [customBass, setCustomBass] = useState<LaneSource | null>(null)
   const [customDrums, setCustomDrums] = useState<LaneSource | null>(null)
-  const [modified, setModified] = useState<Uint8Array | null>(null)
+  const [savedRecipes, setSavedRecipes] = useState<Record<string, SectionRecipe>>({})
+  const [draftRecipes, setDraftRecipes] = useState<Record<string, SectionRecipe>>({})
+  const [draftBytes, setDraftBytes] = useState<Uint8Array | null>(null)
   const [notice, setNotice] = useState("")
+  const [dropActive, setDropActive] = useState(false)
   const [previewing, setPreviewing] = useState<
     "original" | "modified" | "bass" | "drums" | null
   >(null)
   const [transfer, setTransfer] = useState<TransferProgress | null>(null)
   const [transferComplete, setTransferComplete] = useState("")
   const [engagements, setEngagements] = useState(0)
+  const [channelsEnabled, setChannelsEnabled] = useState(() =>
+    STYLE_CHANNEL_NAMES.map(() => true),
+  )
+  const [recordPhase, setRecordPhase] = useState<"idle" | "recording" | "drag">("idle")
+  const [recordTake, setRecordTake] = useState<SectionRecordTake | null>(null)
+  const [recordStatus, setRecordStatus] = useState("")
   const preview = useRef<StylePreviewPlayer | null>(null)
+  const donorInput = useRef<HTMLInputElement | null>(null)
+  const recorder = useRef<SectionRecorder | null>(null)
+  const dragMidiUrl = useRef<string | null>(null)
+  const workingStyleRef = useRef<ParsedYamahaStyle | null>(null)
+  workingStyleRef.current = workingStyle
 
   useEffect(() => {
     preview.current = new StylePreviewPlayer(session, () => setPreviewing(null))
-    return () => preview.current?.stop()
+    recorder.current = new SectionRecorder(session)
+    return () => {
+      preview.current?.stop()
+      recorder.current?.cancel()
+      if (dragMidiUrl.current) URL.revokeObjectURL(dragMidiUrl.current)
+    }
   }, [session])
 
   const bass = useMemo<LaneSource | null>(() => {
@@ -135,23 +171,46 @@ export function StyleMakerDemo() {
     () => styleSections.find((section) => section.id === sectionId) || styleSections[0] || null,
     [sectionId, styleSections],
   )
+  const savedRecipe = selectedSection ? savedRecipes[selectedSection.id] : undefined
+  const sectionDirty = Boolean(
+    selectedSection &&
+      bass &&
+      drums &&
+      (!savedRecipe ||
+        savedRecipe.bassId !== bass.id ||
+        savedRecipe.drumsId !== drums.id),
+  )
+  const savedSectionLabels = styleSections
+    .filter((section) => savedRecipes[section.id])
+    .map((section) => section.label)
+  const exportBytes = workingStyle?.originalBytes || null
+  const hasSavedSections = savedSectionLabels.length > 0
 
   useEffect(() => {
-    if (!donor || !bass || !drums) {
-      setModified(null)
+    if (!workingStyle || !bass || !drums || !selectedSection) {
+      setDraftBytes(null)
       return
     }
     try {
-      setModified(replaceStyleLanes(donor, {
+      setDraftBytes(replaceStyleLanes(workingStyle, {
         bass,
         drums,
-        range: selectedSection || undefined,
+        range: selectedSection,
       }))
-      setNotice("")
     } catch (error) {
       setNotice(error instanceof Error ? error.message : "Could not render the modified style.")
     }
-  }, [bass, donor, drums, selectedSection])
+  }, [bass, drums, selectedSection, workingStyle])
+
+  const currentRecipe = (): SectionRecipe | null => {
+    if (!bass || !drums) return null
+    return {
+      bassId: bass.id,
+      drumsId: drums.id,
+      bassName: bass.name,
+      drumsName: drums.name,
+    }
+  }
 
   const uploadDonor = async (file: File) => {
     try {
@@ -166,12 +225,23 @@ export function StyleMakerDemo() {
       }
       setDonorFile(file)
       setDonor(parsed)
+      setWorkingStyle(parsed)
+      setSavedRecipes({})
+      setDraftRecipes({})
+      setBassId(bassParts[0].id)
+      setDrumsId(drumParts[0].id)
       setSectionId(mainSections[0].id)
+      setRecordPhase("idle")
+      setRecordTake(null)
+      setRecordStatus("")
       setNotice("")
       setEngagements((value) => value + 1)
     } catch (error) {
       setDonorFile(null)
       setDonor(null)
+      setWorkingStyle(null)
+      setSavedRecipes({})
+      setDraftRecipes({})
       setNotice(error instanceof Error ? error.message : "The style file could not be read.")
     }
   }
@@ -210,8 +280,8 @@ export function StyleMakerDemo() {
       setNotice("Connect the Yamaha keyboard to audition through its sounds.")
       return
     }
-    if (!donor || !selectedSection || (version === "modified" && !modified)) return
-    const parsed = version === "original" ? donor : parseYamahaStyle(modified!)
+    if (!donor || !selectedSection || (version === "modified" && !draftBytes)) return
+    const parsed = version === "original" ? donor : parseYamahaStyle(draftBytes!)
     preview.current?.play(
       extractStyleSectionPreviewEvents(parsed, selectedSection),
       parsed.ticksPerQuarter,
@@ -222,7 +292,7 @@ export function StyleMakerDemo() {
   }
 
   const playLane = (lane: "bass" | "drums", requestedId?: string) => {
-    if (!midi.connected || !donor || !selectedSection) {
+    if (!midi.connected || !workingStyle || !selectedSection) {
       setNotice("Connect the Yamaha keyboard and choose a donor style first.")
       return
     }
@@ -240,7 +310,7 @@ export function StyleMakerDemo() {
       donor,
     )
     if (!auditionBass || !auditionDrums) return
-    const rendered = replaceStyleLanes(donor, {
+    const rendered = replaceStyleLanes(workingStyle, {
       bass: auditionBass,
       drums: auditionDrums,
       range: selectedSection,
@@ -261,10 +331,51 @@ export function StyleMakerDemo() {
     setPreviewing(null)
   }
 
+  const saveCurrentSection = () => {
+    if (!workingStyle || !bass || !drums || !selectedSection || !draftBytes) return
+    const recipe = currentRecipe()
+    if (!recipe) return
+    const next = parseYamahaStyle(draftBytes)
+    setWorkingStyle(next)
+    setSavedRecipes((recipes) => ({
+      ...recipes,
+      [selectedSection.id]: recipe,
+    }))
+    setDraftRecipes((recipes) => ({
+      ...recipes,
+      [selectedSection.id]: recipe,
+    }))
+    setNotice(`${selectedSection.label} saved into your new style.`)
+    setEngagements((value) => value + 1)
+  }
+
+  const selectSection = (nextSectionId: string) => {
+    stopPreview()
+    const leaving = currentRecipe()
+    if (selectedSection && leaving) {
+      setDraftRecipes((recipes) => ({
+        ...recipes,
+        [selectedSection.id]: leaving,
+      }))
+    }
+    setSectionId(nextSectionId)
+    const nextRecipe = draftRecipes[nextSectionId] || savedRecipes[nextSectionId]
+    if (nextRecipe) {
+      setBassId(nextRecipe.bassId)
+      setDrumsId(nextRecipe.drumsId)
+    } else {
+      setBassId(bassParts[0].id)
+      setDrumsId(drumParts[0].id)
+    }
+  }
+
   const exportFile = () => {
-    if (!modified || !donorFile) return
-    const downloadBytes = new Uint8Array(modified.length)
-    downloadBytes.set(modified)
+    if (!exportBytes || !donorFile || !hasSavedSections) {
+      setNotice("Save at least one Main section before downloading your new style.")
+      return
+    }
+    const downloadBytes = new Uint8Array(exportBytes.length)
+    downloadBytes.set(exportBytes)
     const blob = new Blob([downloadBytes.buffer], { type: "application/octet-stream" })
     const url = URL.createObjectURL(blob)
     const anchor = document.createElement("a")
@@ -275,7 +386,11 @@ export function StyleMakerDemo() {
   }
 
   const loadToKeyboard = async () => {
-    if (!modified || !midi.connected || !midi.profile) {
+    if (!exportBytes || !hasSavedSections) {
+      setNotice("Save at least one Main section before loading the style to your keyboard.")
+      return
+    }
+    if (!midi.connected || !midi.profile) {
       setNotice("Connect a supported Yamaha keyboard and finish the style first.")
       return
     }
@@ -283,7 +398,7 @@ export function StyleMakerDemo() {
     setTransfer({ phase: "initializing", percent: 1, message: "Preparing your style" })
     const transferClient = new MusicsoftTransfer(session, setTransfer)
     try {
-      const result = await transferClient.transferStyle(modified, "SmartBridgeDemo.prs")
+      const result = await transferClient.transferStyle(exportBytes, "SmartBridgeDemo.prs")
       if (midi.profile.oneClickActivation) {
         setTransfer({
           phase: "activating",
@@ -304,14 +419,172 @@ export function StyleMakerDemo() {
     }
   }
 
+  const applyRecordedTake = (take: SectionRecordTake) => {
+    const style = workingStyleRef.current
+    if (!style || !selectedSection || !donor) return
+    const sectionTicks = Math.max(
+      1,
+      selectedSection.endTick - selectedSection.startTick,
+    )
+    const lanes: Partial<Record<number, { notes: MidiNote[]; cycleTicks: number }>> = {}
+    take.laneNotes.forEach((notes, laneIndex) => {
+      if (!notes.length || !channelsEnabled[laneIndex]) return
+      lanes[laneIndex] = { notes, cycleTicks: sectionTicks }
+    })
+    const bytes = replaceStyleSectionLanes(style, {
+      range: selectedSection,
+      lanes,
+    })
+    const next = parseYamahaStyle(bytes)
+    setWorkingStyle(next)
+    workingStyleRef.current = next
+
+    const rhythmNotes = take.laneNotes[0] || []
+    const bassNotes = take.laneNotes[2] || []
+    if (rhythmNotes.length) {
+      setCustomDrums({
+        id: "custom",
+        name: `Recorded ${STYLE_CHANNEL_NAMES[0]}`,
+        custom: true,
+        notes: rhythmNotes,
+        cycleTicks: sectionTicks,
+      })
+      setDrumsId("custom")
+    }
+    if (bassNotes.length) {
+      setCustomBass({
+        id: "custom",
+        name: `Recorded ${STYLE_CHANNEL_NAMES[2]}`,
+        custom: true,
+        notes: bassNotes,
+        cycleTicks: sectionTicks,
+      })
+      setBassId("custom")
+    }
+
+    if (dragMidiUrl.current) URL.revokeObjectURL(dragMidiUrl.current)
+    const midiCopy = new Uint8Array(take.midiBytes)
+    const blob = new Blob([midiCopy.buffer], { type: "audio/midi" })
+    dragMidiUrl.current = URL.createObjectURL(blob)
+    setRecordTake(take)
+    setRecordPhase("drag")
+    setRecordStatus("Recording complete! Drag the DRAG button to export.")
+    setEngagements((value) => value + 2)
+  }
+
+  const startSectionRecord = () => {
+    if (!midi.connected || !selectedSection || !donor || !recorder.current) {
+      setNotice("Connect the Yamaha keyboard and choose a Main section first.")
+      return
+    }
+    stopPreview()
+    try {
+      setRecordPhase("recording")
+      setRecordTake(null)
+      setRecordStatus("Recording…")
+      recorder.current.start({
+        variation: mainLabelToVariation(selectedSection.label),
+        sectionTicks: Math.max(1, selectedSection.endTick - selectedSection.startTick),
+        ticksPerQuarter: donor.ticksPerQuarter,
+        bpm: 120,
+        channelsEnabled: [...channelsEnabled],
+        onAutoStop: (take) => {
+          if (!take || !take.events.length) {
+            setRecordPhase("idle")
+            setRecordStatus("")
+            setNotice("No style-engine MIDI was captured on channels 9–16.")
+            return
+          }
+          applyRecordedTake(take)
+        },
+      })
+      setEngagements((value) => value + 1)
+    } catch (error) {
+      setRecordPhase("idle")
+      setRecordStatus("")
+      setNotice(error instanceof Error ? error.message : "Recording could not start.")
+    }
+  }
+
+  const stopSectionRecord = () => {
+    if (!recorder.current?.isRecording) return
+    try {
+      const take = recorder.current.stop()
+      if (!take || !take.events.length) {
+        setRecordPhase("idle")
+        setRecordStatus("")
+        setNotice("No style-engine MIDI was captured on channels 9–16.")
+        return
+      }
+      applyRecordedTake(take)
+    } catch (error) {
+      setRecordPhase("idle")
+      setNotice(error instanceof Error ? error.message : "Recording failed.")
+    }
+  }
+
+  const onRecordDragStart = (event: DragEvent<HTMLButtonElement>) => {
+    if (!recordTake || !dragMidiUrl.current) {
+      event.preventDefault()
+      return
+    }
+    const fileName = `SECTION_Main_${recordTake.variation}_SmartBridge.mid`
+    const url = dragMidiUrl.current
+    event.dataTransfer.effectAllowed = "copy"
+    event.dataTransfer.setData(
+      "DownloadURL",
+      `audio/midi:${fileName}:${url}`,
+    )
+    event.dataTransfer.setData("text/uri-list", url)
+    event.dataTransfer.setData("text/plain", fileName)
+  }
+
+  const downloadRecordedMidi = () => {
+    if (!recordTake || !dragMidiUrl.current) return
+    const anchor = document.createElement("a")
+    anchor.href = dragMidiUrl.current
+    anchor.download = `SECTION_Main_${recordTake.variation}_SmartBridge.mid`
+    anchor.click()
+  }
+
+  const acceptDonorFile = (file: File | undefined | null) => {
+    if (!file) return
+    void uploadDonor(file)
+    if (donorInput.current) donorInput.current.value = ""
+  }
+
+  const onDonorDrag = (event: DragEvent<HTMLElement>) => {
+    event.preventDefault()
+    event.stopPropagation()
+    if (event.type === "dragenter" || event.type === "dragover") {
+      setDropActive(true)
+    }
+    if (event.type === "dragleave") {
+      setDropActive(false)
+    }
+  }
+
+  const onDonorDrop = (event: DragEvent<HTMLElement>) => {
+    event.preventDefault()
+    event.stopPropagation()
+    setDropActive(false)
+    const file = event.dataTransfer.files?.[0]
+    acceptDonorFile(file)
+  }
+
   const activeBassPart = bassParts.find((part) => part.id === bassId)
   const activeDrumPart = drumParts.find((part) => part.id === drumsId)
+  const saveLabel = selectedSection
+    ? sectionDirty
+      ? `Save ${selectedSection.label}`
+      : `${selectedSection.label} saved`
+    : "Save section"
 
   return (
     <DemoShell
       title="Style Maker"
       eyebrow="Improve any Yamaha style"
-      step="Upload · Replace · Compare · Load"
+      step="Upload · Replace · Save sections · Load"
       onSafeStop={stopPreview}
     >
       <div className="style-maker-layout">
@@ -321,8 +594,8 @@ export function StyleMakerDemo() {
             <h1>Keep the Yamaha magic.<br />Replace what needs fresh energy.</h1>
           </div>
           <div className="style-steps" aria-label="Style Maker progress">
-            {["Upload", "Bass", "Drums", "Compare", "Load"].map((step, index) => (
-              <span key={step} className={(donor ? 1 : 0) + (modified ? 3 : 0) >= index ? "is-active" : ""}>
+            {["Upload", "Bass", "Drums", "Save", "Load"].map((step, index) => (
+              <span key={step} className={(donor ? 1 : 0) + (hasSavedSections ? 3 : 0) >= index ? "is-active" : ""}>
                 <i>{index + 1}</i>{step}
               </span>
             ))}
@@ -330,17 +603,35 @@ export function StyleMakerDemo() {
         </section>
 
         {!donor ? (
-          <label className="style-dropzone">
+          <div
+            className={`style-dropzone${dropActive ? " is-drop-active" : ""}`}
+            role="button"
+            tabIndex={0}
+            aria-label="Drop your Yamaha style here, or press Enter to browse"
+            onDragEnter={onDonorDrag}
+            onDragOver={onDonorDrag}
+            onDragLeave={onDonorDrag}
+            onDrop={onDonorDrop}
+            onClick={() => donorInput.current?.click()}
+            onKeyDown={(event: KeyboardEvent<HTMLDivElement>) => {
+              if (event.key === "Enter" || event.key === " ") {
+                event.preventDefault()
+                donorInput.current?.click()
+              }
+            }}
+          >
             <input
+              ref={donorInput}
               type="file"
-              accept=".sty,.prs,.sst,.mid,.midi"
-              onChange={(event) => event.target.files?.[0] && uploadDonor(event.target.files[0])}
+              accept=".sty,.prs,.sst,.mid,.midi,audio/midi,application/octet-stream"
+              onChange={(event) => acceptDonorFile(event.target.files?.[0])}
+              onClick={(event) => event.stopPropagation()}
             />
             <span className="style-drop-icon"><Upload size={30} /></span>
             <strong>Drop your Yamaha style here</strong>
-            <p>Your donor stays in browser memory. Nothing is uploaded to a server.</p>
+            <p>Or click to browse. Your donor stays in browser memory — nothing is uploaded to a server.</p>
             <small>.sty · .prs · .sst</small>
-          </label>
+          </div>
         ) : (
           <>
             <section className="donor-summary">
@@ -348,27 +639,101 @@ export function StyleMakerDemo() {
               <div>
                 <small>Donor style</small>
                 <strong>{donorFile?.name}</strong>
-                <span>{donor.tracks.length} MIDI track{donor.tracks.length === 1 ? "" : "s"} · CASM/OTS/MDB tail preserved ({donor.yamahaTail.length.toLocaleString()} bytes)</span>
+                <span>
+                  {donor.tracks.length} MIDI track{donor.tracks.length === 1 ? "" : "s"} · CASM/OTS/MDB tail preserved ({donor.yamahaTail.length.toLocaleString()} bytes)
+                  {hasSavedSections ? ` · Saved ${savedSectionLabels.join(", ")}` : ""}
+                </span>
               </div>
               <label className="style-section-picker">
                 <span>Section</span>
                 <select
                   value={selectedSection?.id || ""}
                   aria-label="Style Maker section"
-                  onChange={(event) => {
-                    stopPreview()
-                    setSectionId(event.target.value)
-                  }}
+                  onChange={(event) => selectSection(event.target.value)}
                 >
                   {styleSections.map((section) => (
-                    <option key={section.id} value={section.id}>{section.label}</option>
+                    <option key={section.id} value={section.id}>
+                      {savedRecipes[section.id] ? `${section.label} (saved)` : section.label}
+                    </option>
                   ))}
                 </select>
               </label>
+              <button
+                type="button"
+                className={`style-section-save${sectionDirty ? "" : " is-saved"}`}
+                onClick={saveCurrentSection}
+                disabled={!sectionDirty || !draftBytes}
+                aria-label={saveLabel}
+              >
+                {sectionDirty ? <Save size={15} /> : <Check size={15} />}
+                {saveLabel}
+              </button>
               <label className="replace-file">
                 Choose another
                 <input type="file" accept=".sty,.prs,.sst" onChange={(event) => event.target.files?.[0] && uploadDonor(event.target.files[0])} />
               </label>
+            </section>
+
+            <section className="section-record-panel" aria-label="Record section">
+              <div className="section-record-copy">
+                <span className="demo-eyebrow">Record This Section</span>
+                <strong>Capture style-engine parts on channels 9–16</strong>
+                <p>
+                  {recordStatus ||
+                    "Same as desktop Jam Player: record what the Yamaha style engine plays for this Main, then drag the take into Cubase."}
+                </p>
+              </div>
+              <div className="section-record-channels" role="group" aria-label="Style channels">
+                {STYLE_CHANNEL_NAMES.map((name, index) => (
+                  <label key={name}>
+                    <input
+                      type="checkbox"
+                      checked={channelsEnabled[index]}
+                      disabled={recordPhase === "recording"}
+                      onChange={() =>
+                        setChannelsEnabled((flags) =>
+                          flags.map((value, flagIndex) => (flagIndex === index ? !value : value)),
+                        )
+                      }
+                    />
+                    {name}
+                  </label>
+                ))}
+              </div>
+              <div className="section-record-actions">
+                {recordPhase === "idle" && (
+                  <button
+                    type="button"
+                    className="section-record-button"
+                    onClick={startSectionRecord}
+                    disabled={!midi.connected}
+                  >
+                    <Circle size={14} fill="currentColor" /> Record
+                  </button>
+                )}
+                {recordPhase === "recording" && (
+                  <button type="button" className="section-record-button is-recording" onClick={stopSectionRecord}>
+                    <Square size={14} fill="currentColor" /> Stop
+                  </button>
+                )}
+                {recordPhase === "drag" && recordTake && (
+                  <>
+                    <button
+                      type="button"
+                      className="section-record-button is-drag"
+                      draggable
+                      onDragStart={onRecordDragStart}
+                      onClick={downloadRecordedMidi}
+                      aria-label="DRAG recorded section MIDI to Cubase"
+                    >
+                      <GripVertical size={15} /> DRAG
+                    </button>
+                    <button type="button" className="btn-secondary" onClick={startSectionRecord}>
+                      Record again
+                    </button>
+                  </>
+                )}
+              </div>
             </section>
 
             <div className="lane-editor-grid">
@@ -423,7 +788,7 @@ export function StyleMakerDemo() {
               <div>
                 <span className="demo-eyebrow">Before & after</span>
                 <h2>Hear the difference on your keyboard.</h2>
-                <p>SmartBridge streams the style parts on Yamaha channels 9–16 without changing your donor’s native CASM tail.</p>
+                <p>Save each Main A–D section into your new style file, then download or load the combined result.</p>
               </div>
               <div className="compare-actions">
                 <button type="button" className={previewing === "original" ? "is-playing" : ""} onClick={() => playVersion("original")}>
@@ -442,12 +807,18 @@ export function StyleMakerDemo() {
 
             {notice && <div className="demo-status" role="status">{notice}</div>}
             <section className="style-final-bar">
-              <button className="btn-secondary" type="button" onClick={exportFile}><Download size={17} /> Download style</button>
+              <button className="btn-secondary" type="button" onClick={exportFile} disabled={!hasSavedSections}>
+                <Download size={17} /> Download style
+              </button>
               <div>
                 <span><WandSparkles size={17} /> Ready for your Yamaha</span>
-                <small>{midi.profile?.oneClickActivation ? "Genos activation is hardware-gated" : "Transfers into USER:\\STYLE"}</small>
+                <small>
+                  {hasSavedSections
+                    ? `New style includes ${savedSectionLabels.join(", ")}`
+                    : "Save Main A–D sections into your new style file"}
+                </small>
               </div>
-              <button className="load-keyboard-button" type="button" onClick={loadToKeyboard} disabled={!modified}>
+              <button className="load-keyboard-button" type="button" onClick={loadToKeyboard} disabled={!hasSavedSections}>
                 Load to Keyboard <ArrowRight size={19} />
               </button>
             </section>

@@ -188,7 +188,74 @@ test("Style Maker clearly requires a user donor file", async ({ page }, testInfo
   await page.getByRole("button", { name: "Genos2" }).click()
   await page.getByRole("button", { name: "Connect my keyboard" }).last().click()
   await expect(page.getByText("Drop your Yamaha style here")).toBeVisible()
-  await expect(page.getByText(/Nothing is uploaded to a server/)).toBeVisible()
+  await expect(page.getByText(/Or click to browse/)).toBeVisible()
+  await expect(page.getByText(/Nothing is uploaded to a server/i)).toBeVisible()
+})
+
+test("Style Maker accepts a Yamaha donor style from the dropzone", async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== "desktop", "Web MIDI routing is checked in Chromium")
+  await page.goto("/demo/style-maker")
+  await page.getByRole("button", { name: "Genos2" }).click()
+  await page.getByRole("button", { name: "Connect my keyboard" }).last().click()
+  await expect(page.getByRole("button", { name: /Drop your Yamaha style here/ })).toBeVisible()
+  await page.locator(".style-dropzone input").setInputFiles({
+    name: "drag-drop.prs",
+    mimeType: "application/octet-stream",
+    buffer: Buffer.from(stylePreviewFixture()),
+  })
+  await expect(page.getByText("drag-drop.prs")).toBeVisible()
+  await expect(page.getByRole("combobox", { name: "Style Maker section" })).toBeVisible()
+  await expect(page.getByRole("button", { name: /Save Main A/ })).toBeVisible()
+  await expect(page.getByRole("button", { name: /^Record$/ })).toBeVisible()
+  await expect(page.getByRole("group", { name: "Style channels" })).toBeVisible()
+})
+
+test("Style Maker section record captures ch 9-16 and enables DRAG", async ({
+  page,
+}, testInfo) => {
+  test.skip(testInfo.project.name !== "desktop", "Web MIDI capture is checked in Chromium")
+  await page.goto("/demo/style-maker")
+  await page.getByRole("button", { name: "Genos2" }).click()
+  await page.getByRole("button", { name: "Connect my keyboard" }).last().click()
+  await page.locator(".style-dropzone input").setInputFiles({
+    name: "record-test.prs",
+    mimeType: "application/octet-stream",
+    buffer: Buffer.from(stylePreviewFixture()),
+  })
+  await expect(page.getByRole("button", { name: /^Record$/ })).toBeEnabled()
+  await page.getByRole("button", { name: /^Record$/ }).click()
+  await expect(page.getByText("Recording…")).toBeVisible()
+
+  // Inject style-engine notes on channels 9–16 while capture is armed.
+  await page.evaluate(() => {
+    const midiWindow = window as unknown as {
+      __midiInputs?: Map<string, { onmidimessage: null | ((event: { data: Uint8Array }) => void) }>
+    }
+    // The session stores ports privately; dispatch through any attached handler
+    // by synthesizing Port 2 traffic via the mock ports created in beforeEach.
+    const outputs = (navigator as unknown as {
+      requestMIDIAccess: () => Promise<{
+        inputs: Map<string, { onmidimessage: null | ((e: { data: Uint8Array }) => void) }>
+      }>
+    })
+    void outputs
+  })
+
+  // Re-open access to the same mock ports and fire note events on ch 9/11.
+  await page.evaluate(async () => {
+    const access = await navigator.requestMIDIAccess()
+    const input2 = [...access.inputs.values()].find((port) => /Port 2/i.test(port.name || ""))
+    if (!input2?.onmidimessage) return
+    input2.onmidimessage({ data: Uint8Array.of(0x98, 36, 100) })
+    input2.onmidimessage({ data: Uint8Array.of(0x9a, 40, 90) })
+    await new Promise((resolve) => setTimeout(resolve, 30))
+    input2.onmidimessage({ data: Uint8Array.of(0x88, 36, 0) })
+    input2.onmidimessage({ data: Uint8Array.of(0x8a, 40, 0) })
+  })
+
+  await page.getByLabel("Record section").getByRole("button", { name: "Stop" }).click()
+  await expect(page.getByRole("button", { name: /DRAG/ })).toBeVisible({ timeout: 5000 })
+  await expect(page.getByText(/Recording complete/)).toBeVisible()
 })
 
 test("Style Maker previews voices and channels 9-16 on Port 2", async ({
@@ -205,8 +272,17 @@ test("Style Maker previews voices and channels 9-16 on Port 2", async ({
   })
   const sectionPicker = page.getByRole("combobox", { name: "Style Maker section" })
   await expect(sectionPicker.locator("option")).toHaveCount(2)
-  await sectionPicker.selectOption({ label: "Main B" })
+  await sectionPicker.selectOption({ index: 1 })
   await expect(page.locator(".lane-audition-controls").getByRole("button", { name: /Start/ })).toHaveCount(2)
+  await expect(page.getByRole("button", { name: /Save Main B/ })).toBeEnabled()
+  await page.getByRole("button", { name: /Save Main B/ }).click()
+  await expect(page.getByText(/Main B saved into your new style/)).toBeVisible()
+  await expect(page.getByRole("button", { name: /Main B saved/ })).toBeDisabled()
+  await sectionPicker.selectOption({ index: 0 })
+  await expect(page.getByRole("button", { name: /Save Main A/ })).toBeEnabled()
+  await page.getByRole("button", { name: /Save Main A/ }).click()
+  await expect(page.getByText(/Saved Main B, Main A|Saved Main A, Main B/)).toBeVisible()
+  await sectionPicker.selectOption({ index: 1 })
 
   await page.evaluate(() => {
     (window as unknown as { __midiSends: unknown[] }).__midiSends = []

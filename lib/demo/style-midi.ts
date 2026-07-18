@@ -295,6 +295,86 @@ export function replaceStyleLanes(
   return Uint8Array.from(output)
 }
 
+/**
+ * Replace any of the eight style-engine lanes inside a section tick range.
+ * Lane index 0–7 = Rhythm1 … Phrase2 → MIDI channels channelBase+1 … channelBase+8
+ * (native Tyros: 9–16). Preserves Yamaha CASM/OTS/MDB tail.
+ */
+export function replaceStyleSectionLanes(
+  style: ParsedYamahaStyle,
+  replacements: {
+    range?: StyleSectionRange
+    lanes: Partial<Record<number, { notes: MidiNote[]; cycleTicks: number }>>
+  },
+): Uint8Array {
+  const tracks = style.tracks.map((track) => ({
+    endTick: track.endTick,
+    events: track.events.map((event) => ({ ...event, data: [...event.data] })),
+  }))
+  const target = tracks[0]
+  const endTick = Math.max(...tracks.map((track) => track.endTick))
+  let order = Math.max(0, ...target.events.map((event) => event.order)) + 1
+  const noteChannels = tracks.flatMap((track) =>
+    track.events
+      .filter((event) => {
+        const kind = event.status & 0xf0
+        return kind === 0x80 || kind === 0x90
+      })
+      .map((event) => event.status & 0x0f),
+  )
+  const nativeStyleChannels = noteChannels.filter((channel) => channel >= 8).length
+    > noteChannels.filter((channel) => channel < 8).length
+  const channelBase = nativeStyleChannels ? 8 : 0
+  const rangeStart = Math.max(0, replacements.range?.startTick || 0)
+  const rangeEnd = Math.min(endTick, replacements.range?.endTick || endTick)
+
+  const removeNotesOnChannels = (channels: number[]) => {
+    tracks.forEach((track) => {
+      track.events = track.events.filter((event) => {
+        const kind = event.status & 0xf0
+        const channel = event.status & 0x0f
+        return !(
+          (kind === 0x80 || kind === 0x90) &&
+          channels.includes(channel) &&
+          event.tick >= rangeStart &&
+          event.tick < rangeEnd
+        )
+      })
+    })
+  }
+
+  for (let laneIndex = 0; laneIndex < 8; laneIndex += 1) {
+    const lane = replacements.lanes[laneIndex]
+    if (!lane || !lane.notes.length) continue
+    // Native Tyros: channels 9–16 → 0-based 8–15 (channelBase 8 + laneIndex).
+    // GM-style fixtures: channels 1–8 → 0-based laneIndex+1 (matches replaceStyleLanes).
+    const writeChannel = channelBase === 8 ? channelBase + laneIndex : laneIndex + 1
+    removeNotesOnChannels(
+      channelBase === 8 ? [writeChannel] : [laneIndex + 1, writeChannel],
+    )
+    const events = notesToEvents(
+      lane.notes,
+      writeChannel,
+      lane.cycleTicks,
+      rangeEnd,
+      order,
+      rangeStart,
+    )
+    order += events.length
+    target.events.push(...events)
+  }
+
+  const output: number[] = [
+    ...Array.from(style.originalBytes.slice(0, 8 + readU32(style.originalBytes, 4))),
+  ]
+  tracks.forEach((track) => {
+    const data = serializeTrack(track)
+    output.push(...Array.from(new TextEncoder().encode("MTrk")), ...writeU32(data.length), ...data)
+  })
+  output.push(...style.yamahaTail)
+  return Uint8Array.from(output)
+}
+
 export function extractStyleSections(style: ParsedYamahaStyle): StyleSectionRange[] {
   const endTick = Math.max(...style.tracks.map((track) => track.endTick))
   const markers = style.tracks
