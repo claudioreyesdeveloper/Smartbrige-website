@@ -26,7 +26,7 @@ describe("app-shell entitlements", () => {
     expect(bass?.access).toBe("upgrade")
     expect(solo?.access).toBe("upgrade")
     expect(lyrics?.access).toBe("upgrade")
-    expect(bass?.upgradeHref).toContain("bass-drums")
+    expect(bass?.upgradeHref).toBe("/app/billing?service=bass-drums")
   })
 
   it("style-maker is coming soon and not active", () => {

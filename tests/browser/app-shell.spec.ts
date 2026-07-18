@@ -1,5 +1,10 @@
 import AxeBuilder from "@axe-core/playwright"
 import { expect, test } from "@playwright/test"
+import { applyAccessFixture } from "./helpers/access-fixture"
+
+test.beforeEach(async ({ page }) => {
+  await applyAccessFixture(page)
+})
 
 test("App overview lists purchased, upgrade, and coming-soon services", async ({ page }) => {
   await page.goto("/app")
@@ -32,7 +37,7 @@ test("Unpurchased service route shows upgrade panel", async ({ page }) => {
   await expect(page.locator(".app-shell-upgrade-panel")).toContainText(
     "Bass & Drums is not in your plan",
   )
-  await expect(page.getByRole("link", { name: "View upgrade options" })).toBeVisible()
+  await expect(page.getByRole("button", { name: /Subscribe to Bass & Drums/i })).toBeVisible()
   await expect(page.getByRole("link", { name: "Back to overview" })).toHaveAttribute("href", "/app")
 })
 

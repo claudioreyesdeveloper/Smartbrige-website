@@ -1,12 +1,23 @@
 import type { Metadata } from "next"
 import { SignInForm } from "@/components/auth/sign-in-form"
+import { sanitizeCallbackUrl } from "@/lib/access"
 
 export const metadata: Metadata = {
   title: "Sign in",
   description: "Sign in to SmartBridge with a secure email link.",
 }
 
-export default function LoginPage() {
+type LoginPageProps = {
+  searchParams?: Promise<{ callbackUrl?: string }>
+}
+
+export default async function LoginPage({ searchParams }: LoginPageProps) {
+  const params = (await searchParams) ?? {}
+  const callbackUrl = sanitizeCallbackUrl(
+    typeof params.callbackUrl === "string" ? params.callbackUrl : "/app",
+    "/app",
+  )
+
   return (
     <div className="page-shell">
       <div className="content-wrap max-w-lg">
@@ -17,7 +28,7 @@ export default function LoginPage() {
         </p>
 
         <div className="card-surface mt-8 p-8">
-          <SignInForm />
+          <SignInForm callbackUrl={callbackUrl} />
         </div>
       </div>
     </div>

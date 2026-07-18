@@ -1,16 +1,19 @@
 "use client"
 
 import Link from "next/link"
+import { useMemo, type ReactNode } from "react"
 import { usePathname } from "next/navigation"
-import type { ReactNode } from "react"
 import { EntitlementProviderBoundary, useEntitlements } from "./entitlement-context"
 import { ServiceNav } from "./service-nav"
+import { StaticEntitlementProvider } from "./static-entitlement-provider"
+import type { ServiceEntitlement } from "./types"
 
 type AppShellFrameProps = {
   children: ReactNode
+  email: string | null
 }
 
-function AppShellFrame({ children }: AppShellFrameProps) {
+function AppShellFrame({ children, email }: AppShellFrameProps) {
   const entitlements = useEntitlements()
   const pathname = usePathname()
   const activeService = entitlements.find(
@@ -35,6 +38,18 @@ function AppShellFrame({ children }: AppShellFrameProps) {
           <ServiceNav entitlements={entitlements} />
 
           <div className="app-shell-sidebar-foot">
+            <Link
+              href="/app/account"
+              className={`app-shell-sidebar-link${pathname === "/app/account" ? " is-active" : ""}`}
+            >
+              Account
+            </Link>
+            <Link
+              href="/app/billing"
+              className={`app-shell-sidebar-link${pathname.startsWith("/app/billing") ? " is-active" : ""}`}
+            >
+              Billing
+            </Link>
             <Link href="/" className="app-shell-sidebar-link">
               Marketing site
             </Link>
@@ -52,6 +67,16 @@ function AppShellFrame({ children }: AppShellFrameProps) {
                   <p className="app-shell-topbar-eyebrow">{activeService.tagline}</p>
                   <h1 className="app-shell-topbar-title">{activeService.name}</h1>
                 </>
+              ) : pathname === "/app/account" ? (
+                <>
+                  <p className="app-shell-topbar-eyebrow">Account</p>
+                  <h1 className="app-shell-topbar-title">Subscriptions</h1>
+                </>
+              ) : pathname.startsWith("/app/billing") ? (
+                <>
+                  <p className="app-shell-topbar-eyebrow">Billing</p>
+                  <h1 className="app-shell-topbar-title">Checkout & portal</h1>
+                </>
               ) : (
                 <>
                   <p className="app-shell-topbar-eyebrow">Subscription</p>
@@ -60,7 +85,7 @@ function AppShellFrame({ children }: AppShellFrameProps) {
               )}
             </div>
             <p className="app-shell-topbar-note" role="status">
-              Signed-in workspace preview — billing connects in a later release.
+              {email ? `Signed in as ${email}` : "Signed-in workspace"}
             </p>
           </header>
 
@@ -75,12 +100,19 @@ function AppShellFrame({ children }: AppShellFrameProps) {
 
 type AppShellProps = {
   children: ReactNode
+  entitlements: ServiceEntitlement[]
+  email?: string | null
 }
 
-export function AppShell({ children }: AppShellProps) {
+export function AppShell({ children, entitlements, email = null }: AppShellProps) {
+  const provider = useMemo(
+    () => new StaticEntitlementProvider(entitlements),
+    [entitlements],
+  )
+
   return (
-    <EntitlementProviderBoundary>
-      <AppShellFrame>{children}</AppShellFrame>
+    <EntitlementProviderBoundary provider={provider}>
+      <AppShellFrame email={email}>{children}</AppShellFrame>
     </EntitlementProviderBoundary>
   )
 }

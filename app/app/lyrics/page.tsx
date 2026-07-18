@@ -1,8 +1,7 @@
 import type { Metadata } from "next"
 import { PlaceholderWorkspace } from "@/components/app-shell/placeholder-workspace"
+import { ServiceAccessGate } from "@/components/app-shell/service-access-gate"
 import { SERVICE_CATALOG } from "@/components/app-shell/service-catalog"
-import { mockEntitlementProvider } from "@/components/app-shell/mock-entitlement-provider"
-import { UpgradeRequired } from "@/components/app-shell/upgrade-required"
 
 const service = SERVICE_CATALOG.lyrics
 
@@ -11,14 +10,12 @@ export const metadata: Metadata = {
 }
 
 export default function LyricsAppPage() {
-  if (!mockEntitlementProvider.isActive("lyrics")) {
-    return <UpgradeRequired serviceKey="lyrics" />
-  }
-
   return (
-    <PlaceholderWorkspace
-      title={service.name}
-      description={service.description}
-    />
+    <ServiceAccessGate serviceKey="lyrics">
+      <PlaceholderWorkspace
+        title={service.name}
+        description={service.description}
+      />
+    </ServiceAccessGate>
   )
 }

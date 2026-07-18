@@ -6,10 +6,12 @@ import type {
   ServiceKey,
 } from "./types"
 
-/** Temporary stand-in until auth + billing entitlements land (A03+). */
+/** Test/dev stand-in. Production /app uses server-derived StaticEntitlementProvider. */
 const MOCK_PURCHASED: ServiceKey[] = ["jam-player", "genos-mixer"]
 
-const MOCK_UPGRADE_BASE = "/app#upgrade"
+function upgradeHrefFor(key: ServiceKey): string {
+  return `/app/billing?service=${key}`
+}
 
 function resolveAccess(key: ServiceKey): ServiceEntitlement["access"] {
   if (getSharedServiceCatalogEntry(key).availability === "future") {
@@ -26,7 +28,7 @@ export class MockEntitlementProvider implements EntitlementProvider {
       return {
         ...definition,
         access,
-        upgradeHref: `${MOCK_UPGRADE_BASE}-${key}`,
+        upgradeHref: upgradeHrefFor(key),
       }
     })
   }
@@ -36,7 +38,7 @@ export class MockEntitlementProvider implements EntitlementProvider {
   }
 
   getUpgradeHref(key: ServiceKey): string {
-    return `${MOCK_UPGRADE_BASE}-${key}`
+    return upgradeHrefFor(key)
   }
 }
 

@@ -1,7 +1,8 @@
 import Link from "next/link"
 import { ArrowUpRight, Lock } from "lucide-react"
+import { CheckoutButton } from "@/components/billing/checkout-button"
+import "@/components/billing/billing.css"
 import { SERVICE_CATALOG } from "./service-catalog"
-import { mockEntitlementProvider } from "./mock-entitlement-provider"
 import type { ServiceKey } from "./types"
 
 type UpgradeRequiredProps = {
@@ -10,7 +11,7 @@ type UpgradeRequiredProps = {
 
 export function UpgradeRequired({ serviceKey }: UpgradeRequiredProps) {
   const service = SERVICE_CATALOG[serviceKey]
-  const upgradeHref = mockEntitlementProvider.getUpgradeHref(serviceKey)
+  const billingHref = `/app/billing?service=${serviceKey}`
 
   return (
     <div className="app-shell-upgrade-panel" role="alert">
@@ -19,14 +20,19 @@ export function UpgradeRequired({ serviceKey }: UpgradeRequiredProps) {
       </span>
       <h2 className="app-shell-upgrade-title">{service.name} is not in your plan</h2>
       <p className="app-shell-upgrade-body">
-        Upgrade your subscription to unlock {service.name.toLowerCase()} and add it to your
-        SmartBridge workflow.
+        Subscribe to unlock {service.name.toLowerCase()}. Each service is billed independently —
+        adding this module will not change your other subscriptions.
       </p>
       <div className="app-shell-upgrade-actions">
-        <a href={upgradeHref} className="app-shell-btn app-shell-btn-accent">
-          View upgrade options
+        <CheckoutButton
+          serviceKey={serviceKey}
+          label={`Subscribe to ${service.name}`}
+          className="app-shell-btn app-shell-btn-accent"
+        />
+        <Link href={billingHref} className="app-shell-btn app-shell-btn-secondary">
+          View billing options
           <ArrowUpRight size={16} aria-hidden="true" />
-        </a>
+        </Link>
         <Link href="/app" className="app-shell-btn app-shell-btn-secondary">
           Back to overview
         </Link>

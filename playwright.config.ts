@@ -27,5 +27,11 @@ export default defineConfig({
     url: "http://127.0.0.1:3000/demo",
     reuseExistingServer: !process.env.CI,
     timeout: 120000,
+    env: {
+      ...process.env,
+      SMARTBRIDGE_ACCESS_FIXTURE: "1",
+      AUTH_SECRET: process.env.AUTH_SECRET ?? "playwright-auth-secret-not-for-production",
+      AUTH_EMAIL_FROM: process.env.AUTH_EMAIL_FROM ?? "playwright@example.com",
+    },
   },
 })
