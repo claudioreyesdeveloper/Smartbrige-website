@@ -22,7 +22,7 @@ export default defineConfig({
     { name: "tablet", use: { ...devices["iPad Pro 11"] } },
     { name: "mobile", use: { ...devices["iPhone 13"] } },
   ],
-  webServer: {
+  webServer: process.env.PLAYWRIGHT_SKIP_WEBSERVER === "1" ? undefined : {
     command: "npm run build && npm run start -- --hostname 127.0.0.1",
     url: "http://127.0.0.1:3000/demo",
     reuseExistingServer: !process.env.CI,
