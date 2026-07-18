@@ -199,25 +199,7 @@ export function parseJamReharmonizeRequest(value: unknown): JamReharmonizeReques
   if (!isPlainObject(value)) fail("Request body must be a JSON object.")
   assertExactKeys(
     value,
-    [
-      "projectId",
-      "model",
-      "scope",
-      "sectionId",
-      "key",
-      "chords",
-      "candidateCount",
-      "style",
-      "sectionName",
-      "sectionClass",
-      "category",
-      "bars",
-      "beatsPerBar",
-      "nextSectionFirstChord",
-      "preserveCadence",
-      "romanTimingsJson",
-      "melodyFeatures",
-    ],
+    ["projectId", "model", "scope", "sectionId", "key", "chords", "candidateCount"],
     "body",
   )
   if (value.scope !== "section" && value.scope !== "song") {
@@ -244,67 +226,6 @@ export function parseJamReharmonizeRequest(value: unknown): JamReharmonizeReques
       max: MAX_REHARMONIZE_CANDIDATES,
     })
   }
-  if (value.style !== undefined) {
-    request.style = assertString(value.style, "style", { max: 32 })
-  }
-  if (value.sectionName !== undefined) {
-    request.sectionName = assertString(value.sectionName, "sectionName", {
-      max: MAX_SECTION_NAME_LENGTH,
-    })
-  }
-  if (value.sectionClass !== undefined) {
-    request.sectionClass = assertString(value.sectionClass, "sectionClass", { max: 64 })
-  }
-  if (value.category !== undefined) {
-    if (typeof value.category !== "string" || value.category.length > 64) {
-      fail("category must be a string no longer than 64 characters")
-    }
-    request.category = value.category
-  }
-  if (value.bars !== undefined) request.bars = assertInt(value.bars, "bars", { min: 1, max: 256 })
-  if (value.beatsPerBar !== undefined) {
-    if (
-      typeof value.beatsPerBar !== "number" ||
-      !Number.isFinite(value.beatsPerBar) ||
-      value.beatsPerBar < 1 ||
-      value.beatsPerBar > 16
-    ) {
-      fail("beatsPerBar out of range")
-    }
-    request.beatsPerBar = value.beatsPerBar
-  }
-  if (value.nextSectionFirstChord !== undefined) {
-    if (
-      typeof value.nextSectionFirstChord !== "string" ||
-      value.nextSectionFirstChord.length > MAX_CHORD_SYMBOL_LENGTH
-    ) {
-      fail("nextSectionFirstChord is invalid")
-    }
-    request.nextSectionFirstChord = value.nextSectionFirstChord
-  }
-  if (value.preserveCadence !== undefined) {
-    if (typeof value.preserveCadence !== "boolean") fail("preserveCadence must be a boolean")
-    request.preserveCadence = value.preserveCadence
-  }
-  if (value.romanTimingsJson !== undefined) {
-    if (
-      typeof value.romanTimingsJson !== "string" ||
-      value.romanTimingsJson.length > 64_000
-    ) {
-      fail("romanTimingsJson is invalid")
-    }
-    request.romanTimingsJson = value.romanTimingsJson
-  }
-  if (value.melodyFeatures !== undefined) {
-    if (typeof value.melodyFeatures === "string") {
-      if (value.melodyFeatures.length > 64_000) fail("melodyFeatures is too large")
-      request.melodyFeatures = value.melodyFeatures
-    } else if (isPlainObject(value.melodyFeatures)) {
-      request.melodyFeatures = value.melodyFeatures
-    } else {
-      fail("melodyFeatures must be a string or object")
-    }
-  }
   if (request.scope === "section" && !request.sectionId) {
     fail("sectionId is required when scope is section")
   }
@@ -314,6 +235,7 @@ export function parseJamReharmonizeRequest(value: unknown): JamReharmonizeReques
 export function toEngineReharmonizeRequest(
   request: JamReharmonizeRequest,
   subjectId: string,
+  ownedProjectId: string,
 ): JamReharmonizeEngineRequest {
   const engine: JamReharmonizeEngineRequest = {
     model: request.model,
@@ -321,22 +243,10 @@ export function toEngineReharmonizeRequest(
     key: request.key,
     chords: request.chords,
     subjectId: parseOpaqueId(subjectId, "subjectId"),
-    projectId: request.projectId,
+    projectId: parseProjectId(ownedProjectId),
   }
   if (request.sectionId !== undefined) engine.sectionId = request.sectionId
   if (request.candidateCount !== undefined) engine.candidateCount = request.candidateCount
-  if (request.style !== undefined) engine.style = request.style
-  if (request.sectionName !== undefined) engine.sectionName = request.sectionName
-  if (request.sectionClass !== undefined) engine.sectionClass = request.sectionClass
-  if (request.category !== undefined) engine.category = request.category
-  if (request.bars !== undefined) engine.bars = request.bars
-  if (request.beatsPerBar !== undefined) engine.beatsPerBar = request.beatsPerBar
-  if (request.nextSectionFirstChord !== undefined) {
-    engine.nextSectionFirstChord = request.nextSectionFirstChord
-  }
-  if (request.preserveCadence !== undefined) engine.preserveCadence = request.preserveCadence
-  if (request.romanTimingsJson !== undefined) engine.romanTimingsJson = request.romanTimingsJson
-  if (request.melodyFeatures !== undefined) engine.melodyFeatures = request.melodyFeatures
   return engine
 }
 

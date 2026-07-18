@@ -2,6 +2,7 @@ import { readFileSync } from "node:fs"
 import path from "node:path"
 import { describe, expect, it } from "vitest"
 import {
+  FORBIDDEN_RESPONSE_KEYS,
   containsForbiddenKeys,
   parseJamPrepareRequest,
   parseJamPrepareResponse,
@@ -110,7 +111,22 @@ describe("jam domain validation", () => {
     expect(parsed).not.toHaveProperty("engineDebug")
   })
 
-  it.each(["subjectId", "patternPool", "techniques", "seed"])(
+  const clientForbiddenFields = [
+    ...new Set([
+      ...FORBIDDEN_RESPONSE_KEYS,
+      "subjectId",
+      "style",
+      "sectionName",
+      "sectionClass",
+      "category",
+      "bars",
+      "beatsPerBar",
+      "nextSectionFirstChord",
+      "preserveCadence",
+    ]),
+  ]
+
+  it.each(clientForbiddenFields)(
     "never accepts client-controlled %s",
     (field) => {
       expect(() =>
@@ -120,7 +136,7 @@ describe("jam domain validation", () => {
           scope: "song",
           key: "C",
           chords: [{ symbol: "C", startBar: 0, durationBars: 2 }],
-          [field]: field === "seed" ? 1 : "controlled",
+          [field]: "proprietary-probe",
         }),
       ).toThrow(/Unknown field/)
     },

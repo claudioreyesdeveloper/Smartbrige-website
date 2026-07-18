@@ -24,7 +24,7 @@ describe("jam v1 contract fixtures", () => {
     const expected = readFileSync(path.join(contractsDir, "CONTRACT_HASH.txt"), "utf8").trim()
     expect(computeHash()).toBe(expected)
     expect(expected).toBe(
-      "709c638215a188a87aa30f36ddd617e12beb25d10009c1e2afa45e1c2bbd184a",
+      "68790d1752933fc774d47effa68ad7acf29ec8d1318f25574c176301d7745b7b",
     )
   })
 

@@ -73,7 +73,9 @@ export class JamEngineService {
     request: JamReharmonizeRequest,
   ): Promise<JamReharmonizeResponse> {
     return this.runAuthorized(userId, request.projectId, "jam_reharmonize", () =>
-      this.engineClient.reharmonize(toEngineReharmonizeRequest(request, userId)),
+      this.engineClient.reharmonize(
+        toEngineReharmonizeRequest(request, userId, request.projectId),
+      ),
     )
   }
 

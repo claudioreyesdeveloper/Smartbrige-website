@@ -18,5 +18,9 @@
     "encoding": "standard-base64",
     "canonicalPaddingRequired": true,
     "maximumDecodedBytes": 12288
+  },
+  "reharmonize": {
+    "musicalContext": "server-derived-only",
+    "clientRecipeControls": false
   }
 }

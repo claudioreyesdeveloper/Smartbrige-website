@@ -87,16 +87,17 @@ export type JamReharmonizeEngineRequest = {
   beatsPerBar?: number
   nextSectionFirstChord?: string
   preserveCadence?: boolean
-  romanTimingsJson?: string
-  melodyFeatures?: string | Record<string, unknown>
 }
 
 /** Public API reharmonize body. */
-export type JamReharmonizeRequest = Omit<
-  JamReharmonizeEngineRequest,
-  "subjectId"
-> & {
+export type JamReharmonizeRequest = {
   projectId: string
+  model: KeyboardModel
+  scope: "section" | "song"
+  sectionId?: string
+  key: string
+  chords: DisplayChord[]
+  candidateCount?: number
 }
 
 export type JamReharmonizeCandidate = {
