@@ -1,7 +1,7 @@
 import type { Metadata } from "next"
-import { PlaceholderWorkspace } from "@/components/app-shell/placeholder-workspace"
 import { ServiceAccessGate } from "@/components/app-shell/service-access-gate"
 import { SERVICE_CATALOG } from "@/components/app-shell/service-catalog"
+import { BassDrumsFixtureEntry } from "@/components/bass-drums/fixture-entry"
 
 const service = SERVICE_CATALOG["bass-drums"]
 
@@ -12,10 +12,7 @@ export const metadata: Metadata = {
 export default function BassDrumsAppPage() {
   return (
     <ServiceAccessGate serviceKey="bass-drums">
-      <PlaceholderWorkspace
-        title={service.name}
-        description={service.description}
-      />
+      <BassDrumsFixtureEntry />
     </ServiceAccessGate>
   )
 }
