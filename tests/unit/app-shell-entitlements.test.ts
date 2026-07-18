@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest"
+import { denyAllEntitlementProvider } from "@/components/app-shell/deny-entitlement-provider"
 import { mockEntitlementProvider } from "@/components/app-shell/mock-entitlement-provider"
 import { SERVICE_CATALOG, SERVICE_NAV_ORDER } from "@/components/app-shell/service-catalog"
 import { SERVICE_KEYS, partitionEntitlements } from "@/components/app-shell/types"
@@ -9,6 +10,13 @@ describe("app-shell entitlements", () => {
       expect(SERVICE_CATALOG[key]).toBeDefined()
       expect(SERVICE_CATALOG[key].key).toBe(key)
       expect(SERVICE_CATALOG[key].path.startsWith("/app/")).toBe(true)
+    }
+  })
+
+  it("defaults to fail-closed access without an injected provider", () => {
+    expect(denyAllEntitlementProvider.getEntitlements()).toEqual([])
+    for (const key of SERVICE_KEYS) {
+      expect(denyAllEntitlementProvider.isActive(key)).toBe(false)
     }
   })
 

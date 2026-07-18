@@ -1,7 +1,7 @@
 "use client"
 
 import { createContext, useContext, useMemo, type ReactNode } from "react"
-import { mockEntitlementProvider } from "./mock-entitlement-provider"
+import { denyAllEntitlementProvider } from "./deny-entitlement-provider"
 import type { EntitlementProvider, ServiceEntitlement } from "./types"
 
 const EntitlementContext = createContext<EntitlementProvider | null>(null)
@@ -13,7 +13,7 @@ type EntitlementProviderProps = {
 
 export function EntitlementProviderBoundary({
   children,
-  provider = mockEntitlementProvider,
+  provider = denyAllEntitlementProvider,
 }: EntitlementProviderProps) {
   const value = useMemo(() => provider, [provider])
   return (

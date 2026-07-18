@@ -2,12 +2,14 @@ import { afterEach, describe, expect, it } from "vitest"
 import {
   ACCESS_FIXTURE_ENV,
   encodeAccessFixtureCookie,
+  isAccessFixtureEnabled,
   parseAccessFixtureCookie,
 } from "@/lib/access/fixture"
 
 describe("access fixture cookie", () => {
   afterEach(() => {
     delete process.env[ACCESS_FIXTURE_ENV]
+    delete process.env.VERCEL_ENV
   })
 
   it("returns null when fixture mode is disabled", () => {
@@ -16,6 +18,29 @@ describe("access fixture cookie", () => {
       entitlements: [{ serviceKey: "jam-player", status: "active" }],
     })
     expect(parseAccessFixtureCookie(encoded)).toBeNull()
+  })
+
+  it("allows fixture mode for local Playwright", () => {
+    process.env[ACCESS_FIXTURE_ENV] = "1"
+    expect(isAccessFixtureEnabled()).toBe(true)
+  })
+
+  it("fails closed on Vercel production even when explicitly enabled", () => {
+    process.env[ACCESS_FIXTURE_ENV] = "1"
+    process.env.VERCEL_ENV = "production"
+    const encoded = encodeAccessFixtureCookie({
+      userId: "user-1",
+      entitlements: [{ serviceKey: "jam-player", status: "active" }],
+    })
+
+    expect(isAccessFixtureEnabled()).toBe(false)
+    expect(parseAccessFixtureCookie(encoded)).toBeNull()
+  })
+
+  it("remains available on Vercel preview when explicitly enabled", () => {
+    process.env[ACCESS_FIXTURE_ENV] = "1"
+    process.env.VERCEL_ENV = "preview"
+    expect(isAccessFixtureEnabled()).toBe(true)
   })
 
   it("parses service keys and statuses without trusting access claims", () => {

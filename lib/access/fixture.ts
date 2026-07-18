@@ -31,13 +31,17 @@ export type ParsedAccessFixture = {
 }
 
 export function isAccessFixtureEnabled(): boolean {
-  return process.env[ACCESS_FIXTURE_ENV] === "1"
+  return (
+    process.env[ACCESS_FIXTURE_ENV] === "1" &&
+    process.env.VERCEL_ENV !== "production"
+  )
 }
 
 /**
  * Parse a Playwright/test fixture cookie.
  * Only service keys + entitlement statuses are accepted; access flags are ignored
- * and recomputed server-side. Disabled unless SMARTBRIDGE_ACCESS_FIXTURE=1.
+ * and recomputed server-side. Disabled unless SMARTBRIDGE_ACCESS_FIXTURE=1,
+ * and always disabled in a Vercel production deployment.
  */
 export function parseAccessFixtureCookie(
   raw: string | undefined | null,
