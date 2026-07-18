@@ -183,6 +183,13 @@ export function createMemoryAtomicWebhookStore(input: {
             if (existing && existing.updatedAt > upsert.eventCreatedAt) {
               continue
             }
+            if (
+              existing &&
+              upsert.replaceOnlySubscriptionId &&
+              existing.stripeSubscriptionId !== upsert.replaceOnlySubscriptionId
+            ) {
+              continue
+            }
             await input.entitlements.upsert(upsert)
             appliedServiceIds.push(upsert.serviceId)
           }

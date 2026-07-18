@@ -279,6 +279,7 @@ export function createNeonAtomicWebhookStore(
         }
       }
 
+      const replacementGuards: string[] = []
       const valueGroups = input.entitlementUpserts.map((upsert) => {
         const start = params.length + 1
         params.push(
@@ -291,11 +292,17 @@ export function createNeonAtomicWebhookStore(
           upsert.validFrom.toISOString(),
           upsert.validUntil?.toISOString() ?? null,
           upsert.eventCreatedAt.toISOString(),
+          upsert.replaceOnlySubscriptionId,
+        )
+        replacementGuards.push(
+          `(EXCLUDED.service_id = $${start + 1}
+            AND ($${start + 9}::text IS NULL
+              OR user_entitlements.stripe_subscription_id = $${start + 9}))`,
         )
         return `($${start}, $${start + 1}, $${start + 2}::entitlement_status,
           $${start + 3}::entitlement_source, $${start + 4}, $${start + 5},
           $${start + 6}::timestamp, $${start + 7}::timestamp,
-          $${start + 8}::timestamp)`
+          $${start + 8}::timestamp, $${start + 9})`
       })
 
       const rows = await sql.query(
@@ -308,7 +315,8 @@ export function createNeonAtomicWebhookStore(
          incoming (
            user_id, service_id, status, source,
            stripe_subscription_id, stripe_subscription_item_id,
-           valid_from, valid_until, updated_at
+           valid_from, valid_until, updated_at,
+           replace_only_subscription_id
          ) AS (
            VALUES ${valueGroups.join(", ")}
          ),
@@ -318,7 +326,10 @@ export function createNeonAtomicWebhookStore(
              stripe_subscription_id, stripe_subscription_item_id,
              valid_from, valid_until, updated_at
            )
-           SELECT incoming.*
+           SELECT
+             user_id, service_id, status, source,
+             stripe_subscription_id, stripe_subscription_item_id,
+             valid_from, valid_until, updated_at
            FROM incoming
            CROSS JOIN claimed
            WHERE true
@@ -331,6 +342,9 @@ export function createNeonAtomicWebhookStore(
              valid_until = EXCLUDED.valid_until,
              updated_at = EXCLUDED.updated_at
            WHERE user_entitlements.updated_at <= EXCLUDED.updated_at
+             AND (
+               ${replacementGuards.join(" OR ")}
+             )
            RETURNING service_id
          )
          SELECT EXISTS(SELECT 1 FROM claimed) AS claimed,

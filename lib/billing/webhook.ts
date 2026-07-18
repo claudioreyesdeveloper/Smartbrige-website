@@ -30,7 +30,7 @@ export type ProcessWebhookResult =
 export type WebhookProcessorDeps = BillingStores & {
   stripeVerifier: StripeWebhookVerifier
   webhookSecret: string
-  retrieveSubscription?: (subscriptionId: string) => Promise<Stripe.Subscription>
+  retrieveSubscription: (subscriptionId: string) => Promise<Stripe.Subscription | null>
   now?: Date
 }
 
@@ -66,8 +66,19 @@ async function processSubscriptionEvent(
   deps: WebhookProcessorDeps,
 ): Promise<PlannedWebhook> {
   const object = event.data.object as Stripe.Subscription
-  const snapshot = toSubscriptionSnapshot(object)
+  const payloadSnapshot = toSubscriptionSnapshot(object)
+  const authoritative = await deps.retrieveSubscription(payloadSnapshot.id)
+  const snapshot = authoritative
+    ? toSubscriptionSnapshot(authoritative)
+    : {
+        ...payloadSnapshot,
+        status: "canceled",
+        cancelAtPeriodEnd: false,
+        currentPeriodEnd: null,
+        canceledAt: deps.now ?? new Date(),
+      }
   const userId = await resolveUserIdForSubscription(snapshot, deps)
+    ?? await resolveUserIdForSubscription(payloadSnapshot, deps)
   if (!userId) {
     return {
       result: { status: "ignored", eventId: event.id, type: event.type },
@@ -127,7 +138,7 @@ async function processCheckoutSessionCompleted(
     typeof session.subscription === "string"
       ? session.subscription
       : session.subscription?.id
-  if (!subscriptionId || !deps.retrieveSubscription) {
+  if (!subscriptionId) {
     return {
       result: {
         status: "processed",
@@ -142,6 +153,19 @@ async function processCheckoutSessionCompleted(
   }
 
   const subscription = await deps.retrieveSubscription(subscriptionId)
+  if (!subscription) {
+    return {
+      result: {
+        status: "processed",
+        eventId: event.id,
+        type: event.type,
+        applied: [],
+        skippedStale: [],
+        skippedUnknownPrice: [],
+      },
+      entitlementUpserts: [],
+    }
+  }
   const snapshot = toSubscriptionSnapshot(subscription)
   if (!userId) {
     return {

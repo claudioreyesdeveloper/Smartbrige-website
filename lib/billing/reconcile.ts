@@ -80,6 +80,10 @@ export async function planSubscriptionEntitlementReconciliation(input: {
       validFrom: window.validFrom,
       validUntil: window.validUntil,
       eventCreatedAt: input.eventCreatedAt,
+      replaceOnlySubscriptionId:
+        status === "active" || status === "trialing"
+          ? null
+          : input.snapshot.id,
     }
     upserts.push(upsert)
     applied.push(mapping.serviceKey)

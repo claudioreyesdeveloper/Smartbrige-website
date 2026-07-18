@@ -40,6 +40,7 @@ export type EntitlementUpsert = {
   validFrom: Date
   validUntil: Date | null
   eventCreatedAt: Date
+  replaceOnlySubscriptionId: string | null
 }
 
 export type StripeSubscriptionSnapshot = {

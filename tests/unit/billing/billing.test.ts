@@ -113,14 +113,16 @@ function fakeStripeEvent(input: {
 }
 
 function stripeSubscriptionObject(input: {
+  id?: string
   status?: Stripe.Subscription.Status
   cancelAtPeriodEnd?: boolean
   periodEnd?: Date
   priceId?: string
+  serviceKey?: "jam-player" | "bass-drums"
 } = {}): Stripe.Subscription {
   const periodEnd = input.periodEnd ?? new Date(NOW.getTime() + 30 * 24 * 3600 * 1000)
   return {
-    id: "sub_jam",
+    id: input.id ?? "sub_jam",
     object: "subscription",
     status: input.status ?? "active",
     customer: "cus_1",
@@ -129,7 +131,7 @@ function stripeSubscriptionObject(input: {
     created: Math.floor(NOW.getTime() / 1000),
     metadata: {
       [BILLING_USER_METADATA_KEY]: "user-1",
-      [BILLING_SERVICE_METADATA_KEY]: "jam-player",
+      [BILLING_SERVICE_METADATA_KEY]: input.serviceKey ?? "jam-player",
     },
     items: {
       object: "list",
@@ -146,7 +148,7 @@ function stripeSubscriptionObject(input: {
           price: {
             id: input.priceId ?? "price_jam",
             object: "price",
-            product: "prod_jam",
+            product: input.serviceKey === "bass-drums" ? "prod_bass-drums" : "prod_jam",
           },
         },
       ],
@@ -503,6 +505,7 @@ describe("stripe webhook processing", () => {
       atomicWebhooks,
       stripeVerifier: { constructEvent },
       webhookSecret: "whsec_test",
+      retrieveSubscription: async () => stripeSubscriptionObject(),
       now: NOW,
     }
 
@@ -521,6 +524,279 @@ describe("stripe webhook processing", () => {
     expect(second.status).toBe("duplicate")
     expect(await entitlements.listByUser("user-1")).toHaveLength(1)
     expect(webhookEvents.processed.has("evt_1")).toBe(true)
+  })
+
+  it("converges same-second active and deleted events in either delivery order", async () => {
+    async function run(order: Array<"active" | "deleted">) {
+      const entitlements = createMemoryEntitlementStore()
+      const webhookEvents = createMemoryWebhookEventStore()
+      const authoritative = stripeSubscriptionObject({ status: "canceled" })
+      const events = {
+        active: fakeStripeEvent({
+          id: "evt_same_second_active",
+          type: "customer.subscription.updated",
+          created: Math.floor(NOW.getTime() / 1000),
+          object: stripeSubscriptionObject({ status: "active" }),
+        }),
+        deleted: fakeStripeEvent({
+          id: "evt_same_second_deleted",
+          type: "customer.subscription.deleted",
+          created: Math.floor(NOW.getTime() / 1000),
+          object: stripeSubscriptionObject({ status: "canceled" }),
+        }),
+      }
+      const deps = {
+        customers: createMemoryCustomerStore(),
+        prices: createMemoryPriceStore(ACTIVE_PRICES),
+        entitlements,
+        webhookEvents,
+        atomicWebhooks: createMemoryAtomicWebhookStore({
+          entitlements,
+          webhookEvents,
+        }),
+        stripeVerifier: {
+          constructEvent: (payload: string | Buffer) =>
+            events[JSON.parse(payload.toString()).kind as keyof typeof events],
+        },
+        webhookSecret: "whsec_test",
+        retrieveSubscription: async () => authoritative,
+        now: NOW,
+      }
+
+      for (const kind of order) {
+        await processStripeWebhook({
+          payload: JSON.stringify({ kind }),
+          signature: "t=1,v1=sig",
+          deps,
+        })
+      }
+      return entitlements.getByUserAndService("user-1", "jam-player")
+    }
+
+    const activeThenDeleted = await run(["active", "deleted"])
+    const deletedThenActive = await run(["deleted", "active"])
+    expect(activeThenDeleted?.status).toBe("canceled")
+    expect(deletedThenActive?.status).toBe("canceled")
+    expect(activeThenDeleted && isEntitlementCurrentlyActive(activeThenDeleted, NOW)).toBe(false)
+    expect(deletedThenActive && isEntitlementCurrentlyActive(deletedThenActive, NOW)).toBe(false)
+    expect(activeThenDeleted?.stripeSubscriptionId).toBe("sub_jam")
+    expect(deletedThenActive?.stripeSubscriptionId).toBe("sub_jam")
+  })
+
+  it("reconciles one subscription from authoritative active to canceled state", async () => {
+    const entitlements = createMemoryEntitlementStore()
+    const webhookEvents = createMemoryWebhookEventStore()
+    let authoritative = stripeSubscriptionObject({ status: "active" })
+    let event = fakeStripeEvent({
+      id: "evt_active_state",
+      type: "customer.subscription.updated",
+      created: Math.floor(NOW.getTime() / 1000),
+      object: stripeSubscriptionObject({ status: "active" }),
+    })
+    const deps = {
+      customers: createMemoryCustomerStore(),
+      prices: createMemoryPriceStore(ACTIVE_PRICES),
+      entitlements,
+      webhookEvents,
+      atomicWebhooks: createMemoryAtomicWebhookStore({
+        entitlements,
+        webhookEvents,
+      }),
+      stripeVerifier: { constructEvent: () => event },
+      webhookSecret: "whsec_test",
+      retrieveSubscription: async () => authoritative,
+      now: NOW,
+    }
+
+    await processStripeWebhook({
+      payload: '{"state":"active"}',
+      signature: "t=1,v1=sig",
+      deps,
+    })
+    expect(
+      (await entitlements.getByUserAndService("user-1", "jam-player"))?.status,
+    ).toBe("active")
+
+    authoritative = stripeSubscriptionObject({ status: "canceled" })
+    event = fakeStripeEvent({
+      id: "evt_canceled_state",
+      type: "customer.subscription.deleted",
+      created: Math.floor(NOW.getTime() / 1000),
+      object: stripeSubscriptionObject({ status: "active" }),
+    })
+    await processStripeWebhook({
+      payload: '{"state":"canceled"}',
+      signature: "t=1,v1=sig",
+      deps,
+    })
+    expect(
+      (await entitlements.getByUserAndService("user-1", "jam-player"))?.status,
+    ).toBe("canceled")
+  })
+
+  it("does not let an old subscription cancellation revoke its replacement", async () => {
+    const entitlements = createMemoryEntitlementStore([
+      {
+        userId: "user-1",
+        serviceId: "svc-jam",
+        serviceKey: "jam-player",
+        status: "active",
+        source: "stripe",
+        stripeSubscriptionId: "sub_replacement",
+        stripeSubscriptionItemId: "si_jam",
+        validFrom: new Date("2026-07-01T00:00:00.000Z"),
+        validUntil: null,
+        updatedAt: NOW,
+      },
+    ])
+    const webhookEvents = createMemoryWebhookEventStore()
+    const oldCanceled = stripeSubscriptionObject({
+      id: "sub_old",
+      status: "canceled",
+    })
+    const event = fakeStripeEvent({
+      id: "evt_old_cancel",
+      type: "customer.subscription.deleted",
+      created: Math.floor(NOW.getTime() / 1000),
+      object: oldCanceled,
+    })
+
+    const result = await processStripeWebhook({
+      payload: '{"id":"evt_old_cancel"}',
+      signature: "t=1,v1=sig",
+      deps: {
+        customers: createMemoryCustomerStore(),
+        prices: createMemoryPriceStore(ACTIVE_PRICES),
+        entitlements,
+        webhookEvents,
+        atomicWebhooks: createMemoryAtomicWebhookStore({
+          entitlements,
+          webhookEvents,
+        }),
+        stripeVerifier: { constructEvent: () => event },
+        webhookSecret: "whsec_test",
+        retrieveSubscription: async () => null,
+        now: NOW,
+      },
+    })
+
+    const jam = await entitlements.getByUserAndService("user-1", "jam-player")
+    expect(result).toMatchObject({ status: "processed", applied: [] })
+    expect(jam?.status).toBe("active")
+    expect(jam?.stripeSubscriptionId).toBe("sub_replacement")
+  })
+
+  it("leaves a failed authoritative retrieval unclaimed so Stripe can retry", async () => {
+    const entitlements = createMemoryEntitlementStore()
+    const webhookEvents = createMemoryWebhookEventStore()
+    const event = fakeStripeEvent({
+      id: "evt_retrieve_retry",
+      type: "customer.subscription.updated",
+      created: Math.floor(NOW.getTime() / 1000),
+      object: stripeSubscriptionObject(),
+    })
+    let fail = true
+    const deps = {
+      customers: createMemoryCustomerStore(),
+      prices: createMemoryPriceStore(ACTIVE_PRICES),
+      entitlements,
+      webhookEvents,
+      atomicWebhooks: createMemoryAtomicWebhookStore({
+        entitlements,
+        webhookEvents,
+      }),
+      stripeVerifier: { constructEvent: () => event },
+      webhookSecret: "whsec_test",
+      retrieveSubscription: async () => {
+        if (fail) {
+          throw new Error("Stripe retrieval unavailable")
+        }
+        return stripeSubscriptionObject()
+      },
+      now: NOW,
+    }
+
+    await expect(
+      processStripeWebhook({
+        payload: '{"id":"evt_retrieve_retry"}',
+        signature: "t=1,v1=sig",
+        deps,
+      }),
+    ).rejects.toThrow("Stripe retrieval unavailable")
+    expect(webhookEvents.processed.has("evt_retrieve_retry")).toBe(false)
+    expect(await entitlements.listByUser("user-1")).toEqual([])
+
+    fail = false
+    const retried = await processStripeWebhook({
+      payload: '{"id":"evt_retrieve_retry"}',
+      signature: "t=1,v1=sig",
+      deps,
+    })
+    expect(retried.status).toBe("processed")
+    expect(webhookEvents.processed.has("evt_retrieve_retry")).toBe(true)
+  })
+
+  it("revokes only the canceled service and leaves other services untouched", async () => {
+    const entitlements = createMemoryEntitlementStore([
+      {
+        userId: "user-1",
+        serviceId: "svc-jam",
+        serviceKey: "jam-player",
+        status: "active",
+        source: "stripe",
+        stripeSubscriptionId: "sub_jam",
+        stripeSubscriptionItemId: "si_jam",
+        validFrom: new Date("2026-07-01T00:00:00.000Z"),
+        validUntil: null,
+        updatedAt: new Date("2026-07-01T00:00:00.000Z"),
+      },
+      {
+        userId: "user-1",
+        serviceId: "svc-bass",
+        serviceKey: "bass-drums",
+        status: "active",
+        source: "stripe",
+        stripeSubscriptionId: "sub_bass",
+        stripeSubscriptionItemId: "si_bass",
+        validFrom: new Date("2026-07-01T00:00:00.000Z"),
+        validUntil: null,
+        updatedAt: new Date("2026-07-01T00:00:00.000Z"),
+      },
+    ])
+    const webhookEvents = createMemoryWebhookEventStore()
+    const canceled = stripeSubscriptionObject({ status: "canceled" })
+    const event = fakeStripeEvent({
+      id: "evt_jam_only",
+      type: "customer.subscription.deleted",
+      created: Math.floor(NOW.getTime() / 1000),
+      object: canceled,
+    })
+
+    await processStripeWebhook({
+      payload: '{"id":"evt_jam_only"}',
+      signature: "t=1,v1=sig",
+      deps: {
+        customers: createMemoryCustomerStore(),
+        prices: createMemoryPriceStore(ACTIVE_PRICES),
+        entitlements,
+        webhookEvents,
+        atomicWebhooks: createMemoryAtomicWebhookStore({
+          entitlements,
+          webhookEvents,
+        }),
+        stripeVerifier: { constructEvent: () => event },
+        webhookSecret: "whsec_test",
+        retrieveSubscription: async () => canceled,
+        now: NOW,
+      },
+    })
+
+    expect(
+      (await entitlements.getByUserAndService("user-1", "jam-player"))?.status,
+    ).toBe("canceled")
+    expect(
+      (await entitlements.getByUserAndService("user-1", "bass-drums"))?.status,
+    ).toBe("active")
   })
 
   it("keeps access when an active renewal webhook arrives after the old period boundary", async () => {
@@ -551,6 +827,7 @@ describe("stripe webhook processing", () => {
         }),
         stripeVerifier: { constructEvent: () => event },
         webhookSecret: "whsec_test",
+        retrieveSubscription: async () => event.data.object as Stripe.Subscription,
         now: NOW,
       },
     })
@@ -585,6 +862,7 @@ describe("stripe webhook processing", () => {
       atomicWebhooks,
       stripeVerifier: { constructEvent: () => event },
       webhookSecret: "whsec_test",
+      retrieveSubscription: async () => event.data.object as Stripe.Subscription,
       now: NOW,
     }
 
@@ -629,6 +907,7 @@ describe("stripe webhook processing", () => {
       }),
       stripeVerifier: { constructEvent: () => event },
       webhookSecret: "whsec_test",
+      retrieveSubscription: async () => event.data.object as Stripe.Subscription,
       now: NOW,
     }
 
@@ -675,6 +954,7 @@ describe("stripe webhook processing", () => {
             },
           },
           webhookSecret: "whsec_test",
+          retrieveSubscription: async () => stripeSubscriptionObject(),
         },
       }),
     ).rejects.toThrow(/signature/i)
@@ -704,6 +984,7 @@ describe("Neon atomic webhook persistence", () => {
           validFrom: new Date("2026-07-01T00:00:00.000Z"),
           validUntil: null,
           eventCreatedAt: NOW,
+          replaceOnlySubscriptionId: null,
         },
       ],
     })

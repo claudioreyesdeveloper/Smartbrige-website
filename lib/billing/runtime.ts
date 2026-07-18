@@ -1,3 +1,4 @@
+import Stripe from "stripe"
 import { createServiceCheckoutSession } from "@/lib/billing/checkout"
 import {
   createDrizzleEntitlementStore,
@@ -67,6 +68,21 @@ export async function handleStripeWebhookRequest(input: {
 }): Promise<ProcessWebhookResult> {
   const stripe = getStripeClient()
   const stores = createProductionBillingStores()
+  const retrieveSubscription = async (
+    subscriptionId: string,
+  ): Promise<Stripe.Subscription | null> => {
+    try {
+      return await stripe.subscriptions.retrieve(subscriptionId)
+    } catch (error) {
+      if (
+        error instanceof Stripe.errors.StripeInvalidRequestError &&
+        error.statusCode === 404
+      ) {
+        return null
+      }
+      throw error
+    }
+  }
 
   return processStripeWebhook({
     payload: input.payload,
@@ -75,7 +91,7 @@ export async function handleStripeWebhookRequest(input: {
       ...stores,
       stripeVerifier: stripe.webhooks,
       webhookSecret: getStripeWebhookSecret(),
-      retrieveSubscription: (subscriptionId) => stripe.subscriptions.retrieve(subscriptionId),
+      retrieveSubscription,
     },
   })
 }
