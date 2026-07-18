@@ -6,6 +6,9 @@ import { getTableConfig } from "drizzle-orm/pg-core"
 import {
   accounts,
   blobReferences,
+  catalogEntries,
+  catalogServiceActivations,
+  catalogVersions,
   projectRevisions,
   projects,
   servicePrices,
@@ -35,6 +38,9 @@ describe("database schema", () => {
       projectRevisions,
       blobReferences,
       stripeWebhookEvents,
+      catalogVersions,
+      catalogServiceActivations,
+      catalogEntries,
     ].map(getTableName)
 
     expect(tableNames).toEqual([
@@ -45,6 +51,9 @@ describe("database schema", () => {
       "project_revisions",
       "blob_references",
       "stripe_webhook_events",
+      "catalog_versions",
+      "catalog_service_activations",
+      "catalog_entries",
     ])
 
     for (const table of [users, services, projects, userEntitlements]) {

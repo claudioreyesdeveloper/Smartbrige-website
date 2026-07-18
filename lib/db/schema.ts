@@ -32,6 +32,12 @@ export const entitlementSourceEnum = pgEnum("entitlement_source", [
 
 export const blobPurposeEnum = pgEnum("blob_purpose", ["render", "upload", "factory"])
 
+export const catalogImportStatusEnum = pgEnum("catalog_import_status", [
+  "importing",
+  "ready",
+  "failed",
+])
+
 export const users = pgTable("user", {
   id: text("id")
     .primaryKey()
@@ -235,6 +241,81 @@ export const stripeWebhookEvents = pgTable(
   (table) => [index("stripe_webhook_events_processed_at_idx").on(table.processedAt)],
 )
 
+/** Immutable A06 factory catalog import versions (compact Neon metadata, not SQLCipher). */
+export const catalogVersions = pgTable(
+  "catalog_versions",
+  {
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => crypto.randomUUID()),
+    contentTreeSha256: text("content_tree_sha256").notNull(),
+    catalogExportVersion: integer("catalog_export_version").notNull(),
+    schemaVersion: integer("schema_version").notNull(),
+    sourceProvenance: jsonb("source_provenance").notNull().$type<Record<string, unknown>>(),
+    status: catalogImportStatusEnum("status").notNull(),
+    sectionCounts: jsonb("section_counts").notNull().$type<Record<string, number>>(),
+    importCheckpoint: jsonb("import_checkpoint").$type<{
+      completedStableIds: string[]
+    } | null>(),
+    errorMessage: text("error_message"),
+    createdAt: timestamp("created_at", { mode: "date" }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { mode: "date" }).defaultNow().notNull(),
+    completedAt: timestamp("completed_at", { mode: "date" }),
+  },
+  (table) => [
+    uniqueIndex("catalog_versions_content_tree_sha256_unique").on(table.contentTreeSha256),
+    index("catalog_versions_status_idx").on(table.status),
+  ],
+)
+
+/** Active catalog version pointer per service (rollback = point at a prior ready version). */
+export const catalogServiceActivations = pgTable(
+  "catalog_service_activations",
+  {
+    serviceKey: text("service_key").$type<(typeof SERVICE_KEYS)[number]>().primaryKey(),
+    catalogVersionId: text("catalog_version_id")
+      .notNull()
+      .references(() => catalogVersions.id, { onDelete: "restrict" }),
+    previousCatalogVersionId: text("previous_catalog_version_id").references(
+      () => catalogVersions.id,
+      { onDelete: "set null" },
+    ),
+    activatedAt: timestamp("activated_at", { mode: "date" }).defaultNow().notNull(),
+  },
+  (table) => [index("catalog_service_activations_version_idx").on(table.catalogVersionId)],
+)
+
+/** Compact per-record factory metadata for entitlement-scoped catalog reads. */
+export const catalogEntries = pgTable(
+  "catalog_entries",
+  {
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => crypto.randomUUID()),
+    catalogVersionId: text("catalog_version_id")
+      .notNull()
+      .references(() => catalogVersions.id, { onDelete: "cascade" }),
+    section: text("section").notNull(),
+    stableId: text("stable_id").notNull(),
+    serviceKey: text("service_key").$type<(typeof SERVICE_KEYS)[number]>().notNull(),
+    kind: text("kind").notNull(),
+    metadata: jsonb("metadata").notNull().$type<Record<string, unknown>>(),
+    blobReferenceId: text("blob_reference_id").references(() => blobReferences.id, {
+      onDelete: "set null",
+    }),
+    createdAt: timestamp("created_at", { mode: "date" }).defaultNow().notNull(),
+  },
+  (table) => [
+    uniqueIndex("catalog_entries_version_stable_id_unique").on(
+      table.catalogVersionId,
+      table.stableId,
+    ),
+    index("catalog_entries_service_key_idx").on(table.serviceKey),
+    index("catalog_entries_version_section_idx").on(table.catalogVersionId, table.section),
+    index("catalog_entries_blob_reference_id_idx").on(table.blobReferenceId),
+  ],
+)
+
 export const usersRelations = relations(users, ({ many }) => ({
   accounts: many(accounts),
   sessions: many(sessions),
@@ -294,5 +375,35 @@ export const blobReferencesRelations = relations(blobReferences, ({ one }) => ({
   project: one(projects, {
     fields: [blobReferences.projectId],
     references: [projects.id],
+  }),
+}))
+
+export const catalogVersionsRelations = relations(catalogVersions, ({ many }) => ({
+  entries: many(catalogEntries),
+  activations: many(catalogServiceActivations),
+}))
+
+export const catalogServiceActivationsRelations = relations(
+  catalogServiceActivations,
+  ({ one }) => ({
+    version: one(catalogVersions, {
+      fields: [catalogServiceActivations.catalogVersionId],
+      references: [catalogVersions.id],
+    }),
+    previousVersion: one(catalogVersions, {
+      fields: [catalogServiceActivations.previousCatalogVersionId],
+      references: [catalogVersions.id],
+    }),
+  }),
+)
+
+export const catalogEntriesRelations = relations(catalogEntries, ({ one }) => ({
+  version: one(catalogVersions, {
+    fields: [catalogEntries.catalogVersionId],
+    references: [catalogVersions.id],
+  }),
+  blobReference: one(blobReferences, {
+    fields: [catalogEntries.blobReferenceId],
+    references: [blobReferences.id],
   }),
 }))
