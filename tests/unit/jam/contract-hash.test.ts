@@ -24,7 +24,7 @@ describe("jam v1 contract fixtures", () => {
     const expected = readFileSync(path.join(contractsDir, "CONTRACT_HASH.txt"), "utf8").trim()
     expect(computeHash()).toBe(expected)
     expect(expected).toBe(
-      "8fd680396b85f610087c65c5edcf3ae33554f11163d4f3db9cf5e183db619aa3",
+      "709c638215a188a87aa30f36ddd617e12beb25d10009c1e2afa45e1c2bbd184a",
     )
   })
 
@@ -39,6 +39,8 @@ describe("jam v1 contract fixtures", () => {
       readFileSync(path.join(contractsDir, "jam-reharmonize.response.json"), "utf8"),
     )
     expect(parseJamPrepareResponse(prepare).planId).toBe("pln_fixture_0001")
-    expect(parseJamReharmonizeResponse(reharmonize).generationId).toBe("gen_fixture_0001")
+    const parsed = parseJamReharmonizeResponse(reharmonize)
+    expect(parsed.generationId).toBe("gen_fixture_0001")
+    expect(parsed.candidates[0]?.label).toBe("Rich chords")
   })
 })

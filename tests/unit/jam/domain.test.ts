@@ -6,6 +6,7 @@ import {
   parseJamPrepareRequest,
   parseJamPrepareResponse,
   parseJamReharmonizeRequest,
+  parseJamReharmonizeResponse,
   stripForbiddenKeys,
   toEnginePrepareRequest,
 } from "@/lib/jam/domain"
@@ -65,28 +66,118 @@ describe("jam domain validation", () => {
       seed: 99,
       recipe: { hidden: true },
       rankingScore: 0.9,
+      sourceClipId: "clip-internal",
+      sourceSongId: "song-internal",
+      patternPool: ["private"],
+      techniques: ["private"],
+      explanation: "private",
+      melodyFeatures: { private: true },
+      romanTimingsJson: "{}",
       nested: { trace: ["x"], keep: 1 },
     }
     expect(containsForbiddenKeys(dirty)).toEqual(
-      expect.arrayContaining(["recipe", "rankingScore", "seed", "trace"]),
+      expect.arrayContaining([
+        "explanation",
+        "melodyFeatures",
+        "patternPool",
+        "recipe",
+        "rankingScore",
+        "romanTimingsJson",
+        "seed",
+        "sourceClipId",
+        "sourceSongId",
+        "techniques",
+        "trace",
+      ]),
     )
     const cleaned = stripForbiddenKeys(dirty) as Record<string, unknown>
     expect(cleaned).not.toHaveProperty("seed")
     expect(cleaned).not.toHaveProperty("recipe")
+    expect(cleaned).not.toHaveProperty("sourceClipId")
+    expect(cleaned).not.toHaveProperty("melodyFeatures")
     expect(cleaned.nested).toEqual({ keep: 1 })
-    // Whitelist parse drops unknown keys such as nested by rejecting them.
-    const { nested: _nested, ...publicSafe } = cleaned
-    expect(parseJamPrepareResponse(publicSafe).planId).toBe("pln_fixture_0001")
+    expect(parseJamPrepareResponse(cleaned).planId).toBe("pln_fixture_0001")
   })
 
   it("drops unknown response fields via whitelist parse", () => {
     const base = fixture("jam-prepare.response.json") as Record<string, unknown>
+    const parsed = parseJamPrepareResponse({
+      ...base,
+      sourcePhraseId: "phrase-9",
+      engineDebug: true,
+    })
+    expect(parsed).not.toHaveProperty("sourcePhraseId")
+    expect(parsed).not.toHaveProperty("engineDebug")
+  })
+
+  it.each(["subjectId", "patternPool", "techniques", "seed"])(
+    "never accepts client-controlled %s",
+    (field) => {
+      expect(() =>
+        parseJamReharmonizeRequest({
+          projectId: "proj_1",
+          model: "genos2",
+          scope: "song",
+          key: "C",
+          chords: [{ symbol: "C", startBar: 0, durationBars: 2 }],
+          [field]: field === "seed" ? 1 : "controlled",
+        }),
+      ).toThrow(/Unknown field/)
+    },
+  )
+
+  it("rejects malformed, overpadded, and oversized dispatch base64", () => {
+    const base = fixture("jam-prepare.response.json") as {
+      dispatch: { fullSong: Array<Record<string, unknown>> }
+    } & Record<string, unknown>
+    for (const bytes of ["AAAA=", "AA===", "AA-_"]) {
+      expect(() =>
+        parseJamPrepareResponse({
+          ...base,
+          dispatch: {
+            ...base.dispatch,
+            fullSong: [{ ...base.dispatch.fullSong[0], bytes }],
+          },
+        }),
+      ).toThrow(/base64|format/)
+    }
+
+    const max = Buffer.alloc(12_288, 1).toString("base64")
+    expect(
+      parseJamPrepareResponse({
+        ...base,
+        dispatch: {
+          ...base.dispatch,
+          fullSong: [{ ...base.dispatch.fullSong[0], bytes: max }],
+        },
+      }).dispatch.fullSong[0]?.bytes,
+    ).toBe(max)
+
+    const tooLarge = Buffer.alloc(12_289, 1).toString("base64")
     expect(() =>
       parseJamPrepareResponse({
         ...base,
-        sourcePhraseId: "phrase-9",
-        engineDebug: true,
+        dispatch: {
+          ...base.dispatch,
+          fullSong: [{ ...base.dispatch.fullSong[0], bytes: tooLarge }],
+        },
       }),
-    ).toThrow(/Unknown field/)
+    ).toThrow(/max length|12288/)
+  })
+
+  it("preserves optional candidate labels without inventing a fallback", () => {
+    const withLabel = parseJamReharmonizeResponse(fixture("jam-reharmonize.response.json"))
+    expect(withLabel.candidates[0]?.label).toBe("Rich chords")
+
+    const withoutLabel = parseJamReharmonizeResponse({
+      generationId: "gen_1",
+      candidates: [
+        {
+          id: "cand_1",
+          chords: [{ symbol: "C", startBar: 0, durationBars: 1 }],
+        },
+      ],
+    })
+    expect(withoutLabel.candidates[0]).not.toHaveProperty("label")
   })
 })

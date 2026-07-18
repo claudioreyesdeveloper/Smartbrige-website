@@ -1,0 +1,22 @@
+{
+  "version": "v1",
+  "authentication": {
+    "headers": [
+      "x-sb-timestamp",
+      "x-sb-request-id",
+      "x-sb-content-sha256",
+      "x-sb-signature"
+    ],
+    "canonicalPayload": "{timestamp}.{requestId}.{sha256Hex(rawBody)}",
+    "requestId": {
+      "minimumLength": 16,
+      "maximumLength": 128,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]*$"
+    }
+  },
+  "dispatchEventBytes": {
+    "encoding": "standard-base64",
+    "canonicalPaddingRequired": true,
+    "maximumDecodedBytes": 12288
+  }
+}

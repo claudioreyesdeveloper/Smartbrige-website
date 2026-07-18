@@ -77,15 +77,31 @@ export type JamReharmonizeEngineRequest = {
   key: string
   chords: DisplayChord[]
   candidateCount?: number
+  subjectId: string
+  projectId: string
+  style?: string
+  sectionName?: string
+  sectionClass?: string
+  category?: string
+  bars?: number
+  beatsPerBar?: number
+  nextSectionFirstChord?: string
+  preserveCadence?: boolean
+  romanTimingsJson?: string
+  melodyFeatures?: string | Record<string, unknown>
 }
 
 /** Public API reharmonize body. */
-export type JamReharmonizeRequest = JamReharmonizeEngineRequest & {
+export type JamReharmonizeRequest = Omit<
+  JamReharmonizeEngineRequest,
+  "subjectId"
+> & {
   projectId: string
 }
 
 export type JamReharmonizeCandidate = {
   id: string
+  label?: string
   chords: DisplayChord[]
 }
 

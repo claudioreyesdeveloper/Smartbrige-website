@@ -3,6 +3,7 @@ import path from "node:path"
 import { describe, expect, it, vi } from "vitest"
 import {
   HMAC_BODY_HASH_HEADER,
+  HMAC_REQUEST_ID_HEADER,
   HMAC_SIGNATURE_HEADER,
   HMAC_TIMESTAMP_HEADER,
   PrivateEngineClient,
@@ -54,10 +55,42 @@ describe("engine proxy HMAC and SSRF guards", () => {
     expect(result.planId).toBe("pln_fixture_0001")
     expect(seenUrl).toBe("https://engine.example.internal/v1/jam/prepare")
     expect(seenHeaders?.get(HMAC_TIMESTAMP_HEADER)).toBe("1700000000")
+    const requestId = seenHeaders?.get(HMAC_REQUEST_ID_HEADER)
+    expect(requestId).toMatch(/^[A-Za-z0-9][A-Za-z0-9._:-]{15,127}$/)
     expect(seenHeaders?.get(HMAC_BODY_HASH_HEADER)).toBe(sha256Hex(seenBody))
     expect(seenHeaders?.get(HMAC_SIGNATURE_HEADER)).toBe(
-      signPayload(SECRET, buildSigningPayload("1700000000", sha256Hex(seenBody))),
+      signPayload(
+        SECRET,
+        buildSigningPayload("1700000000", requestId as string, sha256Hex(seenBody)),
+      ),
     )
+  })
+
+  it("generates distinct request IDs so the private replay guard can claim each call", async () => {
+    const requestIds: string[] = []
+    const fetchImpl = vi.fn(async (_input: RequestInfo | URL, init?: RequestInit) => {
+      requestIds.push(new Headers(init?.headers).get(HMAC_REQUEST_ID_HEADER) ?? "")
+      return new Response(
+        JSON.stringify(fixture("jam-prepare.response.json")),
+        { status: 200 },
+      )
+    })
+    const client = new PrivateEngineClient({
+      config: {
+        baseUrl: new URL("https://engine.example.internal"),
+        signingSecret: SECRET,
+        dailyLimit: 100,
+        perMinuteLimit: 10,
+        maxSkewSeconds: 60,
+      },
+      fetchImpl: fetchImpl as unknown as typeof fetch,
+      nowMs: () => 1_700_000_000_000,
+    })
+    await client.prepare(fixture("jam-prepare.request.json") as never)
+    await client.prepare(fixture("jam-prepare.request.json") as never)
+    expect(requestIds[0]).toMatch(/^[A-Za-z0-9][A-Za-z0-9._:-]{15,127}$/)
+    expect(requestIds[1]).toMatch(/^[A-Za-z0-9][A-Za-z0-9._:-]{15,127}$/)
+    expect(requestIds[0]).not.toBe(requestIds[1])
   })
 
   it("rejects non-loopback http private engine URLs", () => {

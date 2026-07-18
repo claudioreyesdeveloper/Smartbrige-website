@@ -9,9 +9,11 @@ export {
 } from "@/lib/engine-proxy/env"
 export {
   HMAC_BODY_HASH_HEADER,
+  HMAC_REQUEST_ID_HEADER,
   HMAC_SIGNATURE_HEADER,
   HMAC_TIMESTAMP_HEADER,
   buildSigningPayload,
+  generateEngineRequestId,
   sha256Hex,
   signEngineRequest,
   signPayload,

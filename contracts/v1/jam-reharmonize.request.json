@@ -3,6 +3,16 @@
   "scope": "section",
   "sectionId": "sec-main-a",
   "key": "C",
+  "subjectId": "sub_fixture_user_1",
+  "projectId": "proj_fixture_0001",
+  "style": "Jazz",
+  "sectionName": "Verse",
+  "sectionClass": "verse",
+  "category": "Pop",
+  "bars": 8,
+  "beatsPerBar": 4,
+  "nextSectionFirstChord": "F",
+  "preserveCadence": true,
   "chords": [
     {
       "symbol": "C",

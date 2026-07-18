@@ -6,9 +6,18 @@ export const FORBIDDEN_RESPONSE_KEYS = [
   "sourcePhraseId",
   "sourcePhraseIds",
   "source_phrase_id",
+  "sourceClipId",
+  "sourceSongId",
+  "sourceSongName",
   "patternName",
   "patternNames",
   "pattern_name",
+  "patternPool",
+  "technique",
+  "techniques",
+  "techniqueId",
+  "techniqueIds",
+  "explanation",
   "score",
   "scores",
   "rankingScore",
@@ -23,6 +32,8 @@ export const FORBIDDEN_RESPONSE_KEYS = [
   "settings",
   "internalDebug",
   "debug",
+  "melodyFeatures",
+  "romanTimingsJson",
 ] as const
 
 export type ForbiddenResponseKey = (typeof FORBIDDEN_RESPONSE_KEYS)[number]

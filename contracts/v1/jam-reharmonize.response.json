@@ -3,6 +3,7 @@
   "candidates": [
     {
       "id": "cand_1",
+      "label": "Rich chords",
       "chords": [
         {
           "symbol": "Cmaj7",
@@ -28,6 +29,7 @@
     },
     {
       "id": "cand_2",
+      "label": "Approaches",
       "chords": [
         {
           "symbol": "C6",

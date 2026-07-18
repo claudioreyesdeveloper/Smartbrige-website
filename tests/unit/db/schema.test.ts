@@ -143,6 +143,26 @@ describe("database schema", () => {
     })
   })
 
+  it("records engine usage in the generated 0002 snapshot", () => {
+    const previous = JSON.parse(
+      readFileSync(path.join(process.cwd(), "drizzle", "meta", "0001_snapshot.json"), "utf8"),
+    )
+    const snapshot = JSON.parse(
+      readFileSync(path.join(process.cwd(), "drizzle", "meta", "0002_snapshot.json"), "utf8"),
+    )
+    expect(snapshot.prevId).toBe(previous.id)
+    expect(snapshot.tables["public.engine_usage_events"]).toBeDefined()
+    expect(snapshot.enums["public.engine_operation"].values).toEqual([
+      "jam_prepare",
+      "jam_reharmonize",
+    ])
+    expect(snapshot.enums["public.engine_usage_status"].values).toEqual([
+      "completed",
+      "failed",
+      "rejected",
+    ])
+  })
+
   it("matches the independent service catalog keys", () => {
     expect(SERVICE_CATALOG.map((entry) => entry.key)).toEqual([...SERVICE_KEYS])
     expect(SERVICE_KEYS).toEqual([

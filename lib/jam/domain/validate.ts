@@ -3,6 +3,7 @@ import {
   MAX_BYTES_FIELD_CHARS,
   MAX_CHORD_SYMBOL_LENGTH,
   MAX_CHORDS_PER_SECTION,
+  MAX_DISPATCH_EVENT_BYTES,
   MAX_DISPATCH_EVENTS_FULL_SONG,
   MAX_DISPATCH_EVENTS_PER_SECTION,
   MAX_OPAQUE_ID_LENGTH,
@@ -31,7 +32,8 @@ import type {
 } from "@/lib/jam/domain/types"
 
 const OPAQUE_ID = /^[A-Za-z0-9._:-]+$/
-const BYTES_FIELD = /^[A-Za-z0-9+/=]+$/
+const STANDARD_BASE64_PATTERN =
+  /^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/
 const MIDI_TARGETS: readonly MidiTarget[] = ["port1", "port2", "both"]
 const DENOMINATORS = new Set([1, 2, 4, 8, 16])
 
@@ -91,9 +93,9 @@ function parseSectionId(value: unknown, path: string): string {
   })
 }
 
-function parseDisplayChord(value: unknown, path: string): DisplayChord {
+function parseDisplayChord(value: unknown, path: string, strict = true): DisplayChord {
   if (!isPlainObject(value)) fail(`${path} must be an object`)
-  assertExactKeys(value, ["symbol", "startBar", "durationBars"], path)
+  if (strict) assertExactKeys(value, ["symbol", "startBar", "durationBars"], path)
   return {
     symbol: assertString(value.symbol, `${path}.symbol`, { max: MAX_CHORD_SYMBOL_LENGTH }),
     startBar: assertInt(value.startBar, `${path}.startBar`, { min: 0, max: 10_000 }),
@@ -101,9 +103,9 @@ function parseDisplayChord(value: unknown, path: string): DisplayChord {
   }
 }
 
-function parseTimeSignature(value: unknown, path: string): TimeSignature {
+function parseTimeSignature(value: unknown, path: string, strict = true): TimeSignature {
   if (!isPlainObject(value)) fail(`${path} must be an object`)
-  assertExactKeys(value, ["numerator", "denominator"], path)
+  if (strict) assertExactKeys(value, ["numerator", "denominator"], path)
   const numerator = assertInt(value.numerator, `${path}.numerator`, { min: 1, max: 32 })
   const denominator = assertInt(value.denominator, `${path}.denominator`, { min: 1, max: 16 })
   if (!DENOMINATORS.has(denominator)) fail(`${path}.denominator is invalid`)
@@ -197,7 +199,25 @@ export function parseJamReharmonizeRequest(value: unknown): JamReharmonizeReques
   if (!isPlainObject(value)) fail("Request body must be a JSON object.")
   assertExactKeys(
     value,
-    ["projectId", "model", "scope", "sectionId", "key", "chords", "candidateCount"],
+    [
+      "projectId",
+      "model",
+      "scope",
+      "sectionId",
+      "key",
+      "chords",
+      "candidateCount",
+      "style",
+      "sectionName",
+      "sectionClass",
+      "category",
+      "bars",
+      "beatsPerBar",
+      "nextSectionFirstChord",
+      "preserveCadence",
+      "romanTimingsJson",
+      "melodyFeatures",
+    ],
     "body",
   )
   if (value.scope !== "section" && value.scope !== "song") {
@@ -224,6 +244,67 @@ export function parseJamReharmonizeRequest(value: unknown): JamReharmonizeReques
       max: MAX_REHARMONIZE_CANDIDATES,
     })
   }
+  if (value.style !== undefined) {
+    request.style = assertString(value.style, "style", { max: 32 })
+  }
+  if (value.sectionName !== undefined) {
+    request.sectionName = assertString(value.sectionName, "sectionName", {
+      max: MAX_SECTION_NAME_LENGTH,
+    })
+  }
+  if (value.sectionClass !== undefined) {
+    request.sectionClass = assertString(value.sectionClass, "sectionClass", { max: 64 })
+  }
+  if (value.category !== undefined) {
+    if (typeof value.category !== "string" || value.category.length > 64) {
+      fail("category must be a string no longer than 64 characters")
+    }
+    request.category = value.category
+  }
+  if (value.bars !== undefined) request.bars = assertInt(value.bars, "bars", { min: 1, max: 256 })
+  if (value.beatsPerBar !== undefined) {
+    if (
+      typeof value.beatsPerBar !== "number" ||
+      !Number.isFinite(value.beatsPerBar) ||
+      value.beatsPerBar < 1 ||
+      value.beatsPerBar > 16
+    ) {
+      fail("beatsPerBar out of range")
+    }
+    request.beatsPerBar = value.beatsPerBar
+  }
+  if (value.nextSectionFirstChord !== undefined) {
+    if (
+      typeof value.nextSectionFirstChord !== "string" ||
+      value.nextSectionFirstChord.length > MAX_CHORD_SYMBOL_LENGTH
+    ) {
+      fail("nextSectionFirstChord is invalid")
+    }
+    request.nextSectionFirstChord = value.nextSectionFirstChord
+  }
+  if (value.preserveCadence !== undefined) {
+    if (typeof value.preserveCadence !== "boolean") fail("preserveCadence must be a boolean")
+    request.preserveCadence = value.preserveCadence
+  }
+  if (value.romanTimingsJson !== undefined) {
+    if (
+      typeof value.romanTimingsJson !== "string" ||
+      value.romanTimingsJson.length > 64_000
+    ) {
+      fail("romanTimingsJson is invalid")
+    }
+    request.romanTimingsJson = value.romanTimingsJson
+  }
+  if (value.melodyFeatures !== undefined) {
+    if (typeof value.melodyFeatures === "string") {
+      if (value.melodyFeatures.length > 64_000) fail("melodyFeatures is too large")
+      request.melodyFeatures = value.melodyFeatures
+    } else if (isPlainObject(value.melodyFeatures)) {
+      request.melodyFeatures = value.melodyFeatures
+    } else {
+      fail("melodyFeatures must be a string or object")
+    }
+  }
   if (request.scope === "section" && !request.sectionId) {
     fail("sectionId is required when scope is section")
   }
@@ -232,15 +313,30 @@ export function parseJamReharmonizeRequest(value: unknown): JamReharmonizeReques
 
 export function toEngineReharmonizeRequest(
   request: JamReharmonizeRequest,
+  subjectId: string,
 ): JamReharmonizeEngineRequest {
   const engine: JamReharmonizeEngineRequest = {
     model: request.model,
     scope: request.scope,
     key: request.key,
     chords: request.chords,
+    subjectId: parseOpaqueId(subjectId, "subjectId"),
+    projectId: request.projectId,
   }
   if (request.sectionId !== undefined) engine.sectionId = request.sectionId
   if (request.candidateCount !== undefined) engine.candidateCount = request.candidateCount
+  if (request.style !== undefined) engine.style = request.style
+  if (request.sectionName !== undefined) engine.sectionName = request.sectionName
+  if (request.sectionClass !== undefined) engine.sectionClass = request.sectionClass
+  if (request.category !== undefined) engine.category = request.category
+  if (request.bars !== undefined) engine.bars = request.bars
+  if (request.beatsPerBar !== undefined) engine.beatsPerBar = request.beatsPerBar
+  if (request.nextSectionFirstChord !== undefined) {
+    engine.nextSectionFirstChord = request.nextSectionFirstChord
+  }
+  if (request.preserveCadence !== undefined) engine.preserveCadence = request.preserveCadence
+  if (request.romanTimingsJson !== undefined) engine.romanTimingsJson = request.romanTimingsJson
+  if (request.melodyFeatures !== undefined) engine.melodyFeatures = request.melodyFeatures
   return engine
 }
 
@@ -253,24 +349,28 @@ function parseMidiTarget(value: unknown, path: string): MidiTarget {
 
 function parseDispatchEvent(value: unknown, path: string): DispatchEvent {
   if (!isPlainObject(value)) fail(`${path} must be an object`)
-  assertExactKeys(value, ["atMs", "target", "bytes"], path)
+  const bytes = assertString(value.bytes, `${path}.bytes`, {
+    min: 4,
+    max: MAX_BYTES_FIELD_CHARS,
+    pattern: STANDARD_BASE64_PATTERN,
+  })
+  const decoded = Buffer.from(bytes, "base64")
+  if (
+    decoded.length < 1 ||
+    decoded.length > MAX_DISPATCH_EVENT_BYTES ||
+    decoded.toString("base64") !== bytes
+  ) {
+    fail(`${path}.bytes must be canonical standard base64 with 1-${MAX_DISPATCH_EVENT_BYTES} decoded bytes`)
+  }
   return {
     atMs: assertInt(value.atMs, `${path}.atMs`, { min: 0, max: 86_400_000 }),
     target: parseMidiTarget(value.target, `${path}.target`),
-    bytes: assertString(value.bytes, `${path}.bytes`, {
-      max: MAX_BYTES_FIELD_CHARS,
-      pattern: BYTES_FIELD,
-    }),
+    bytes,
   }
 }
 
 function parseDisplayTimeline(value: unknown, path: string): DisplayTimeline {
   if (!isPlainObject(value)) fail(`${path} must be an object`)
-  assertExactKeys(
-    value,
-    ["tempoBpm", "key", "timeSignature", "durationMs", "sections", "chords"],
-    path,
-  )
   const sectionsRaw = value.sections
   if (!Array.isArray(sectionsRaw)) fail(`${path}.sections must be an array`)
   if (sectionsRaw.length < 1 || sectionsRaw.length > MAX_SECTIONS) {
@@ -284,11 +384,10 @@ function parseDisplayTimeline(value: unknown, path: string): DisplayTimeline {
   return {
     tempoBpm: assertInt(value.tempoBpm, `${path}.tempoBpm`, { min: 20, max: 400 }),
     key: assertString(value.key, `${path}.key`, { max: 16 }),
-    timeSignature: parseTimeSignature(value.timeSignature, `${path}.timeSignature`),
+    timeSignature: parseTimeSignature(value.timeSignature, `${path}.timeSignature`, false),
     durationMs: assertInt(value.durationMs, `${path}.durationMs`, { min: 0, max: 86_400_000 }),
     sections: sectionsRaw.map((section, index) => {
       if (!isPlainObject(section)) fail(`${path}.sections[${index}] must be an object`)
-      assertExactKeys(section, ["id", "name", "startBar", "barCount"], `${path}.sections[${index}]`)
       return {
         id: parseSectionId(section.id, `${path}.sections[${index}].id`),
         name: assertString(section.name, `${path}.sections[${index}].name`, {
@@ -304,7 +403,9 @@ function parseDisplayTimeline(value: unknown, path: string): DisplayTimeline {
         }),
       }
     }),
-    chords: chordsRaw.map((chord, index) => parseDisplayChord(chord, `${path}.chords[${index}]`)),
+    chords: chordsRaw.map((chord, index) =>
+      parseDisplayChord(chord, `${path}.chords[${index}]`, false),
+    ),
   }
 }
 
@@ -314,9 +415,7 @@ function parseDisplayTimeline(value: unknown, path: string): DisplayTimeline {
  */
 export function parseJamPrepareResponse(value: unknown): JamPrepareResponse {
   if (!isPlainObject(value)) fail("Engine prepare response must be an object")
-  assertExactKeys(value, ["planId", "expiresAt", "display", "dispatch"], "response")
   if (!isPlainObject(value.dispatch)) fail("response.dispatch must be an object")
-  assertExactKeys(value.dispatch, ["fullSong", "sections"], "response.dispatch")
   const fullSongRaw = value.dispatch.fullSong
   if (!Array.isArray(fullSongRaw)) fail("response.dispatch.fullSong must be an array")
   if (fullSongRaw.length > MAX_DISPATCH_EVENTS_FULL_SONG) {
@@ -358,7 +457,6 @@ export function parseJamPrepareResponse(value: unknown): JamPrepareResponse {
 
 export function parseJamReharmonizeResponse(value: unknown): JamReharmonizeResponse {
   if (!isPlainObject(value)) fail("Engine reharmonize response must be an object")
-  assertExactKeys(value, ["generationId", "candidates"], "response")
   const candidatesRaw = value.candidates
   if (!Array.isArray(candidatesRaw)) fail("response.candidates must be an array")
   if (candidatesRaw.length < 1 || candidatesRaw.length > MAX_REHARMONIZE_CANDIDATES) {
@@ -368,18 +466,27 @@ export function parseJamReharmonizeResponse(value: unknown): JamReharmonizeRespo
     generationId: parseOpaqueId(value.generationId, "response.generationId"),
     candidates: candidatesRaw.map((candidate, index) => {
       if (!isPlainObject(candidate)) fail(`response.candidates[${index}] must be an object`)
-      assertExactKeys(candidate, ["id", "chords"], `response.candidates[${index}]`)
       const chordsRaw = candidate.chords
       if (!Array.isArray(chordsRaw)) fail(`response.candidates[${index}].chords must be an array`)
       if (chordsRaw.length < 1 || chordsRaw.length > MAX_TOTAL_CHORDS) {
         fail(`response.candidates[${index}].chords length out of range`)
       }
-      return {
+      const parsed: JamReharmonizeResponse["candidates"][number] = {
         id: parseOpaqueId(candidate.id, `response.candidates[${index}].id`),
         chords: chordsRaw.map((chord, chordIndex) =>
-          parseDisplayChord(chord, `response.candidates[${index}].chords[${chordIndex}]`),
+          parseDisplayChord(
+            chord,
+            `response.candidates[${index}].chords[${chordIndex}]`,
+            false,
+          ),
         ),
       }
+      if (candidate.label !== undefined) {
+        parsed.label = assertString(candidate.label, `response.candidates[${index}].label`, {
+          max: 128,
+        })
+      }
+      return parsed
     }),
   }
 }

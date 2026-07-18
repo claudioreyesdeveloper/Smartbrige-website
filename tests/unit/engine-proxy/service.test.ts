@@ -26,7 +26,9 @@ function createService(options?: {
   const usage = new MemoryEngineUsageStore()
   const prepareResponse = fixture("jam-prepare.response.json")
   const reharmonizeResponse = fixture("jam-reharmonize.response.json")
-  const fetchImpl = vi.fn(async (input: RequestInfo | URL) => {
+  const engineBodies: unknown[] = []
+  const fetchImpl = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+    engineBodies.push(JSON.parse(String(init?.body ?? "{}")) as unknown)
     const url = String(input)
     if (url.endsWith("/v1/jam/prepare")) {
       if (options?.prepareImpl) {
@@ -75,7 +77,7 @@ function createService(options?: {
     now: () => new Date("2026-07-18T12:00:00.000Z"),
   })
 
-  return { service, usage, fetchImpl }
+  return { service, usage, fetchImpl, engineBodies }
 }
 
 describe("JamEngineService quotas and authorization", () => {
@@ -84,9 +86,17 @@ describe("JamEngineService quotas and authorization", () => {
     ...fixture<Omit<JamPrepareRequest, "projectId">>("jam-prepare.request.json"),
   }
 
+  const privateReharmonizeFixture = fixture<Record<string, unknown>>(
+    "jam-reharmonize.request.json",
+  )
   const reharmonizeRequest: JamReharmonizeRequest = {
     projectId: "proj_1",
-    ...fixture<Omit<JamReharmonizeRequest, "projectId">>("jam-reharmonize.request.json"),
+    model: "genos2",
+    scope: "section",
+    sectionId: "sec-main-a",
+    key: "C",
+    chords: privateReharmonizeFixture.chords as JamReharmonizeRequest["chords"],
+    candidateCount: 3,
   }
 
   it("requires jam-player entitlement and project ownership", async () => {
@@ -101,6 +111,24 @@ describe("JamEngineService quotas and authorization", () => {
       deniedOwner.service.prepare("user-1", prepareRequest),
     ).rejects.toMatchObject({ code: "forbidden" })
     expect(deniedOwner.fetchImpl).not.toHaveBeenCalled()
+  })
+
+  it("binds the private reharmonize envelope to session subject and owned project", async () => {
+    const { service, engineBodies } = createService()
+    await service.reharmonize("authenticated-user", reharmonizeRequest)
+    expect(engineBodies[0]).toEqual({
+      model: "genos2",
+      scope: "section",
+      sectionId: "sec-main-a",
+      key: "C",
+      chords: reharmonizeRequest.chords,
+      candidateCount: 3,
+      subjectId: "authenticated-user",
+      projectId: "proj_1",
+    })
+    expect(engineBodies[0]).not.toHaveProperty("patternPool")
+    expect(engineBodies[0]).not.toHaveProperty("techniques")
+    expect(engineBodies[0]).not.toHaveProperty("seed")
   })
 
   it("records completed usage and does not consume daily quota on backend failure", async () => {
