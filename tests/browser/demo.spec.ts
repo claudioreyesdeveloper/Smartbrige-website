@@ -126,14 +126,14 @@ test("Jam Player exposes two complete 4/4 songs per category and mocked Web MIDI
   await expect(page.locator(".song-list button")).toHaveCount(2)
   await expect(page.getByPlaceholder("Search 796 styles")).toBeVisible()
   await expect(page.getByRole("button", { name: "Play arrangement" })).toBeVisible()
-  await expect(page.locator(".timeline-section header strong").nth(0)).toHaveText("Section A")
-  await expect(page.locator(".timeline-section header strong").nth(1)).toHaveText("Chorus")
-  await expect(page.locator(".timeline-section header strong").nth(2)).toHaveText("Verse")
+  await expect(page.locator(".timeline-section header strong").nth(0)).toHaveText("Intro")
+  await expect(page.locator(".timeline-section header strong").nth(1)).toHaveText("Verse")
+  await expect(page.locator(".timeline-section header strong").nth(2)).toHaveText("Pre-Chorus")
 
   await page.evaluate(() => {
     (window as unknown as { __midiSends: unknown[] }).__midiSends = []
   })
-  await page.locator(".timeline-section").nth(1).dblclick()
+  await page.locator(".timeline-section").nth(3).dblclick()
   await expect(page.getByText("Playing Chorus from the beginning.")).toBeVisible()
   await page.waitForTimeout(30)
   const sectionSends = await page.evaluate(() =>

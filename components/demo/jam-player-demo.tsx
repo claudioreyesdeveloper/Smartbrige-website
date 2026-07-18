@@ -22,7 +22,28 @@ import {
   stylesForProfile,
 } from "@/lib/demo/yamaha/style-catalog"
 
-const songs = rawSongs as DemoSong[]
+function sectionOrder(label: string) {
+  const normalized = label.toLowerCase()
+  if (normalized.includes("intro")) return 0
+  if (normalized.includes("verse")) return 1
+  if (normalized.includes("pre") && normalized.includes("chorus")) return 2
+  if (normalized.includes("chorus")) return 3
+  if (normalized.includes("bridge")) return 4
+  if (normalized.includes("ending") || normalized.includes("outro")) return 5
+  return 999
+}
+
+const songs = (rawSongs as DemoSong[]).map((song) => ({
+  ...song,
+  sections: song.sections
+    .map((section, sourceIndex) => ({ section, sourceIndex }))
+    .sort(
+      (a, b) =>
+        sectionOrder(a.section.label) - sectionOrder(b.section.label) ||
+        a.sourceIndex - b.sourceIndex,
+    )
+    .map(({ section }) => section),
+}))
 const reharmonizations = rawReharmonizations as Record<
   string,
   { styles: Record<string, Record<string, ChordEvent[]>> }

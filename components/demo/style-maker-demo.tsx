@@ -442,7 +442,9 @@ export function StyleMakerDemo() {
 
             {notice && <div className="demo-status" role="status">{notice}</div>}
             <section className="style-final-bar">
-              <button className="btn-secondary" type="button" onClick={exportFile}><Download size={17} /> Download style</button>
+              <button className="btn-secondary" type="button" onClick={exportFile} disabled={!modified}>
+                <Download size={17} /> Save New Style
+              </button>
               <div>
                 <span><WandSparkles size={17} /> Ready for your Yamaha</span>
                 <small>{midi.profile?.oneClickActivation ? "Genos activation is hardware-gated" : "Transfers into USER:\\STYLE"}</small>
