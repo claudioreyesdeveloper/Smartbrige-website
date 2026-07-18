@@ -1,0 +1,31 @@
+{
+  "subjectId": "sub_fixture_user_1",
+  "projectId": "proj_fixture_0001",
+  "model": "genos2",
+  "operation": "apply",
+  "bassCandidateId": "rhy_fixture_bass_1",
+  "drumCandidateId": "rhy_fixture_drum_1",
+  "fillSlots": [
+    { "slotBar": 8, "candidateId": "fil_fixture_0001" }
+  ],
+  "context": {
+    "sectionId": "sec-main-a",
+    "sectionName": "Verse",
+    "sectionType": "verse",
+    "bars": 8,
+    "bpm": 120,
+    "key": "C",
+    "timeSignature": { "numerator": 4, "denominator": 4 },
+    "chords": [
+      { "symbol": "C", "startBar": 0, "durationBars": 0.5 },
+      { "symbol": "F", "startBar": 0.5, "durationBars": 0.5 },
+      { "symbol": "G", "startBar": 1, "durationBars": 7 }
+    ]
+  },
+  "options": {
+    "timeFeel": "normal",
+    "bassVelocity": "balanced",
+    "drumMapping": "gm",
+    "forceFillEveryFourBars": false
+  }
+}

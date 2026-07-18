@@ -29,9 +29,28 @@ export type RhythmFilterOptions = {
   feels: string[]
 }
 
-export type OpaqueAuditionRender = {
-  renderReferenceId: string
+export type OpaqueAuditionSource = {
+  candidateId: string
+  part: "bass" | "drums" | "fill"
   durationLabel: string
+}
+
+export type RhythmPlaybackDescriptor = {
+  channel: number
+  kind: "mega-voice" | "dx7-bass1" | "channel-current" | "drum-kit"
+  label: string
+  bankMsb: number | null
+  bankLsb: number | null
+  programYamaha: number | null
+}
+
+export type PreparedRhythmAudition = {
+  renderReferenceId: string
+  recipeReferenceId: string
+  durationMs: number
+  durationLabel: string
+  renderedSmf: string
+  playback: RhythmPlaybackDescriptor
 }
 
 export type RhythmCandidateSummary = {
@@ -42,7 +61,7 @@ export type RhythmCandidateSummary = {
   feel: string
   bars: number
   summary: string
-  audition: OpaqueAuditionRender
+  audition: OpaqueAuditionSource
 }
 
 export type RhythmFillSummary = {
@@ -50,7 +69,7 @@ export type RhythmFillSummary = {
   name: string
   feel: string
   lengthLabel: string
-  audition: OpaqueAuditionRender
+  audition: OpaqueAuditionSource
 }
 
 export type RhythmCandidateQuery = {
@@ -122,7 +141,7 @@ export type RhythmProjectAdapter = {
 }
 
 export type RhythmLibraryAdapter = {
-  getFilterOptions(part: RhythmPart): Promise<RhythmFilterOptions>
+  getFilterOptions(part: RhythmPart, projectId: string): Promise<RhythmFilterOptions>
   queryCandidates(query: RhythmCandidateQuery): Promise<RhythmCandidateResult>
   getSuggestedDrums(query: SuggestedDrumsQuery): Promise<RhythmCandidateResult>
   getFills(input: {
@@ -131,12 +150,18 @@ export type RhythmLibraryAdapter = {
     contextRevision: string
     drumCandidateId: string
   }): Promise<RhythmFillSummary[]>
+  prepareAudition(input: {
+    projectId: string
+    sectionId: string
+    contextRevision: string
+    source: OpaqueAuditionSource
+  }): Promise<PreparedRhythmAudition>
   applyToSong(request: RhythmApplyRequest): Promise<RhythmApplyResult>
 }
 
 export type RhythmAuditionAdapter = {
   getState(): AuditionState
-  play(render: OpaqueAuditionRender, label: string): Promise<void>
+  play(render: PreparedRhythmAudition, label: string): Promise<void>
   stop(): void
   subscribe(listener: (state: AuditionState) => void): () => void
 }

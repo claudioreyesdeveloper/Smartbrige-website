@@ -1,0 +1,12 @@
+{
+  "queryId": "fqy_fixture_0001",
+  "expiresAt": "2026-07-18T12:15:00.000Z",
+  "fills": [
+    {
+      "candidateId": "fil_fixture_0001",
+      "label": "Fill option 1",
+      "feel": "straight",
+      "bars": 1
+    }
+  ]
+}

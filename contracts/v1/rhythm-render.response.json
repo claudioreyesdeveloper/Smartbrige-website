@@ -1,0 +1,34 @@
+{
+  "renders": [
+    {
+      "renderReferenceId": "rnd_fixture_bass_1",
+      "recipeReferenceId": "rcp_fixture_bass_1",
+      "part": "bass",
+      "durationMs": 16000,
+      "renderedSmf": "TVRoZAAAAAYAAQACA8BNVHJrAAAACwD/UQMHoSAA/y8ATVRyawAAAA0AkSRQgXCBJAAA/y8A",
+      "playback": {
+        "channel": 3,
+        "kind": "mega-voice",
+        "label": "Bass voice",
+        "bankMsb": 8,
+        "bankLsb": 0,
+        "programYamaha": 18
+      }
+    },
+    {
+      "renderReferenceId": "rnd_fixture_drums_1",
+      "recipeReferenceId": "rcp_fixture_drums_1",
+      "part": "drums",
+      "durationMs": 16000,
+      "renderedSmf": "TVRoZAAAAAYAAQACA8BNVHJrAAAACwD/UQMHoSAA/y8ATVRyawAAAA0AkSRQgXCBJAAA/y8A",
+      "playback": {
+        "channel": 2,
+        "kind": "channel-current",
+        "label": "Drum channel",
+        "bankMsb": null,
+        "bankLsb": null,
+        "programYamaha": null
+      }
+    }
+  ]
+}

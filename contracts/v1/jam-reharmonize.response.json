@@ -8,22 +8,22 @@
         {
           "symbol": "Cmaj7",
           "startBar": 0,
-          "durationBars": 2
+          "durationBars": 0.5
         },
         {
           "symbol": "Am7",
-          "startBar": 2,
-          "durationBars": 2
+          "startBar": 0.5,
+          "durationBars": 0.5
         },
         {
           "symbol": "Fmaj7",
-          "startBar": 4,
-          "durationBars": 2
+          "startBar": 1,
+          "durationBars": 3
         },
         {
           "symbol": "G7",
-          "startBar": 6,
-          "durationBars": 2
+          "startBar": 4,
+          "durationBars": 4
         }
       ]
     },

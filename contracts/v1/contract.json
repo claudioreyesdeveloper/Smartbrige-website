@@ -22,5 +22,12 @@
   "reharmonize": {
     "musicalContext": "server-derived-only",
     "clientRecipeControls": false
+  },
+  "rhythm": {
+    "candidateIdentifiers": "opaque-owned-expiring",
+    "sourceMidiAcceptedFromCaller": false,
+    "privateRecipeFieldsReturned": false,
+    "renderedSmfEncoding": "standard-base64-canonical",
+    "fillLookup": "private-same-family-only"
   }
 }

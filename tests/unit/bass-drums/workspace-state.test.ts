@@ -154,11 +154,23 @@ describe("Bass & Drums workspace state", () => {
       contextRevision: section.contextRevision,
       drumCandidateId: candidate.id,
     })
+    const candidateRender = await adapters.library.prepareAudition({
+      projectId: project.id,
+      sectionId: section.id,
+      contextRevision: section.contextRevision,
+      source: candidate.audition,
+    })
+    const fillRender = await adapters.library.prepareAudition({
+      projectId: project.id,
+      sectionId: section.id,
+      contextRevision: section.contextRevision,
+      source: fills[0]!.audition,
+    })
 
     expect(typeof candidate.id).toBe("string")
-    expect(typeof candidate.audition.renderReferenceId).toBe("string")
+    expect(typeof candidateRender.renderReferenceId).toBe("string")
     expect(typeof fills[0]!.id).toBe("string")
-    expect(typeof fills[0]!.audition.renderReferenceId).toBe("string")
+    expect(typeof fillRender.renderReferenceId).toBe("string")
     expect(candidate).not.toHaveProperty("score")
     expect(candidate).not.toHaveProperty("seed")
     expect(fills[0]).not.toHaveProperty("sourcePath")

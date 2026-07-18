@@ -2,7 +2,7 @@ import type {
   AppliedRhythmReference,
   AuditionState,
   BassDrumsAdapters,
-  OpaqueAuditionRender,
+  PreparedRhythmAudition,
   RhythmCandidateSummary,
   RhythmFillSummary,
   RhythmPart,
@@ -18,7 +18,7 @@ const BASS_CANDIDATES: RhythmCandidateSummary[] = [
     feel: "Straight 8ths",
     bars: 4,
     summary: "Warm, even movement with space around the backbeat.",
-    audition: { renderReferenceId: "render_bass_a", durationLabel: "4 bars" },
+    audition: { candidateId: "opaque_bass_a", part: "bass", durationLabel: "4 bars" },
   },
   {
     id: "opaque_bass_b",
@@ -28,7 +28,7 @@ const BASS_CANDIDATES: RhythmCandidateSummary[] = [
     feel: "Straight 8ths",
     bars: 4,
     summary: "A more active phrase shaped for a chorus lift.",
-    audition: { renderReferenceId: "render_bass_b", durationLabel: "4 bars" },
+    audition: { candidateId: "opaque_bass_b", part: "bass", durationLabel: "4 bars" },
   },
   {
     id: "opaque_bass_c",
@@ -38,7 +38,7 @@ const BASS_CANDIDATES: RhythmCandidateSummary[] = [
     feel: "16ths",
     bars: 4,
     summary: "Short syncopated notes with a grounded low register.",
-    audition: { renderReferenceId: "render_bass_c", durationLabel: "4 bars" },
+    audition: { candidateId: "opaque_bass_c", part: "bass", durationLabel: "4 bars" },
   },
   {
     id: "opaque_bass_d",
@@ -48,7 +48,7 @@ const BASS_CANDIDATES: RhythmCandidateSummary[] = [
     feel: "Swing",
     bars: 4,
     summary: "Relaxed movement for a softer change in energy.",
-    audition: { renderReferenceId: "render_bass_d", durationLabel: "4 bars" },
+    audition: { candidateId: "opaque_bass_d", part: "bass", durationLabel: "4 bars" },
   },
 ]
 
@@ -61,7 +61,7 @@ const DRUM_CANDIDATES: RhythmCandidateSummary[] = [
     feel: "Straight 8ths",
     bars: 4,
     summary: "Tight kick and snare with a restrained closed-hat pattern.",
-    audition: { renderReferenceId: "render_drums_a", durationLabel: "4 bars" },
+    audition: { candidateId: "opaque_drums_a", part: "drums", durationLabel: "4 bars" },
   },
   {
     id: "opaque_drums_b",
@@ -71,7 +71,7 @@ const DRUM_CANDIDATES: RhythmCandidateSummary[] = [
     feel: "Straight 8ths",
     bars: 4,
     summary: "Open hats and a wider backbeat for a chorus section.",
-    audition: { renderReferenceId: "render_drums_b", durationLabel: "4 bars" },
+    audition: { candidateId: "opaque_drums_b", part: "drums", durationLabel: "4 bars" },
   },
   {
     id: "opaque_drums_c",
@@ -81,7 +81,7 @@ const DRUM_CANDIDATES: RhythmCandidateSummary[] = [
     feel: "16ths",
     bars: 4,
     summary: "Dry kit, ghost-note detail, and a concise syncopated kick.",
-    audition: { renderReferenceId: "render_drums_c", durationLabel: "4 bars" },
+    audition: { candidateId: "opaque_drums_c", part: "drums", durationLabel: "4 bars" },
   },
 ]
 
@@ -91,21 +91,21 @@ const FILLS: RhythmFillSummary[] = [
     name: "Compact Turn",
     feel: "Straight 8ths",
     lengthLabel: "1 bar",
-    audition: { renderReferenceId: "render_fill_a", durationLabel: "1 bar" },
+    audition: { candidateId: "opaque_fill_a", part: "fill", durationLabel: "1 bar" },
   },
   {
     id: "opaque_fill_b",
     name: "Snare Lift",
     feel: "Straight 8ths",
     lengthLabel: "1 bar",
-    audition: { renderReferenceId: "render_fill_b", durationLabel: "1 bar" },
+    audition: { candidateId: "opaque_fill_b", part: "fill", durationLabel: "1 bar" },
   },
   {
     id: "opaque_fill_c",
     name: "Short Tom Run",
     feel: "16ths",
     lengthLabel: "1 bar",
-    audition: { renderReferenceId: "render_fill_c", durationLabel: "1 bar" },
+    audition: { candidateId: "opaque_fill_c", part: "fill", durationLabel: "1 bar" },
   },
 ]
 
@@ -153,7 +153,7 @@ function candidateFor(part: RhythmPart, id: string | null) {
 }
 
 function renderFor(part: RhythmPart, id: string): string {
-  return candidateFor(part, id)?.audition.renderReferenceId ?? `render_${part}_applied`
+  return candidateFor(part, id) ? id.replace(/^opaque_/, "render_") : `render_${part}_applied`
 }
 
 export function createDeterministicBassDrumsAdapters(): BassDrumsAdapters {
@@ -226,6 +226,23 @@ export function createDeterministicBassDrumsAdapters(): BassDrumsAdapters {
         await wait()
         return structuredClone(FILLS)
       },
+      async prepareAudition({ source }) {
+        await wait()
+        return {
+          renderReferenceId: `render_${source.candidateId}`,
+          recipeReferenceId: `recipe_${source.candidateId}`,
+          durationLabel: source.durationLabel,
+          renderedSmf: "TVRoZAAAAAYAAQABA8BNVHJrAAAABAD/LwA=",
+          playback: {
+            channel: source.part === "bass" ? 11 : 2,
+            kind: source.part === "bass" ? "mega-voice" : "channel-current",
+            label: source.part === "bass" ? "Bass voice" : "Drum channel",
+            bankMsb: source.part === "bass" ? 8 : null,
+            bankLsb: source.part === "bass" ? 0 : null,
+            programYamaha: source.part === "bass" ? 18 : null,
+          },
+        }
+      },
       async applyToSong(request) {
         await wait()
         const section = currentProject.sections.find((item) => item.id === request.sectionId)
@@ -266,7 +283,7 @@ export function createDeterministicBassDrumsAdapters(): BassDrumsAdapters {
     },
     audition: {
       getState: () => ({ ...auditionState }),
-      async play(render: OpaqueAuditionRender, label: string) {
+      async play(render: PreparedRhythmAudition, label: string) {
         await wait()
         auditionState = {
           status: "playing",

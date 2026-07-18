@@ -111,4 +111,9 @@ export type JamReharmonizeResponse = {
   candidates: JamReharmonizeCandidate[]
 }
 
-export type EngineOperation = "jam_prepare" | "jam_reharmonize"
+export type EngineOperation =
+  | "jam_prepare"
+  | "jam_reharmonize"
+  | "rhythm_browse"
+  | "rhythm_fills"
+  | "rhythm_render"

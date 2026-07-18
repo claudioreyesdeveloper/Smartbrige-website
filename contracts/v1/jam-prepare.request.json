@@ -16,22 +16,22 @@
           {
             "symbol": "C",
             "startBar": 0,
-            "durationBars": 2
+            "durationBars": 0.5
           },
           {
             "symbol": "Am",
-            "startBar": 2,
-            "durationBars": 2
+            "startBar": 0.5,
+            "durationBars": 0.5
           },
           {
             "symbol": "F",
-            "startBar": 4,
-            "durationBars": 2
+            "startBar": 1,
+            "durationBars": 3
           },
           {
             "symbol": "G",
-            "startBar": 6,
-            "durationBars": 2
+            "startBar": 4,
+            "durationBars": 4
           }
         ],
         "styleNumber": 42

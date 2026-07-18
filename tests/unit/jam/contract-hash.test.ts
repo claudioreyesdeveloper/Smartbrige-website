@@ -24,7 +24,7 @@ describe("jam v1 contract fixtures", () => {
     const expected = readFileSync(path.join(contractsDir, "CONTRACT_HASH.txt"), "utf8").trim()
     expect(computeHash()).toBe(expected)
     expect(expected).toBe(
-      "68790d1752933fc774d47effa68ad7acf29ec8d1318f25574c176301d7745b7b",
+      "6462580c1279eb08aaedc3be85439f41365a6988d6c45f1e0fbfa3b5a3f19eb1",
     )
   })
 
@@ -42,5 +42,24 @@ describe("jam v1 contract fixtures", () => {
     const parsed = parseJamReharmonizeResponse(reharmonize)
     expect(parsed.generationId).toBe("gen_fixture_0001")
     expect(parsed.candidates[0]?.label).toBe("Rich chords")
+  })
+
+  it("parses final rhythm fixtures without forbidden private fields", async () => {
+    const {
+      parseRhythmFillsResponse,
+      parseRhythmOptionsResponse,
+      parseRhythmQueryResponse,
+      parseRhythmRenderResponse,
+    } = await import("@/lib/rhythm/domain")
+    const { containsForbiddenKeys } = await import("@/lib/jam/domain/forbidden")
+    const read = (name: string) =>
+      JSON.parse(readFileSync(path.join(contractsDir, name), "utf8"))
+    const responses = [
+      parseRhythmOptionsResponse(read("rhythm-options.response.json")),
+      parseRhythmQueryResponse(read("rhythm-query.response.json")),
+      parseRhythmFillsResponse(read("rhythm-fills.response.json")),
+      parseRhythmRenderResponse(read("rhythm-render.response.json")),
+    ]
+    expect(responses.map(containsForbiddenKeys)).toEqual([[], [], [], []])
   })
 })

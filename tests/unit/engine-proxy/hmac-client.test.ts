@@ -161,4 +161,38 @@ describe("engine proxy HMAC and SSRF guards", () => {
     expect(result).not.toHaveProperty("recipe")
     expect(result.planId).toBe("pln_fixture_0001")
   })
+
+  it("strips corpus v2 and private rhythm metadata before strict parsing", async () => {
+    const clean = fixture<Record<string, unknown>>("rhythm-query.response.json")
+    const candidates = clean.candidates as Array<Record<string, unknown>>
+    const fetchImpl = vi.fn(async () =>
+      new Response(
+        JSON.stringify({
+          ...clean,
+          privateMetadata: { trace: "secret" },
+          candidates: [{
+            ...candidates[0],
+            sourcePath: "/private/library.mid",
+            sourceName: "private source",
+            rankScore: 0.99,
+            corpusVersion: "v2-private",
+          }],
+        }),
+        { status: 200 },
+      ),
+    )
+    const client = new PrivateEngineClient({
+      config: {
+        baseUrl: new URL("https://engine.example.internal"),
+        signingSecret: SECRET,
+        dailyLimit: 100,
+        perMinuteLimit: 10,
+        maxSkewSeconds: 60,
+      },
+      fetchImpl: fetchImpl as unknown as typeof fetch,
+    })
+    const result = await client.rhythmQuery(fixture("rhythm-query.request.json"))
+    expect(result.candidates[0]).toEqual(candidates[0])
+    expect(result).not.toHaveProperty("privateMetadata")
+  })
 })

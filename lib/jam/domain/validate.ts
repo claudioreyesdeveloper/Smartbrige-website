@@ -82,12 +82,13 @@ function assertInt(
 function assertNumber(
   value: unknown,
   path: string,
-  options: { minExclusive?: number; max: number },
+  options: { minInclusive?: number; minExclusive?: number; max: number },
 ): number {
   if (typeof value !== "number" || !Number.isFinite(value)) {
     fail(`${path} must be a finite number`)
   }
   if (
+    value < (options.minInclusive ?? Number.NEGATIVE_INFINITY) ||
     value <= (options.minExclusive ?? Number.NEGATIVE_INFINITY) ||
     value > options.max
   ) {
@@ -115,7 +116,10 @@ function parseDisplayChord(value: unknown, path: string, strict = true): Display
   if (strict) assertExactKeys(value, ["symbol", "startBar", "durationBars"], path)
   return {
     symbol: assertString(value.symbol, `${path}.symbol`, { max: MAX_CHORD_SYMBOL_LENGTH }),
-    startBar: assertInt(value.startBar, `${path}.startBar`, { min: 0, max: 10_000 }),
+    startBar: assertNumber(value.startBar, `${path}.startBar`, {
+      minInclusive: 0,
+      max: 10_000,
+    }),
     durationBars: assertNumber(value.durationBars, `${path}.durationBars`, {
       minExclusive: 0,
       max: 256,

@@ -41,6 +41,9 @@ export const catalogImportStatusEnum = pgEnum("catalog_import_status", [
 export const engineOperationEnum = pgEnum("engine_operation", [
   "jam_prepare",
   "jam_reharmonize",
+  "rhythm_browse",
+  "rhythm_fills",
+  "rhythm_render",
 ])
 
 export const engineUsageStatusEnum = pgEnum("engine_usage_status", [

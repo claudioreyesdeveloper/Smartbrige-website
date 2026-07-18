@@ -12,10 +12,28 @@ import type {
 } from "@/lib/jam/domain/types"
 import { readEngineProxyConfig, type EngineProxyConfig } from "@/lib/engine-proxy/env"
 import { signEngineRequest } from "@/lib/engine-proxy/hmac"
+import {
+  parseRhythmFillsResponse,
+  parseRhythmOptionsResponse,
+  parseRhythmQueryResponse,
+  parseRhythmRenderResponse,
+  type RhythmFillsEngineRequest,
+  type RhythmFillsResponse,
+  type RhythmOptionsEngineRequest,
+  type RhythmOptionsResponse,
+  type RhythmQueryEngineRequest,
+  type RhythmQueryResponse,
+  type RhythmRenderEngineRequest,
+  type RhythmRenderResponse,
+} from "@/lib/rhythm/domain"
 
 const ALLOWED_ENGINE_PATHS = {
   prepare: "/v1/jam/prepare",
   reharmonize: "/v1/jam/reharmonize",
+  rhythmOptions: "/v1/rhythm/options",
+  rhythmQuery: "/v1/rhythm/query",
+  rhythmFills: "/v1/rhythm/fills",
+  rhythmRender: "/v1/rhythm/render",
 } as const
 
 export type EngineFetch = typeof fetch
@@ -140,6 +158,50 @@ export class PrivateEngineClient {
       path: ALLOWED_ENGINE_PATHS.reharmonize,
       body: request,
       parseResponse: parseJamReharmonizeResponse,
+      config: this.config,
+      fetchImpl: this.fetchImpl,
+      nowMs: this.nowMs,
+    })
+  }
+
+  rhythmOptions(request: RhythmOptionsEngineRequest): Promise<RhythmOptionsResponse> {
+    return postEngineJson({
+      path: ALLOWED_ENGINE_PATHS.rhythmOptions,
+      body: request,
+      parseResponse: parseRhythmOptionsResponse,
+      config: this.config,
+      fetchImpl: this.fetchImpl,
+      nowMs: this.nowMs,
+    })
+  }
+
+  rhythmQuery(request: RhythmQueryEngineRequest): Promise<RhythmQueryResponse> {
+    return postEngineJson({
+      path: ALLOWED_ENGINE_PATHS.rhythmQuery,
+      body: request,
+      parseResponse: parseRhythmQueryResponse,
+      config: this.config,
+      fetchImpl: this.fetchImpl,
+      nowMs: this.nowMs,
+    })
+  }
+
+  rhythmFills(request: RhythmFillsEngineRequest): Promise<RhythmFillsResponse> {
+    return postEngineJson({
+      path: ALLOWED_ENGINE_PATHS.rhythmFills,
+      body: request,
+      parseResponse: parseRhythmFillsResponse,
+      config: this.config,
+      fetchImpl: this.fetchImpl,
+      nowMs: this.nowMs,
+    })
+  }
+
+  rhythmRender(request: RhythmRenderEngineRequest): Promise<RhythmRenderResponse> {
+    return postEngineJson({
+      path: ALLOWED_ENGINE_PATHS.rhythmRender,
+      body: request,
+      parseResponse: parseRhythmRenderResponse,
       config: this.config,
       fetchImpl: this.fetchImpl,
       nowMs: this.nowMs,

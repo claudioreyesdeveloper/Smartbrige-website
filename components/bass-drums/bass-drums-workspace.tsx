@@ -10,7 +10,8 @@ import {
   Square,
   TriangleAlert,
 } from "lucide-react"
-import { useEffect, useMemo, useReducer, useState } from "react"
+import { useEffect, useMemo, useReducer, useRef, useState } from "react"
+import { createProductionBassDrumsAdapters } from "./production"
 import {
   initialRhythmWorkspaceState,
   rhythmWorkspaceReducer,
@@ -40,7 +41,9 @@ const EMPTY_OPTIONS: RhythmFilterOptions = {
   feels: ["All Feels"],
 }
 
-export function BassDrumsWorkspace({ adapters }: { adapters: BassDrumsAdapters }) {
+export function BassDrumsWorkspace({ adapters: injected }: { adapters?: BassDrumsAdapters }) {
+  const adaptersRef = useRef(injected ?? createProductionBassDrumsAdapters())
+  const adapters = adaptersRef.current
   const [state, dispatch] = useReducer(
     rhythmWorkspaceReducer,
     initialRhythmWorkspaceState,
@@ -99,16 +102,17 @@ export function BassDrumsWorkspace({ adapters }: { adapters: BassDrumsAdapters }
     let cancelled = false
     ;(async () => {
       try {
-        const [projectList, bassOptions, drumOptions] = await Promise.all([
-          adapters.projects.list(),
-          adapters.library.getFilterOptions("bass"),
-          adapters.library.getFilterOptions("drums"),
-        ])
+        const projectList = await adapters.projects.list()
         if (cancelled) return
         setProjects(projectList)
-        setFilterOptions({ bass: bassOptions, drums: drumOptions })
         const first = projectList[0]
         if (first) {
+          const [bassOptions, drumOptions] = await Promise.all([
+            adapters.library.getFilterOptions("bass", first.id),
+            adapters.library.getFilterOptions("drums", first.id),
+          ])
+          if (cancelled) return
+          setFilterOptions({ bass: bassOptions, drums: drumOptions })
           dispatch({
             type: "select-project",
             projectId: first.id,
@@ -216,10 +220,15 @@ export function BassDrumsWorkspace({ adapters }: { adapters: BassDrumsAdapters }
     adapters.audition.stop()
     setError("")
     try {
-      const opened = await adapters.projects.open(projectId)
+      const [opened, bassOptions, drumOptions] = await Promise.all([
+        adapters.projects.open(projectId),
+        adapters.library.getFilterOptions("bass", projectId),
+        adapters.library.getFilterOptions("drums", projectId),
+      ])
       setProjects((current) =>
         current.map((item) => (item.id === opened.id ? opened : item)),
       )
+      setFilterOptions({ bass: bassOptions, drums: drumOptions })
       dispatch({
         type: "select-project",
         projectId: opened.id,
@@ -241,9 +250,16 @@ export function BassDrumsWorkspace({ adapters }: { adapters: BassDrumsAdapters }
   const audition = async (
     candidate: RhythmCandidateSummary | RhythmFillSummary,
   ) => {
+    if (!project || !section) return
     setError("")
     try {
-      await adapters.audition.play(candidate.audition, candidate.name)
+      const render = await adapters.library.prepareAudition({
+        projectId: project.id,
+        sectionId: section.id,
+        contextRevision: section.contextRevision,
+        source: candidate.audition,
+      })
+      await adapters.audition.play(render, candidate.name)
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Audition could not start.")
     }
