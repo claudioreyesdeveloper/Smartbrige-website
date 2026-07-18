@@ -20,15 +20,12 @@ test("App overview lists purchased, upgrade, and coming-soon services", async ({
   await expect(page.getByRole("heading", { name: "Style Maker" })).toBeVisible()
 })
 
-test("Purchased service opens placeholder workspace", async ({ page }) => {
+test("Purchased Jam Player opens paid workspace", async ({ page }) => {
   await page.goto("/app/jam-player")
 
   await expect(page.getByRole("heading", { name: "Jam Player", level: 1 })).toBeVisible()
-  await expect(page.getByText(/This module shell is ready/)).toBeVisible()
-  await expect(page.getByRole("link", { name: /Open the public demo/i })).toHaveAttribute(
-    "href",
-    "/demo",
-  )
+  await expect(page.getByText(/Three steps: choose a song/i)).toBeVisible()
+  await expect(page.getByRole("button", { name: /Play arrangement/i })).toBeVisible()
 })
 
 test("Unpurchased service route shows upgrade panel", async ({ page }) => {

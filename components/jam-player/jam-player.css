@@ -1,0 +1,708 @@
+/* Scoped paid Jam Player styles — does not touch global or demo CSS */
+
+.paid-jam {
+  --paid-jam-ink: #e8f5fc;
+  --paid-jam-muted: #a8c0d4;
+  --paid-jam-line: rgba(114, 170, 210, 0.16);
+  --paid-jam-panel: rgba(6, 18, 29, 0.72);
+  --paid-jam-accent: #4db8ff;
+  color: var(--paid-jam-ink);
+}
+
+.paid-jam-lead {
+  margin: 0 0 1rem;
+  max-width: 48rem;
+  color: var(--paid-jam-muted);
+  font-size: 1.05rem;
+  line-height: 1.45;
+}
+
+.paid-jam-banner {
+  display: flex;
+  gap: 0.85rem;
+  align-items: flex-start;
+  margin-bottom: 1rem;
+  padding: 1rem 1.1rem;
+  border-radius: 0.75rem;
+  border: 1px solid var(--paid-jam-line);
+}
+
+.paid-jam-banner strong {
+  display: block;
+  margin-bottom: 0.25rem;
+  font-size: 1.05rem;
+}
+
+.paid-jam-banner p {
+  margin: 0;
+  color: var(--paid-jam-muted);
+  font-size: 0.95rem;
+}
+
+.paid-jam-banner-warning {
+  background: rgba(120, 80, 20, 0.28);
+  border-color: rgba(245, 180, 70, 0.35);
+}
+
+.paid-jam-banner-error {
+  background: rgba(100, 25, 30, 0.32);
+  border-color: rgba(248, 113, 113, 0.35);
+}
+
+.paid-jam-banner-quota {
+  background: rgba(88, 40, 110, 0.28);
+  border-color: rgba(216, 140, 255, 0.35);
+}
+
+.paid-jam-layout {
+  display: grid;
+  grid-template-columns: minmax(16rem, 18rem) minmax(0, 1fr);
+  gap: 0;
+  min-height: 36rem;
+  border: 1px solid var(--paid-jam-line);
+  border-radius: 0.9rem;
+  overflow: hidden;
+  background: rgba(4, 14, 24, 0.55);
+}
+
+.paid-jam-library {
+  border-right: 1px solid var(--paid-jam-line);
+  background: var(--paid-jam-panel);
+  overflow: auto;
+  max-height: min(78vh, 56rem);
+}
+
+.paid-jam-panel-heading {
+  padding: 1.15rem 1.1rem 0.85rem;
+  display: grid;
+  gap: 0.2rem;
+  border-bottom: 1px solid var(--paid-jam-line);
+}
+
+.paid-jam-panel-heading-tight {
+  margin-top: 0.75rem;
+  border-top: 1px solid var(--paid-jam-line);
+}
+
+.paid-jam-panel-heading span {
+  color: #9eb6ca;
+  font-size: 0.72rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.paid-jam-panel-heading strong {
+  font-size: 1rem;
+}
+
+.paid-jam-field {
+  display: grid;
+  gap: 0.35rem;
+  padding: 0.75rem 1rem 0;
+}
+
+.paid-jam-field > span {
+  color: #9fb6c9;
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.paid-jam-field input,
+.paid-jam-field select,
+.paid-jam-controls input,
+.paid-jam-controls select,
+.paid-jam-reharm select,
+.paid-jam-project-title input {
+  min-height: 2.75rem;
+  padding: 0.55rem 0.75rem;
+  border-radius: 0.55rem;
+  border: 1px solid rgba(100, 156, 198, 0.28);
+  background: #091d2d;
+  color: #e8f5fc;
+  font-size: 1rem;
+}
+
+.paid-jam-category-tabs {
+  padding: 0.75rem;
+  display: grid;
+  gap: 0.3rem;
+}
+
+.paid-jam-category-tabs button,
+.paid-jam-song-list button,
+.paid-jam-project-list button,
+.paid-jam-project-actions button,
+.paid-jam-connection button,
+.paid-jam-reharm > button,
+.paid-jam-transport-stop,
+.paid-jam-transport-main {
+  cursor: pointer;
+  font: inherit;
+}
+
+.paid-jam-category-tabs button {
+  width: 100%;
+  min-height: 2.5rem;
+  padding: 0.55rem 0.7rem;
+  text-align: left;
+  color: #89a1b5;
+  border: 1px solid transparent;
+  border-radius: 0.5rem;
+  background: transparent;
+  font-size: 0.95rem;
+}
+
+.paid-jam-category-tabs button.is-active,
+.paid-jam-category-tabs button:hover {
+  color: #cbe9ff;
+  border-color: rgba(69, 163, 228, 0.24);
+  background: rgba(32, 102, 150, 0.2);
+}
+
+.paid-jam-song-list {
+  padding: 0.5rem 0.75rem 1rem;
+  display: grid;
+  gap: 0.45rem;
+  border-top: 1px solid rgba(114, 170, 210, 0.1);
+}
+
+.paid-jam-song-list button {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  padding: 0.8rem;
+  text-align: left;
+  color: #89a1b5;
+  border: 1px solid transparent;
+  border-radius: 0.6rem;
+  background: transparent;
+}
+
+.paid-jam-song-list button > i {
+  width: 0.3rem;
+  height: 2.4rem;
+  border-radius: 999px;
+}
+
+.paid-jam-song-list button span {
+  display: grid;
+  gap: 0.2rem;
+}
+
+.paid-jam-song-list button strong {
+  color: #e8f5fc;
+  font-size: 1rem;
+}
+
+.paid-jam-song-list button small {
+  color: #9eb6ca;
+  font-size: 0.82rem;
+}
+
+.paid-jam-song-list button.is-active,
+.paid-jam-song-list button:hover {
+  border-color: rgba(69, 163, 228, 0.28);
+  background: rgba(32, 102, 150, 0.22);
+}
+
+.paid-jam-project-actions {
+  display: flex;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem 0;
+}
+
+.paid-jam-project-actions button {
+  flex: 1;
+  min-height: 2.6rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  border-radius: 0.55rem;
+  border: 1px solid rgba(100, 156, 198, 0.28);
+  background: #0d2436;
+  color: #dff2ff;
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+.paid-jam-save-status {
+  margin: 0.55rem 1rem 0;
+  color: #8fb0c7;
+  font-size: 0.9rem;
+}
+
+.paid-jam-save-status[data-state="dirty"],
+.paid-jam-save-status[data-state="error"] {
+  color: #fbbf24;
+}
+
+.paid-jam-project-list {
+  list-style: none;
+  margin: 0.6rem 0 1rem;
+  padding: 0 0.75rem 1rem;
+  display: grid;
+  gap: 0.35rem;
+}
+
+.paid-jam-project-list button {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+  min-height: 2.5rem;
+  padding: 0.55rem 0.7rem;
+  border-radius: 0.5rem;
+  border: 1px solid transparent;
+  background: transparent;
+  color: #c5dceb;
+  text-align: left;
+}
+
+.paid-jam-project-list button.is-active,
+.paid-jam-project-list button:hover {
+  border-color: rgba(69, 163, 228, 0.28);
+  background: rgba(32, 102, 150, 0.2);
+}
+
+.paid-jam-stage {
+  padding: 1.15rem 1.25rem 1.5rem;
+  display: grid;
+  gap: 1rem;
+  align-content: start;
+}
+
+.paid-jam-song-header {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: flex-start;
+}
+
+.paid-jam-eyebrow {
+  display: block;
+  margin-bottom: 0.25rem;
+  color: #a8c0d4;
+  font-size: 0.78rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.paid-jam-song-header h2 {
+  margin: 0;
+  font-size: clamp(1.55rem, 2vw, 2rem);
+  line-height: 1.15;
+}
+
+.paid-jam-song-header p {
+  margin: 0.35rem 0 0;
+  color: var(--paid-jam-muted);
+  font-size: 1rem;
+}
+
+.paid-jam-facts {
+  display: flex;
+  gap: 0.65rem;
+}
+
+.paid-jam-facts span {
+  min-width: 4.5rem;
+  padding: 0.55rem 0.7rem;
+  border-radius: 0.55rem;
+  background: rgba(9, 29, 45, 0.9);
+  border: 1px solid var(--paid-jam-line);
+  display: grid;
+  gap: 0.15rem;
+}
+
+.paid-jam-facts small {
+  color: #9eb6ca;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.paid-jam-facts strong {
+  font-size: 1.2rem;
+}
+
+.paid-jam-connection {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 0.85rem;
+  align-items: center;
+  padding: 0.9rem 1rem;
+  border-radius: 0.75rem;
+  border: 1px solid var(--paid-jam-line);
+  background: rgba(10, 30, 46, 0.75);
+}
+
+.paid-jam-connection strong {
+  font-size: 1.05rem;
+}
+
+.paid-jam-connection p {
+  margin: 0.2rem 0 0;
+  color: var(--paid-jam-muted);
+  font-size: 0.92rem;
+}
+
+.paid-jam-connection button {
+  min-height: 2.6rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.5rem 0.85rem;
+  border-radius: 0.55rem;
+  border: 1px solid rgba(100, 156, 198, 0.28);
+  background: #0d2436;
+  color: #dff2ff;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.paid-jam-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem 0.85rem;
+  align-items: end;
+}
+
+.paid-jam-controls .paid-jam-field {
+  padding: 0;
+  min-width: 7rem;
+}
+
+.paid-jam-field-grow {
+  flex: 1 1 12rem;
+}
+
+.paid-jam-loop {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  min-height: 2.75rem;
+  padding: 0 0.35rem;
+  color: #d7ebf8;
+  font-size: 1rem;
+  font-weight: 650;
+}
+
+.paid-jam-loop input {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+.paid-jam-transport {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.7rem;
+  align-items: center;
+}
+
+.paid-jam-transport-main {
+  min-height: 3.25rem;
+  min-width: 12rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.55rem;
+  padding: 0.65rem 1.2rem;
+  border: 0;
+  border-radius: 0.75rem;
+  background: linear-gradient(180deg, #3aa4e8, #2178b8);
+  color: #04131f;
+  font-size: 1.1rem;
+  font-weight: 800;
+}
+
+.paid-jam-transport-main:disabled,
+.paid-jam-transport-stop:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.paid-jam-transport-stop {
+  min-height: 3.25rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.55rem 1rem;
+  border-radius: 0.7rem;
+  border: 1px solid rgba(100, 156, 198, 0.28);
+  background: #0d2436;
+  color: #dff2ff;
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.paid-jam-readout {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+  margin-left: auto;
+}
+
+.paid-jam-readout span {
+  min-width: 5.5rem;
+  padding: 0.45rem 0.65rem;
+  border-radius: 0.5rem;
+  background: rgba(9, 29, 45, 0.9);
+  border: 1px solid var(--paid-jam-line);
+  display: grid;
+}
+
+.paid-jam-readout small {
+  color: #9eb6ca;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.paid-jam-readout strong {
+  font-size: 1.05rem;
+}
+
+.paid-jam-reharm {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.85rem;
+  align-items: end;
+  padding: 0.95rem 1rem;
+  border-radius: 0.75rem;
+  border: 1px solid var(--paid-jam-line);
+  background: rgba(10, 30, 46, 0.55);
+}
+
+.paid-jam-reharm > div {
+  flex: 1 1 14rem;
+}
+
+.paid-jam-reharm > button {
+  min-height: 2.75rem;
+  padding: 0.55rem 1rem;
+  border-radius: 0.55rem;
+  border: 1px solid rgba(100, 156, 198, 0.28);
+  background: #12324a;
+  color: #e8f5fc;
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.paid-jam-reharm .paid-jam-field {
+  padding: 0;
+  min-width: 12rem;
+}
+
+.paid-jam-project-title {
+  padding: 0;
+  max-width: 28rem;
+}
+
+.paid-jam-status {
+  padding: 0.75rem 0.9rem;
+  border-radius: 0.55rem;
+  background: rgba(32, 102, 150, 0.2);
+  border: 1px solid rgba(69, 163, 228, 0.24);
+  color: #d7ebf8;
+  font-size: 1rem;
+}
+
+.paid-jam-muted {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  color: var(--paid-jam-muted);
+  font-size: 0.95rem;
+}
+
+.paid-jam-hint {
+  margin: 0;
+  color: #9eb6ca;
+  font-size: 0.92rem;
+}
+
+.paid-jam-spin {
+  animation: paid-jam-spin 0.9s linear infinite;
+}
+
+@keyframes paid-jam-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Timeline — Demo Station visual language, larger labels */
+.paid-jam-timeline {
+  display: grid;
+  gap: 0.7rem;
+}
+
+.paid-jam-section {
+  --section-accent: #4db8ff;
+  overflow: hidden;
+  border: 1px solid rgba(100, 156, 198, 0.15);
+  border-radius: 0.75rem;
+  background: rgba(7, 21, 34, 0.78);
+  cursor: pointer;
+  transition: border-color 140ms ease, box-shadow 140ms ease;
+}
+
+.paid-jam-section:hover,
+.paid-jam-section:focus-visible {
+  border-color: color-mix(in srgb, var(--section-accent) 45%, #315574);
+  outline: none;
+  box-shadow: inset 3px 0 var(--section-accent);
+}
+
+.paid-jam-section.is-active {
+  border-color: color-mix(in srgb, var(--section-accent) 65%, #315574);
+  box-shadow:
+    inset 3px 0 var(--section-accent),
+    0 0 28px color-mix(in srgb, var(--section-accent) 9%, transparent);
+}
+
+.paid-jam-section header {
+  min-height: 2.85rem;
+  padding: 0 0.9rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid rgba(102, 157, 198, 0.11);
+  background: rgba(14, 38, 57, 0.62);
+}
+
+.paid-jam-section header > div:first-child {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.paid-jam-section header > div:first-child span {
+  color: #8eacc2;
+  font-size: 0.72rem;
+  font-weight: 900;
+}
+
+.paid-jam-section header strong {
+  font-size: 1.05rem;
+}
+
+.paid-jam-section-meta {
+  display: flex;
+  gap: 0.4rem;
+}
+
+.paid-jam-section-meta span {
+  padding: 0.3rem 0.5rem;
+  color: #b4cce0;
+  border-radius: 0.35rem;
+  background: rgba(10, 25, 39, 0.65);
+  font-size: 0.72rem;
+  font-weight: 650;
+}
+
+.paid-jam-rows {
+  padding: 0.6rem;
+  display: grid;
+  gap: 0.5rem;
+}
+
+.paid-jam-row {
+  display: grid;
+  grid-template-columns: 2.2rem minmax(0, 1fr);
+  gap: 0.45rem;
+}
+
+.paid-jam-bar-numbers {
+  display: grid;
+  grid-template-rows: repeat(4, 1fr);
+  color: #8eacc2;
+  font-size: 0.62rem;
+}
+
+.paid-jam-bar-numbers span {
+  display: flex;
+  align-items: center;
+}
+
+.paid-jam-chord-lane {
+  position: relative;
+  height: 3.6rem;
+  overflow: hidden;
+  border: 1px solid rgba(83, 137, 177, 0.12);
+  border-radius: 0.45rem;
+  background: #071623;
+}
+
+.paid-jam-beat-grid {
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    to right,
+    transparent 0,
+    transparent calc(25% - 1px),
+    rgba(90, 140, 175, 0.12) calc(25% - 1px),
+    rgba(90, 140, 175, 0.12) 25%
+  );
+}
+
+.paid-jam-chord {
+  position: absolute;
+  top: 0.45rem;
+  bottom: 0.45rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 0.35rem;
+  border-radius: 0.35rem;
+  background: color-mix(in srgb, var(--section-accent) 28%, #0b2233);
+  border: 1px solid color-mix(in srgb, var(--section-accent) 45%, transparent);
+  color: #f2fbff;
+  font-size: 0.92rem;
+  font-weight: 750;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.paid-jam-chord.is-current {
+  background: color-mix(in srgb, var(--section-accent) 55%, #123047);
+  box-shadow: 0 0 16px color-mix(in srgb, var(--section-accent) 35%, transparent);
+}
+
+.paid-jam-playhead {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: #fff;
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.55);
+}
+
+@media (max-width: 980px) {
+  .paid-jam-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .paid-jam-library {
+    max-height: none;
+    border-right: 0;
+    border-bottom: 1px solid var(--paid-jam-line);
+  }
+
+  .paid-jam-connection {
+    grid-template-columns: auto 1fr;
+  }
+
+  .paid-jam-connection button {
+    grid-column: 1 / -1;
+  }
+
+  .paid-jam-readout {
+    margin-left: 0;
+    width: 100%;
+  }
+}

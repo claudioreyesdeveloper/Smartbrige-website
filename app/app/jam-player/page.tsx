@@ -1,5 +1,5 @@
 import type { Metadata } from "next"
-import { PlaceholderWorkspace } from "@/components/app-shell/placeholder-workspace"
+import { JamPlayerWorkspace } from "@/components/jam-player"
 import { ServiceAccessGate } from "@/components/app-shell/service-access-gate"
 import { SERVICE_CATALOG } from "@/components/app-shell/service-catalog"
 
@@ -12,10 +12,7 @@ export const metadata: Metadata = {
 export default function JamPlayerAppPage() {
   return (
     <ServiceAccessGate serviceKey="jam-player">
-      <PlaceholderWorkspace
-        title={service.name}
-        description={service.description}
-      />
+      <JamPlayerWorkspace />
     </ServiceAccessGate>
   )
 }
