@@ -27,40 +27,42 @@ function AppShellFrame({ children, email }: AppShellFrameProps) {
       </a>
 
       <div className="app-shell-layout">
-        <aside className="app-shell-sidebar" aria-label="Application">
-          <div className="app-shell-brand">
-            <Link href="/app" className="app-shell-brand-link">
-              SmartBridge
-            </Link>
-            <span className="app-shell-brand-badge">App</span>
+        <header className="app-shell-header">
+          <div className="app-shell-header-primary">
+            <div className="app-shell-brand">
+              <Link href="/app" className="app-shell-brand-link">
+                SmartBridge
+              </Link>
+              <span className="app-shell-brand-badge">App</span>
+            </div>
+
+            <ServiceNav entitlements={entitlements} />
+
+            <nav className="app-shell-utility-nav" aria-label="Account and support">
+              <Link
+                href="/app/account"
+                className={`app-shell-utility-link${pathname === "/app/account" ? " is-active" : ""}`}
+                aria-current={pathname === "/app/account" ? "page" : undefined}
+              >
+                Account
+              </Link>
+              <Link
+                href="/app/billing"
+                className={`app-shell-utility-link${pathname.startsWith("/app/billing") ? " is-active" : ""}`}
+                aria-current={pathname.startsWith("/app/billing") ? "page" : undefined}
+              >
+                Billing
+              </Link>
+              <Link href="/demo" className="app-shell-utility-link">
+                Public demo
+              </Link>
+              <Link href="/" className="app-shell-utility-link">
+                Website
+              </Link>
+            </nav>
           </div>
 
-          <ServiceNav entitlements={entitlements} />
-
-          <div className="app-shell-sidebar-foot">
-            <Link
-              href="/app/account"
-              className={`app-shell-sidebar-link${pathname === "/app/account" ? " is-active" : ""}`}
-            >
-              Account
-            </Link>
-            <Link
-              href="/app/billing"
-              className={`app-shell-sidebar-link${pathname.startsWith("/app/billing") ? " is-active" : ""}`}
-            >
-              Billing
-            </Link>
-            <Link href="/" className="app-shell-sidebar-link">
-              Marketing site
-            </Link>
-            <Link href="/demo" className="app-shell-sidebar-link">
-              Public demo
-            </Link>
-          </div>
-        </aside>
-
-        <div className="app-shell-main-column">
-          <header className="app-shell-topbar">
+          <div className="app-shell-context-bar">
             <div>
               {activeService ? (
                 <>
@@ -87,12 +89,12 @@ function AppShellFrame({ children, email }: AppShellFrameProps) {
             <p className="app-shell-topbar-note" role="status">
               {email ? `Signed in as ${email}` : "Signed-in workspace"}
             </p>
-          </header>
+          </div>
+        </header>
 
-          <main id="app-shell-main" className="app-shell-main">
-            {children}
-          </main>
-        </div>
+        <main id="app-shell-main" className="app-shell-main">
+          {children}
+        </main>
       </div>
     </div>
   )

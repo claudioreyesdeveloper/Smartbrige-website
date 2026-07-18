@@ -51,6 +51,26 @@
   border-color: rgba(245, 180, 70, 0.35);
 }
 
+.paid-jam.is-unsupported .paid-jam-lead,
+.paid-jam.is-unsupported .paid-jam-layout {
+  display: none;
+}
+
+.paid-jam.is-unsupported .paid-jam-banner-warning {
+  max-width: 44rem;
+  margin: clamp(2rem, 8vh, 6rem) auto;
+  padding: 1.5rem;
+}
+
+.paid-jam.is-unsupported .paid-jam-banner-warning strong {
+  font-size: 1.25rem;
+}
+
+.paid-jam.is-unsupported .paid-jam-banner-warning p {
+  margin-top: 0.4rem;
+  line-height: 1.55;
+}
+
 .paid-jam-banner-error {
   background: rgba(100, 25, 30, 0.32);
   border-color: rgba(248, 113, 113, 0.35);

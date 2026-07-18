@@ -572,7 +572,9 @@ export function JamPlayerWorkspace({ adapters: injected }: JamPlayerWorkspacePro
   const playing = playback.status === "playing"
 
   return (
-    <div className="paid-jam app-shell-workspace">
+    <div
+      className={`paid-jam app-shell-workspace${connection.browserSupported ? "" : " is-unsupported"}`}
+    >
       <p className="paid-jam-lead">
         Choose a song, connect your Yamaha, shape the arrangement, then play from the
         timeline.
@@ -583,7 +585,10 @@ export function JamPlayerWorkspace({ adapters: injected }: JamPlayerWorkspacePro
           <TriangleAlert size={22} aria-hidden="true" />
           <div>
             <strong>Use Chrome or Edge on a computer</strong>
-            <p>{connection.guidance}</p>
+            <p>
+              SmartBridge Jam requires desktop Chrome or Microsoft Edge. Phones,
+              tablets, Safari, and Firefox are not supported.
+            </p>
           </div>
         </div>
       )}

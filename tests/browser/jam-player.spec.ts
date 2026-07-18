@@ -320,6 +320,12 @@ test("paid Jam Player loads songs, timeline, and transport controls", async ({
   await page.goto("/app/jam-player")
 
   await expect(page.getByRole("heading", { name: "Jam Player", level: 1 })).toBeVisible()
+  await expect(page.getByRole("navigation", { name: "SmartBridge services" })).toBeVisible()
+  await expect(page.getByRole("link", { name: "Jam Player", exact: true })).toHaveAttribute(
+    "aria-current",
+    "page",
+  )
+  await expect(page.locator(".app-shell-sidebar")).toHaveCount(0)
   await expect(page.getByText(/Choose a song, connect your Yamaha/i)).toBeVisible()
   await expect(page.getByText("1 · Keyboard connection")).toBeVisible()
   await expect(page.getByRole("heading", { name: "Choose the musical feel" })).toBeVisible()
@@ -335,7 +341,7 @@ test("paid Jam Player loads songs, timeline, and transport controls", async ({
   await expect(page.getByLabel("Search styles")).toBeVisible()
   await expect(page.getByLabel("Loop full song")).toBeVisible()
   await expect(page.getByLabel("Reharmonization candidate")).toBeVisible()
-  // Style Maker stays out of the Jam workspace (sidebar roadmap entry may still exist).
+  // Style Maker stays out of the Jam workspace (the shell may still identify it as future).
   await expect(page.locator(".paid-jam")).not.toContainText(/Style Maker/i)
 
   const hierarchy = await page.evaluate(() => {
@@ -347,6 +353,14 @@ test("paid Jam Player loads songs, timeline, and transport controls", async ({
       performance: top(".paid-jam-performance-panel"),
       timeline: top(".paid-jam-timeline"),
       optionalHarmony: top(".paid-jam-reharm"),
+      navigationBottom:
+        document.querySelector(".app-shell-header")?.getBoundingClientRect().bottom ??
+        Number.MAX_SAFE_INTEGER,
+      workspaceTop:
+        document.querySelector(".paid-jam")?.getBoundingClientRect().top ??
+        Number.MAX_SAFE_INTEGER,
+      mainWidth:
+        document.querySelector(".app-shell-main")?.getBoundingClientRect().width ?? 0,
       overflow: document.documentElement.scrollWidth - window.innerWidth,
     }
   })
@@ -354,6 +368,8 @@ test("paid Jam Player loads songs, timeline, and transport controls", async ({
   expect(hierarchy.transform).toBeLessThan(hierarchy.performance)
   expect(hierarchy.performance).toBeLessThan(hierarchy.timeline)
   expect(hierarchy.timeline).toBeLessThan(hierarchy.optionalHarmony)
+  expect(hierarchy.navigationBottom).toBeLessThanOrEqual(hierarchy.workspaceTop)
+  expect(hierarchy.mainWidth).toBeGreaterThan(1100)
   expect(hierarchy.overflow).toBeLessThanOrEqual(1)
 
   if (testInfo.project.name === "desktop" || testInfo.project.name === "tablet") {

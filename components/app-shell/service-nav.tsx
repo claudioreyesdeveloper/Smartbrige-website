@@ -29,24 +29,45 @@ type ServiceNavProps = {
 
 export function ServiceNav({ entitlements }: ServiceNavProps) {
   const pathname = usePathname()
+  const available = entitlements.filter((service) => service.access === "active")
+  const unavailable = entitlements.filter((service) => service.access !== "active")
 
   return (
     <nav className="app-shell-nav" aria-label="SmartBridge services">
-      <Link
-        href="/app"
-        className={`app-shell-nav-item${pathname === "/app" ? " is-active" : ""}`}
-        aria-current={pathname === "/app" ? "page" : undefined}
-      >
-        <LayoutGrid size={18} aria-hidden="true" />
-        <span>Overview</span>
-      </Link>
+      <div className="app-shell-nav-primary">
+        <Link
+          href="/app"
+          className={`app-shell-nav-item${pathname === "/app" ? " is-active" : ""}`}
+          aria-current={pathname === "/app" ? "page" : undefined}
+        >
+          <LayoutGrid size={17} aria-hidden="true" />
+          <span>Overview</span>
+        </Link>
 
-      <ul className="app-shell-nav-list">
-        {entitlements.map((service) => {
+        <ul className="app-shell-nav-list">
+          {available.map((service) => {
+            const Icon = SERVICE_ICONS[service.key]
+            const isActive = pathname === service.path
+            return (
+              <li key={service.key}>
+                <Link
+                  href={service.path}
+                  className={`app-shell-nav-item${isActive ? " is-active" : ""}`}
+                  aria-current={isActive ? "page" : undefined}
+                >
+                  <Icon size={17} aria-hidden="true" />
+                  <span>{service.name}</span>
+                </Link>
+              </li>
+            )
+          })}
+        </ul>
+      </div>
+
+      <ul className="app-shell-nav-list app-shell-nav-unavailable" aria-label="Other services">
+        {unavailable.map((service) => {
           const Icon = SERVICE_ICONS[service.key]
-          const isActive = service.access === "active" && pathname === service.path
           const isComingSoon = service.access === "coming-soon"
-          const isUpgrade = service.access === "upgrade"
 
           if (isComingSoon) {
             return (
@@ -64,32 +85,17 @@ export function ServiceNav({ entitlements }: ServiceNavProps) {
             )
           }
 
-          if (isUpgrade) {
-            return (
-              <li key={service.key}>
-                <a
-                  href={service.upgradeHref}
-                  className="app-shell-nav-item is-upgrade"
-                >
-                  <Icon size={18} aria-hidden="true" />
-                  <span>{service.name}</span>
-                  <Lock size={14} aria-hidden="true" className="app-shell-nav-lock" />
-                  <span className="visually-hidden"> — upgrade required</span>
-                </a>
-              </li>
-            )
-          }
-
           return (
             <li key={service.key}>
-              <Link
-                href={service.path}
-                className={`app-shell-nav-item${isActive ? " is-active" : ""}`}
-                aria-current={isActive ? "page" : undefined}
+              <a
+                href={service.upgradeHref}
+                className="app-shell-nav-item is-upgrade"
               >
-                <Icon size={18} aria-hidden="true" />
+                <Icon size={16} aria-hidden="true" />
                 <span>{service.name}</span>
-              </Link>
+                <Lock size={12} aria-hidden="true" className="app-shell-nav-lock" />
+                <span className="visually-hidden"> — upgrade required</span>
+              </a>
             </li>
           )
         })}
