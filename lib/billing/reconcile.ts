@@ -16,14 +16,18 @@ export type ReconcileResult = {
   skippedUnknownPrice: string[]
 }
 
-export async function reconcileSubscriptionEntitlements(input: {
+export type ReconcilePlan = ReconcileResult & {
+  upserts: EntitlementUpsert[]
+}
+
+export async function planSubscriptionEntitlementReconciliation(input: {
   snapshot: StripeSubscriptionSnapshot
   userId: string
   eventCreatedAt: Date
   prices: ServicePriceStore
   entitlements: EntitlementStore
   now?: Date
-}): Promise<ReconcileResult> {
+}): Promise<ReconcilePlan> {
   const now = input.now ?? new Date()
   const mappings = await input.prices.listActiveMappings()
   const priceMap = new Map(mappings.map((row) => [row.stripePriceId, row]))
@@ -31,9 +35,10 @@ export async function reconcileSubscriptionEntitlements(input: {
   const applied: ServiceKey[] = []
   const skippedStale: ServiceKey[] = []
   const skippedUnknownPrice: string[] = []
+  const upserts: EntitlementUpsert[] = []
 
   if (input.snapshot.items.length === 0) {
-    return { applied, skippedStale, skippedUnknownPrice }
+    return { applied, skippedStale, skippedUnknownPrice, upserts }
   }
 
   for (const item of input.snapshot.items) {
@@ -76,11 +81,30 @@ export async function reconcileSubscriptionEntitlements(input: {
       validUntil: window.validUntil,
       eventCreatedAt: input.eventCreatedAt,
     }
-    await input.entitlements.upsert(upsert)
+    upserts.push(upsert)
     applied.push(mapping.serviceKey)
   }
 
-  return { applied, skippedStale, skippedUnknownPrice }
+  return { applied, skippedStale, skippedUnknownPrice, upserts }
+}
+
+export async function reconcileSubscriptionEntitlements(input: {
+  snapshot: StripeSubscriptionSnapshot
+  userId: string
+  eventCreatedAt: Date
+  prices: ServicePriceStore
+  entitlements: EntitlementStore
+  now?: Date
+}): Promise<ReconcileResult> {
+  const plan = await planSubscriptionEntitlementReconciliation(input)
+  for (const upsert of plan.upserts) {
+    await input.entitlements.upsert(upsert)
+  }
+  return {
+    applied: plan.applied,
+    skippedStale: plan.skippedStale,
+    skippedUnknownPrice: plan.skippedUnknownPrice,
+  }
 }
 
 export function resolveUserIdFromSubscriptionMetadata(

@@ -34,11 +34,28 @@ export interface WebhookEventStore {
   markProcessed(eventId: string, type: string, payloadHash: string): Promise<"inserted" | "duplicate">
 }
 
+export type AtomicWebhookCommit = {
+  eventId: string
+  type: string
+  payloadHash: string
+  entitlementUpserts: EntitlementUpsert[]
+}
+
+export type AtomicWebhookCommitResult = {
+  status: "inserted" | "duplicate"
+  appliedServiceIds: string[]
+}
+
+export interface AtomicWebhookStore {
+  commit(input: AtomicWebhookCommit): Promise<AtomicWebhookCommitResult>
+}
+
 export type BillingStores = {
   customers: BillingCustomerStore
   prices: ServicePriceStore
   entitlements: EntitlementStore
   webhookEvents: WebhookEventStore
+  atomicWebhooks: AtomicWebhookStore
 }
 
 export function createMemoryCustomerStore(
@@ -134,6 +151,75 @@ export function createMemoryWebhookEventStore(): WebhookEventStore & {
       }
       processed.set(eventId, { type, payloadHash })
       return "inserted"
+    },
+  }
+}
+
+export function createMemoryAtomicWebhookStore(input: {
+  entitlements: EntitlementStore & { rows: StoredEntitlement[] }
+  webhookEvents: WebhookEventStore & {
+    processed: Map<string, { type: string; payloadHash: string }>
+  }
+  failAfterEntitlements?: () => boolean
+}): AtomicWebhookStore {
+  let queue = Promise.resolve()
+
+  return {
+    async commit(commit) {
+      const execute = async (): Promise<AtomicWebhookCommitResult> => {
+        if (await input.webhookEvents.hasProcessed(commit.eventId)) {
+          return { status: "duplicate", appliedServiceIds: [] }
+        }
+
+        const entitlementSnapshot = input.entitlements.rows.map((row) => ({ ...row }))
+        const eventSnapshot = new Map(input.webhookEvents.processed)
+        const appliedServiceIds: string[] = []
+        try {
+          for (const upsert of commit.entitlementUpserts) {
+            const existing = await input.entitlements.getByUserAndService(
+              upsert.userId,
+              upsert.serviceKey,
+            )
+            if (existing && existing.updatedAt > upsert.eventCreatedAt) {
+              continue
+            }
+            await input.entitlements.upsert(upsert)
+            appliedServiceIds.push(upsert.serviceId)
+          }
+
+          if (input.failAfterEntitlements?.()) {
+            throw new Error("Simulated failure between entitlement and event writes")
+          }
+
+          const marked = await input.webhookEvents.markProcessed(
+            commit.eventId,
+            commit.type,
+            commit.payloadHash,
+          )
+          if (marked === "duplicate") {
+            return { status: "duplicate", appliedServiceIds: [] }
+          }
+          return { status: "inserted", appliedServiceIds }
+        } catch (error) {
+          input.entitlements.rows.splice(
+            0,
+            input.entitlements.rows.length,
+            ...entitlementSnapshot,
+          )
+          input.webhookEvents.processed.clear()
+          for (const [key, value] of eventSnapshot) {
+            input.webhookEvents.processed.set(key, value)
+          }
+          throw error
+        }
+      }
+
+      const result = queue.then(execute, execute)
+      queue = result.then(
+        () => undefined,
+        () => undefined,
+      )
+      return result
     },
   }
 }

@@ -1,14 +1,17 @@
 import { describe, expect, it, vi } from "vitest"
 import { createServiceCheckoutSession } from "@/lib/billing/checkout"
+import { createNeonAtomicWebhookStore } from "@/lib/billing/drizzle-stores"
 import { createBillingPortalSession } from "@/lib/billing/portal"
 import { BillingError } from "@/lib/billing/errors"
 import { reconcileSubscriptionEntitlements } from "@/lib/billing/reconcile"
 import {
+  createMemoryAtomicWebhookStore,
   createMemoryCustomerStore,
   createMemoryEntitlementStore,
   createMemoryPriceStore,
   createMemoryWebhookEventStore,
 } from "@/lib/billing/stores"
+import { isEntitlementCurrentlyActive } from "@/lib/auth/entitlement-logic"
 import type { ServicePriceMapping, StripeSubscriptionSnapshot } from "@/lib/billing/types"
 import { processStripeWebhook } from "@/lib/billing/webhook"
 import {
@@ -107,6 +110,50 @@ function fakeStripeEvent(input: {
     pending_webhooks: 0,
     request: null,
   } as Stripe.Event
+}
+
+function stripeSubscriptionObject(input: {
+  status?: Stripe.Subscription.Status
+  cancelAtPeriodEnd?: boolean
+  periodEnd?: Date
+  priceId?: string
+} = {}): Stripe.Subscription {
+  const periodEnd = input.periodEnd ?? new Date(NOW.getTime() + 30 * 24 * 3600 * 1000)
+  return {
+    id: "sub_jam",
+    object: "subscription",
+    status: input.status ?? "active",
+    customer: "cus_1",
+    cancel_at_period_end: input.cancelAtPeriodEnd ?? false,
+    canceled_at: null,
+    created: Math.floor(NOW.getTime() / 1000),
+    metadata: {
+      [BILLING_USER_METADATA_KEY]: "user-1",
+      [BILLING_SERVICE_METADATA_KEY]: "jam-player",
+    },
+    items: {
+      object: "list",
+      data: [
+        {
+          id: "si_jam",
+          object: "subscription_item",
+          created: Math.floor(NOW.getTime() / 1000),
+          current_period_start: Math.floor(
+            new Date("2026-07-01T00:00:00.000Z").getTime() / 1000,
+          ),
+          current_period_end: Math.floor(periodEnd.getTime() / 1000),
+          metadata: {},
+          price: {
+            id: input.priceId ?? "price_jam",
+            object: "price",
+            product: "prod_jam",
+          },
+        },
+      ],
+      has_more: false,
+      url: "",
+    },
+  } as unknown as Stripe.Subscription
 }
 
 function createFakeStripe(options?: {
@@ -307,6 +354,64 @@ describe("entitlement reconciliation", () => {
     expect(mixer?.stripeSubscriptionId).toBe("sub_mixer")
   })
 
+  it("keeps cancel-at-period-end access until but not at the exact boundary", async () => {
+    const prices = createMemoryPriceStore(ACTIVE_PRICES)
+    const entitlements = createMemoryEntitlementStore()
+    const periodEnd = new Date("2026-08-01T00:00:00.000Z")
+
+    await reconcileSubscriptionEntitlements({
+      snapshot: subscriptionSnapshot({
+        id: "sub_jam",
+        status: "active",
+        cancelAtPeriodEnd: true,
+        currentPeriodEnd: periodEnd,
+        items: [{ id: "si_jam", priceId: "price_jam", productId: "prod_jam", metadata: {} }],
+      }),
+      userId: "user-1",
+      eventCreatedAt: NOW,
+      prices,
+      entitlements,
+      now: NOW,
+    })
+
+    const jam = await entitlements.getByUserAndService("user-1", "jam-player")
+    expect(jam?.validUntil).toEqual(periodEnd)
+    expect(
+      jam &&
+        isEntitlementCurrentlyActive(
+          jam,
+          new Date(periodEnd.getTime() - 1),
+        ),
+    ).toBe(true)
+    expect(jam && isEntitlementCurrentlyActive(jam, periodEnd)).toBe(false)
+  })
+
+  it("does not hard-expire an active renewal at its reported period end", async () => {
+    const prices = createMemoryPriceStore(ACTIVE_PRICES)
+    const entitlements = createMemoryEntitlementStore()
+    const periodEnd = new Date("2026-07-15T00:00:00.000Z")
+
+    await reconcileSubscriptionEntitlements({
+      snapshot: subscriptionSnapshot({
+        id: "sub_jam",
+        status: "active",
+        cancelAtPeriodEnd: false,
+        currentPeriodEnd: periodEnd,
+        items: [{ id: "si_jam", priceId: "price_jam", productId: "prod_jam", metadata: {} }],
+      }),
+      userId: "user-1",
+      eventCreatedAt: NOW,
+      prices,
+      entitlements,
+      now: NOW,
+    })
+
+    const jam = await entitlements.getByUserAndService("user-1", "jam-player")
+    expect(jam?.status).toBe("active")
+    expect(jam?.validUntil).toBeNull()
+    expect(jam && isEntitlementCurrentlyActive(jam, NOW)).toBe(true)
+  })
+
   it("skips stale out-of-order entitlement updates", async () => {
     const prices = createMemoryPriceStore(ACTIVE_PRICES)
     const entitlements = createMemoryEntitlementStore([
@@ -377,44 +482,16 @@ describe("stripe webhook processing", () => {
     const entitlements = createMemoryEntitlementStore()
     const customers = createMemoryCustomerStore()
     const webhookEvents = createMemoryWebhookEventStore()
+    const atomicWebhooks = createMemoryAtomicWebhookStore({
+      entitlements,
+      webhookEvents,
+    })
     const constructEvent = vi.fn(() =>
       fakeStripeEvent({
         id: "evt_1",
         type: "customer.subscription.created",
         created: Math.floor(NOW.getTime() / 1000),
-        object: {
-          id: "sub_jam",
-          object: "subscription",
-          status: "active",
-          customer: "cus_1",
-          cancel_at_period_end: false,
-          canceled_at: null,
-          created: Math.floor(NOW.getTime() / 1000),
-          metadata: {
-            [BILLING_USER_METADATA_KEY]: "user-1",
-            [BILLING_SERVICE_METADATA_KEY]: "jam-player",
-          },
-          items: {
-            object: "list",
-            data: [
-              {
-                id: "si_jam",
-                object: "subscription_item",
-                created: Math.floor(NOW.getTime() / 1000),
-                current_period_start: Math.floor(NOW.getTime() / 1000),
-                current_period_end: Math.floor(NOW.getTime() / 1000) + 30 * 24 * 3600,
-                metadata: {},
-                price: {
-                  id: "price_jam",
-                  object: "price",
-                  product: "prod_jam",
-                },
-              },
-            ],
-            has_more: false,
-            url: "",
-          },
-        } as unknown as Stripe.Subscription,
+        object: stripeSubscriptionObject(),
       }),
     )
 
@@ -423,6 +500,7 @@ describe("stripe webhook processing", () => {
       prices,
       entitlements,
       webhookEvents,
+      atomicWebhooks,
       stripeVerifier: { constructEvent },
       webhookSecret: "whsec_test",
       now: NOW,
@@ -445,7 +523,139 @@ describe("stripe webhook processing", () => {
     expect(webhookEvents.processed.has("evt_1")).toBe(true)
   })
 
+  it("keeps access when an active renewal webhook arrives after the old period boundary", async () => {
+    const entitlements = createMemoryEntitlementStore()
+    const webhookEvents = createMemoryWebhookEventStore()
+    const event = fakeStripeEvent({
+      id: "evt_delayed_renewal",
+      type: "customer.subscription.updated",
+      created: Math.floor(NOW.getTime() / 1000),
+      object: stripeSubscriptionObject({
+        status: "active",
+        cancelAtPeriodEnd: false,
+        periodEnd: new Date("2026-07-15T00:00:00.000Z"),
+      }),
+    })
+
+    const result = await processStripeWebhook({
+      payload: '{"id":"evt_delayed_renewal"}',
+      signature: "t=1,v1=sig",
+      deps: {
+        customers: createMemoryCustomerStore(),
+        prices: createMemoryPriceStore(ACTIVE_PRICES),
+        entitlements,
+        webhookEvents,
+        atomicWebhooks: createMemoryAtomicWebhookStore({
+          entitlements,
+          webhookEvents,
+        }),
+        stripeVerifier: { constructEvent: () => event },
+        webhookSecret: "whsec_test",
+        now: NOW,
+      },
+    })
+
+    const jam = await entitlements.getByUserAndService("user-1", "jam-player")
+    expect(result.status).toBe("processed")
+    expect(jam?.status).toBe("active")
+    expect(jam?.validUntil).toBeNull()
+    expect(jam && isEntitlementCurrentlyActive(jam, NOW)).toBe(true)
+  })
+
+  it("rolls back entitlement writes when atomic processing fails before event commit", async () => {
+    const entitlements = createMemoryEntitlementStore()
+    const webhookEvents = createMemoryWebhookEventStore()
+    let fail = true
+    const atomicWebhooks = createMemoryAtomicWebhookStore({
+      entitlements,
+      webhookEvents,
+      failAfterEntitlements: () => fail,
+    })
+    const event = fakeStripeEvent({
+      id: "evt_retry",
+      type: "customer.subscription.created",
+      created: Math.floor(NOW.getTime() / 1000),
+      object: stripeSubscriptionObject(),
+    })
+    const deps = {
+      customers: createMemoryCustomerStore(),
+      prices: createMemoryPriceStore(ACTIVE_PRICES),
+      entitlements,
+      webhookEvents,
+      atomicWebhooks,
+      stripeVerifier: { constructEvent: () => event },
+      webhookSecret: "whsec_test",
+      now: NOW,
+    }
+
+    await expect(
+      processStripeWebhook({
+        payload: '{"id":"evt_retry"}',
+        signature: "t=1,v1=sig",
+        deps,
+      }),
+    ).rejects.toThrow(/between entitlement and event writes/)
+    expect(await entitlements.listByUser("user-1")).toEqual([])
+    expect(webhookEvents.processed.has("evt_retry")).toBe(false)
+
+    fail = false
+    const retried = await processStripeWebhook({
+      payload: '{"id":"evt_retry"}',
+      signature: "t=1,v1=sig",
+      deps,
+    })
+    expect(retried.status).toBe("processed")
+    expect(await entitlements.listByUser("user-1")).toHaveLength(1)
+    expect(webhookEvents.processed.has("evt_retry")).toBe(true)
+  })
+
+  it("allows exactly one concurrent duplicate to claim and apply the event", async () => {
+    const entitlements = createMemoryEntitlementStore()
+    const webhookEvents = createMemoryWebhookEventStore()
+    const event = fakeStripeEvent({
+      id: "evt_concurrent",
+      type: "customer.subscription.created",
+      created: Math.floor(NOW.getTime() / 1000),
+      object: stripeSubscriptionObject(),
+    })
+    const deps = {
+      customers: createMemoryCustomerStore(),
+      prices: createMemoryPriceStore(ACTIVE_PRICES),
+      entitlements,
+      webhookEvents,
+      atomicWebhooks: createMemoryAtomicWebhookStore({
+        entitlements,
+        webhookEvents,
+      }),
+      stripeVerifier: { constructEvent: () => event },
+      webhookSecret: "whsec_test",
+      now: NOW,
+    }
+
+    const results = await Promise.all([
+      processStripeWebhook({
+        payload: '{"id":"evt_concurrent"}',
+        signature: "t=1,v1=sig",
+        deps,
+      }),
+      processStripeWebhook({
+        payload: '{"id":"evt_concurrent"}',
+        signature: "t=1,v1=sig",
+        deps,
+      }),
+    ])
+
+    expect(results.map((result) => result.status).sort()).toEqual([
+      "duplicate",
+      "processed",
+    ])
+    expect(await entitlements.listByUser("user-1")).toHaveLength(1)
+    expect(webhookEvents.processed.size).toBe(1)
+  })
+
   it("rejects webhook calls without a valid signature", async () => {
+    const entitlements = createMemoryEntitlementStore()
+    const webhookEvents = createMemoryWebhookEventStore()
     await expect(
       processStripeWebhook({
         payload: "{}",
@@ -453,8 +663,12 @@ describe("stripe webhook processing", () => {
         deps: {
           customers: createMemoryCustomerStore(),
           prices: createMemoryPriceStore(ACTIVE_PRICES),
-          entitlements: createMemoryEntitlementStore(),
-          webhookEvents: createMemoryWebhookEventStore(),
+          entitlements,
+          webhookEvents,
+          atomicWebhooks: createMemoryAtomicWebhookStore({
+            entitlements,
+            webhookEvents,
+          }),
           stripeVerifier: {
             constructEvent: () => {
               throw new Error("No signatures found matching the expected signature for payload")
@@ -464,5 +678,45 @@ describe("stripe webhook processing", () => {
         },
       }),
     ).rejects.toThrow(/signature/i)
+  })
+})
+
+describe("Neon atomic webhook persistence", () => {
+  it("gates entitlement upserts on the event claim in one PostgreSQL statement", async () => {
+    const query = vi.fn(async (_statement: string, _params?: unknown[]) => [
+      { claimed: true, service_ids: ["svc-jam"] },
+    ])
+    const atomic = createNeonAtomicWebhookStore({ query } as never)
+
+    const result = await atomic.commit({
+      eventId: "evt_atomic",
+      type: "customer.subscription.updated",
+      payloadHash: "hash",
+      entitlementUpserts: [
+        {
+          userId: "user-1",
+          serviceId: "svc-jam",
+          serviceKey: "jam-player",
+          status: "active",
+          source: "stripe",
+          stripeSubscriptionId: "sub_jam",
+          stripeSubscriptionItemId: "si_jam",
+          validFrom: new Date("2026-07-01T00:00:00.000Z"),
+          validUntil: null,
+          eventCreatedAt: NOW,
+        },
+      ],
+    })
+
+    expect(query).toHaveBeenCalledTimes(1)
+    const statement = query.mock.calls[0]?.[0] as string
+    expect(statement).toMatch(/WITH claimed AS/)
+    expect(statement).toMatch(/ON CONFLICT \(id\) DO NOTHING/)
+    expect(statement).toMatch(/CROSS JOIN claimed/)
+    expect(statement).toMatch(/updated_at <= EXCLUDED\.updated_at/)
+    expect(result).toEqual({
+      status: "inserted",
+      appliedServiceIds: ["svc-jam"],
+    })
   })
 })

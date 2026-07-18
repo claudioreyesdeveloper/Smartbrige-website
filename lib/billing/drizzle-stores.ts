@@ -1,5 +1,6 @@
 import { and, eq } from "drizzle-orm"
-import { getDb, type AppDatabase } from "@/lib/db"
+import { neon, type NeonQueryFunction } from "@neondatabase/serverless"
+import { getDatabaseUrl, getDb, type AppDatabase } from "@/lib/db"
 import {
   servicePrices,
   services,
@@ -8,6 +9,7 @@ import {
 } from "@/lib/db/schema"
 import { isServiceKey, type ServiceKey } from "@/lib/services/catalog"
 import type {
+  AtomicWebhookStore,
   BillingCustomerStore,
   EntitlementStore,
   ServicePriceStore,
@@ -238,6 +240,111 @@ export function createDrizzleWebhookEventStore(
         .onConflictDoNothing()
         .returning({ id: stripeWebhookEvents.id })
       return inserted.length > 0 ? "inserted" : "duplicate"
+    },
+  }
+}
+
+type AtomicCommitRow = {
+  claimed: boolean
+  service_ids: string[] | null
+}
+
+/**
+ * Claims the webhook event and applies all entitlement changes in one
+ * PostgreSQL statement. The data-modifying CTE gates every upsert on the
+ * successful event insert, so a concurrent duplicate cannot write.
+ */
+export function createNeonAtomicWebhookStore(
+  sql: NeonQueryFunction<false, false> = neon(getDatabaseUrl()),
+): AtomicWebhookStore {
+  return {
+    async commit(input) {
+      const params: unknown[] = [input.eventId, input.type, input.payloadHash]
+
+      if (input.entitlementUpserts.length === 0) {
+        const rows = await sql.query(
+          `WITH claimed AS (
+             INSERT INTO stripe_webhook_events (id, type, payload_hash)
+             VALUES ($1, $2, $3)
+             ON CONFLICT (id) DO NOTHING
+             RETURNING id
+           )
+           SELECT EXISTS(SELECT 1 FROM claimed) AS claimed,
+                  ARRAY[]::text[] AS service_ids`,
+          params,
+        ) as AtomicCommitRow[]
+        return {
+          status: rows[0]?.claimed ? "inserted" : "duplicate",
+          appliedServiceIds: [],
+        }
+      }
+
+      const valueGroups = input.entitlementUpserts.map((upsert) => {
+        const start = params.length + 1
+        params.push(
+          upsert.userId,
+          upsert.serviceId,
+          upsert.status,
+          upsert.source,
+          upsert.stripeSubscriptionId,
+          upsert.stripeSubscriptionItemId,
+          upsert.validFrom.toISOString(),
+          upsert.validUntil?.toISOString() ?? null,
+          upsert.eventCreatedAt.toISOString(),
+        )
+        return `($${start}, $${start + 1}, $${start + 2}::entitlement_status,
+          $${start + 3}::entitlement_source, $${start + 4}, $${start + 5},
+          $${start + 6}::timestamp, $${start + 7}::timestamp,
+          $${start + 8}::timestamp)`
+      })
+
+      const rows = await sql.query(
+        `WITH claimed AS (
+           INSERT INTO stripe_webhook_events (id, type, payload_hash)
+           VALUES ($1, $2, $3)
+           ON CONFLICT (id) DO NOTHING
+           RETURNING id
+         ),
+         incoming (
+           user_id, service_id, status, source,
+           stripe_subscription_id, stripe_subscription_item_id,
+           valid_from, valid_until, updated_at
+         ) AS (
+           VALUES ${valueGroups.join(", ")}
+         ),
+         applied AS (
+           INSERT INTO user_entitlements (
+             user_id, service_id, status, source,
+             stripe_subscription_id, stripe_subscription_item_id,
+             valid_from, valid_until, updated_at
+           )
+           SELECT incoming.*
+           FROM incoming
+           CROSS JOIN claimed
+           WHERE true
+           ON CONFLICT (user_id, service_id) DO UPDATE SET
+             status = EXCLUDED.status,
+             source = EXCLUDED.source,
+             stripe_subscription_id = EXCLUDED.stripe_subscription_id,
+             stripe_subscription_item_id = EXCLUDED.stripe_subscription_item_id,
+             valid_from = EXCLUDED.valid_from,
+             valid_until = EXCLUDED.valid_until,
+             updated_at = EXCLUDED.updated_at
+           WHERE user_entitlements.updated_at <= EXCLUDED.updated_at
+           RETURNING service_id
+         )
+         SELECT EXISTS(SELECT 1 FROM claimed) AS claimed,
+                COALESCE(
+                  (SELECT array_agg(service_id) FROM applied),
+                  ARRAY[]::text[]
+                ) AS service_ids`,
+        params,
+      ) as AtomicCommitRow[]
+
+      return {
+        status: rows[0]?.claimed ? "inserted" : "duplicate",
+        appliedServiceIds: rows[0]?.service_ids ?? [],
+      }
     },
   }
 }

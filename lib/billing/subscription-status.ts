@@ -33,10 +33,12 @@ export function entitlementWindowFromSubscription(
   snapshot: StripeSubscriptionSnapshot,
 ): { validFrom: Date; validUntil: Date | null } {
   const validFrom = snapshot.currentPeriodStart ?? snapshot.created
+  const remainsActive =
+    snapshot.status === "active" || snapshot.status === "trialing"
   const validUntil =
-    snapshot.status === "canceled" || snapshot.cancelAtPeriodEnd
+    remainsActive && snapshot.cancelAtPeriodEnd
       ? snapshot.currentPeriodEnd
-      : snapshot.currentPeriodEnd
+      : null
   return { validFrom, validUntil }
 }
 

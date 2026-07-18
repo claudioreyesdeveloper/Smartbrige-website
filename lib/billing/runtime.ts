@@ -3,6 +3,7 @@ import {
   createDrizzleEntitlementStore,
   createDrizzlePriceStore,
   createDrizzleWebhookEventStore,
+  createNeonAtomicWebhookStore,
   createStripeMetadataCustomerStore,
 } from "@/lib/billing/drizzle-stores"
 import { getAppUrl, getStripeWebhookSecret } from "@/lib/billing/env"
@@ -20,6 +21,7 @@ export function createProductionBillingStores(): BillingStores {
     prices: createDrizzlePriceStore(),
     entitlements: createDrizzleEntitlementStore(),
     webhookEvents: createDrizzleWebhookEventStore(),
+    atomicWebhooks: createNeonAtomicWebhookStore(),
   }
 }
 
