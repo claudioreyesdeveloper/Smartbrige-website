@@ -2,6 +2,7 @@
 
 import { useState, type FormEvent } from "react"
 import { signIn } from "next-auth/react"
+import { VERIFY_REQUEST_PATH } from "@/lib/auth/verify-request"
 
 type SignInFormProps = {
   callbackUrl?: string
@@ -29,7 +30,7 @@ export function SignInForm({ callbackUrl = "/" }: SignInFormProps) {
         return
       }
 
-      window.location.assign(`/verify-request?email=${encodeURIComponent(email)}`)
+      window.location.assign(VERIFY_REQUEST_PATH)
     } catch {
       setError("Something went wrong while requesting a sign-in link.")
     } finally {

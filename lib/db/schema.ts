@@ -152,7 +152,7 @@ export const userEntitlements = pgTable(
   (table) => [
     index("user_entitlements_user_id_idx").on(table.userId),
     index("user_entitlements_service_id_idx").on(table.serviceId),
-    index("user_entitlements_user_service_idx").on(table.userId, table.serviceId),
+    uniqueIndex("user_entitlements_user_service_unique").on(table.userId, table.serviceId),
   ],
 )
 

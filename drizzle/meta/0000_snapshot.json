@@ -1,5 +1,5 @@
 {
-  "id": "a6977341-02f8-4b26-84a2-b2877e2d35e4",
+  "id": "fb11fe62-082a-4511-8112-e3ca12903a77",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -842,8 +842,8 @@
           "method": "btree",
           "with": {}
         },
-        "user_entitlements_user_service_idx": {
-          "name": "user_entitlements_user_service_idx",
+        "user_entitlements_user_service_unique": {
+          "name": "user_entitlements_user_service_unique",
           "columns": [
             {
               "expression": "user_id",
@@ -858,7 +858,7 @@
               "nulls": "last"
             }
           ],
-          "isUnique": false,
+          "isUnique": true,
           "concurrently": false,
           "method": "btree",
           "with": {}

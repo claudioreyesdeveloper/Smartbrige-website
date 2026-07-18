@@ -137,4 +137,4 @@ CREATE UNIQUE INDEX "services_key_unique" ON "services" USING btree ("key");--> 
 CREATE INDEX "stripe_webhook_events_processed_at_idx" ON "stripe_webhook_events" USING btree ("processed_at");--> statement-breakpoint
 CREATE INDEX "user_entitlements_user_id_idx" ON "user_entitlements" USING btree ("user_id");--> statement-breakpoint
 CREATE INDEX "user_entitlements_service_id_idx" ON "user_entitlements" USING btree ("service_id");--> statement-breakpoint
-CREATE INDEX "user_entitlements_user_service_idx" ON "user_entitlements" USING btree ("user_id","service_id");
+CREATE UNIQUE INDEX "user_entitlements_user_service_unique" ON "user_entitlements" USING btree ("user_id","service_id");

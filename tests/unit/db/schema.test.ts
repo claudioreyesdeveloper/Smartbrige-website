@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest"
 import { getTableName, getTableColumns } from "drizzle-orm"
+import { getTableConfig } from "drizzle-orm/pg-core"
 import {
   accounts,
   blobReferences,
@@ -54,6 +55,19 @@ describe("database schema", () => {
     const entitlementColumns = Object.keys(getTableColumns(userEntitlements))
     expect(entitlementColumns).toContain("serviceId")
     expect(entitlementColumns).not.toContain("serviceKey")
+  })
+
+  it("allows at most one entitlement per user and service", () => {
+    const config = getTableConfig(userEntitlements)
+    const uniqueIndex = config.indexes.find(
+      (candidate) => candidate.config.name === "user_entitlements_user_service_unique",
+    )
+
+    expect(uniqueIndex?.config.unique).toBe(true)
+    expect(uniqueIndex?.config.columns.map((column) => "name" in column && column.name)).toEqual([
+      "user_id",
+      "service_id",
+    ])
   })
 
   it("matches the independent service catalog keys", () => {
