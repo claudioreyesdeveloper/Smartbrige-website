@@ -1,4 +1,9 @@
 import { and, eq, isNull } from "drizzle-orm"
+import { cookies } from "next/headers"
+import {
+  ACCESS_FIXTURE_COOKIE,
+  parseAccessFixtureCookie,
+} from "@/lib/access/fixture"
 import {
   isEntitlementCurrentlyActive,
   listActiveServiceKeys,
@@ -13,7 +18,25 @@ import { isServiceKey } from "@/lib/db/services"
 
 export type { EntitlementRecord }
 
+async function readFixtureEntitlements(userId: string): Promise<EntitlementRecord[] | null> {
+  try {
+    const jar = await cookies()
+    const fixture = parseAccessFixtureCookie(jar.get(ACCESS_FIXTURE_COOKIE)?.value)
+    if (!fixture || fixture.userId !== userId) {
+      return null
+    }
+    return fixture.records
+  } catch {
+    return null
+  }
+}
+
 export async function getEntitlementRecordsForUser(userId: string): Promise<EntitlementRecord[]> {
+  const fixtureRecords = await readFixtureEntitlements(userId)
+  if (fixtureRecords) {
+    return fixtureRecords
+  }
+
   const db = getDb()
   const rows = await db
     .select({

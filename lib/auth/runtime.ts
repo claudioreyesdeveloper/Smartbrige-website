@@ -1,6 +1,11 @@
 import { DrizzleAdapter } from "@auth/drizzle-adapter"
+import { cookies } from "next/headers"
 import NextAuth from "next-auth"
 import Resend from "next-auth/providers/resend"
+import {
+  ACCESS_FIXTURE_COOKIE,
+  parseAccessFixtureCookie,
+} from "@/lib/access/fixture"
 import { getDb } from "@/lib/db"
 import { accounts, sessions, users, verificationTokens } from "@/lib/db/schema"
 
@@ -63,7 +68,20 @@ export async function signOut(...args: Parameters<AuthExports["signOut"]>) {
   return getAuthExports().signOut(...args)
 }
 
+async function readFixtureUserId(): Promise<string | null> {
+  try {
+    const jar = await cookies()
+    return parseAccessFixtureCookie(jar.get(ACCESS_FIXTURE_COOKIE)?.value)?.userId ?? null
+  } catch {
+    return null
+  }
+}
+
 export async function getSessionUserId(): Promise<string | null> {
+  const fixtureUserId = await readFixtureUserId()
+  if (fixtureUserId) {
+    return fixtureUserId
+  }
   const session = await auth()
   return session?.user?.id ?? null
 }
