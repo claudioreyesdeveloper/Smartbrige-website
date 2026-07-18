@@ -28,12 +28,27 @@ export type ProjectChord = {
   durationBeats?: number
 }
 
+export type ProjectMelodyNote = {
+  id: string
+  pitch: number
+  startTick: number
+  durationTicks: number
+  phraseId?: string
+}
+
+export type ProjectMelody = {
+  ppq: number
+  label?: string
+  notes: ProjectMelodyNote[]
+}
+
 export type ProjectSection = {
   id: string
   name: string
   stylePart?: ProjectStylePart
   chords: ProjectChord[]
   bars?: number
+  melody?: ProjectMelody
 }
 
 export type ProjectStyleRef = {
@@ -73,6 +88,7 @@ export type ProjectRecipe = {
 
 export type ProjectSoloTake = {
   id: string
+  sectionId?: string
   instrument?: string
   style?: string
   recipe: ProjectRecipe
@@ -85,11 +101,30 @@ export type ProjectLyricSyllable = {
   tick?: number
 }
 
+export type ProjectLyricsCreative = {
+  title: string
+  about: string
+  theme: string
+  mood: string
+  avoidWords: string
+}
+
+export type ProjectLyricAssignment = {
+  id: string
+  word: string
+  syllable: string
+  noteId: string
+}
+
 export type ProjectLyrics = {
   text?: string
   syllables?: ProjectLyricSyllable[]
   recipeReferenceId?: string
   renderReferenceId?: string
+  exportReferenceId?: string
+  sectionId?: string
+  creative?: ProjectLyricsCreative
+  assignments?: ProjectLyricAssignment[]
 }
 
 export type ProjectMixerChannel = {
@@ -257,6 +292,54 @@ function parseSection(raw: unknown, label: string): ProjectSection {
   if (stylePart !== undefined) section.stylePart = stylePart
   const bars = assertOptionalFiniteNumber(raw.bars, `${label}.bars`)
   if (bars !== undefined) section.bars = bars
+  if (raw.melody !== undefined) {
+    if (!isPlainObject(raw.melody) || !Array.isArray(raw.melody.notes)) {
+      throw new ProjectError("validation", `${label}.melody must contain notes.`)
+    }
+    const ppq = assertFiniteNumber(raw.melody.ppq, `${label}.melody.ppq`)
+    if (!Number.isInteger(ppq) || ppq < 24 || ppq > 9_600 || raw.melody.notes.length > 2_048) {
+      throw new ProjectError("validation", `${label}.melody is invalid.`)
+    }
+    section.melody = {
+      ppq,
+      notes: raw.melody.notes.map((item, index) => {
+        if (!isPlainObject(item)) {
+          throw new ProjectError("validation", `${label}.melody.notes[${index}] must be an object.`)
+        }
+        const pitch = assertFiniteNumber(item.pitch, `${label}.melody.notes[${index}].pitch`)
+        const startTick = assertFiniteNumber(
+          item.startTick,
+          `${label}.melody.notes[${index}].startTick`,
+        )
+        const durationTicks = assertFiniteNumber(
+          item.durationTicks,
+          `${label}.melody.notes[${index}].durationTicks`,
+        )
+        if (
+          !Number.isInteger(pitch) || pitch < 0 || pitch > 127 ||
+          !Number.isInteger(startTick) || startTick < 0 ||
+          !Number.isInteger(durationTicks) || durationTicks < 1
+        ) {
+          throw new ProjectError("validation", `${label}.melody.notes[${index}] is invalid.`)
+        }
+        const note: ProjectMelodyNote = {
+          id: assertString(item.id, `${label}.melody.notes[${index}].id`, 128),
+          pitch,
+          startTick,
+          durationTicks,
+        }
+        const phraseId = assertOptionalString(
+          item.phraseId,
+          `${label}.melody.notes[${index}].phraseId`,
+          128,
+        )
+        if (phraseId !== undefined) note.phraseId = phraseId
+        return note
+      }),
+    }
+    const melodyLabel = assertOptionalString(raw.melody.label, `${label}.melody.label`, 200)
+    if (melodyLabel !== undefined) section.melody.label = melodyLabel
+  }
   return section
 }
 
@@ -311,8 +394,10 @@ function parseSoloTake(raw: unknown, label: string): ProjectSoloTake {
   }
   const instrument = assertOptionalString(raw.instrument, `${label}.instrument`, 128)
   const style = assertOptionalString(raw.style, `${label}.style`, 128)
+  const sectionId = assertOptionalString(raw.sectionId, `${label}.sectionId`, 128)
   if (instrument !== undefined) take.instrument = instrument
   if (style !== undefined) take.style = style
+  if (sectionId !== undefined) take.sectionId = sectionId
   if (raw.selected !== undefined) take.selected = assertBoolean(raw.selected, `${label}.selected`)
   return take
 }
@@ -363,8 +448,45 @@ function parseLyrics(raw: unknown, label: string): ProjectLyrics | undefined {
     `${label}.renderReferenceId`,
     128,
   )
+  const exportReferenceId = assertOptionalString(
+    raw.exportReferenceId,
+    `${label}.exportReferenceId`,
+    128,
+  )
+  const sectionId = assertOptionalString(raw.sectionId, `${label}.sectionId`, 128)
   if (recipeReferenceId !== undefined) lyrics.recipeReferenceId = recipeReferenceId
   if (renderReferenceId !== undefined) lyrics.renderReferenceId = renderReferenceId
+  if (exportReferenceId !== undefined) lyrics.exportReferenceId = exportReferenceId
+  if (sectionId !== undefined) lyrics.sectionId = sectionId
+  if (raw.creative !== undefined) {
+    if (!isPlainObject(raw.creative)) {
+      throw new ProjectError("validation", `${label}.creative must be an object.`)
+    }
+    lyrics.creative = {
+      title: assertOptionalString(raw.creative.title, `${label}.creative.title`, 2_000) ?? "",
+      about: assertOptionalString(raw.creative.about, `${label}.creative.about`, 2_000) ?? "",
+      theme: assertOptionalString(raw.creative.theme, `${label}.creative.theme`, 2_000) ?? "",
+      mood: assertOptionalString(raw.creative.mood, `${label}.creative.mood`, 2_000) ?? "",
+      avoidWords:
+        assertOptionalString(raw.creative.avoidWords, `${label}.creative.avoidWords`, 2_000) ?? "",
+    }
+  }
+  if (raw.assignments !== undefined) {
+    if (!Array.isArray(raw.assignments) || raw.assignments.length > 2_048) {
+      throw new ProjectError("validation", `${label}.assignments is invalid.`)
+    }
+    lyrics.assignments = raw.assignments.map((item, index) => {
+      if (!isPlainObject(item)) {
+        throw new ProjectError("validation", `${label}.assignments[${index}] must be an object.`)
+      }
+      return {
+        id: assertString(item.id, `${label}.assignments[${index}].id`, 128),
+        word: assertString(item.word, `${label}.assignments[${index}].word`, 256),
+        syllable: assertString(item.syllable, `${label}.assignments[${index}].syllable`, 256),
+        noteId: assertString(item.noteId, `${label}.assignments[${index}].noteId`, 128),
+      }
+    })
+  }
   return lyrics
 }
 

@@ -13,6 +13,7 @@ import {
   TriangleAlert,
 } from "lucide-react"
 import { useEffect, useReducer, useRef, useState } from "react"
+import { createProductionLyricsWorkspaceAdapters } from "./production"
 import {
   initialLyricsWorkspaceState,
   lyricsWorkspaceReducer,
@@ -34,8 +35,8 @@ const INITIAL_CREATIVE: CreativeDirection = {
   avoidWords: "forever, fire",
 }
 
-export function LyricsWorkspace({ adapters }: { adapters?: LyricsAdapters }) {
-  const adaptersRef = useRef(adapters)
+export function LyricsWorkspace({ adapters: injected }: { adapters?: LyricsAdapters }) {
+  const adaptersRef = useRef(injected ?? createProductionLyricsWorkspaceAdapters())
   const client = adaptersRef.current
   const [state, dispatch] = useReducer(
     lyricsWorkspaceReducer,

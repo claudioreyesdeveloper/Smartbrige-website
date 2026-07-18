@@ -15,6 +15,7 @@ import {
   TriangleAlert,
 } from "lucide-react"
 import { useEffect, useReducer, useRef, useState } from "react"
+import { createProductionSoloPhrasesAdapters } from "./production"
 import {
   initialSoloWorkspaceState,
   soloWorkspaceReducer,
@@ -47,11 +48,11 @@ const EMPTY_SELECTIONS: SoloSelections = {
 }
 
 export function SoloPhrasesWorkspace({
-  adapters,
+  adapters: injected,
 }: {
-  adapters: SoloPhrasesAdapters
+  adapters?: SoloPhrasesAdapters
 }) {
-  const adaptersRef = useRef(adapters)
+  const adaptersRef = useRef(injected ?? createProductionSoloPhrasesAdapters())
   const activeAdapters = adaptersRef.current
   const [state, dispatch] = useReducer(
     soloWorkspaceReducer,

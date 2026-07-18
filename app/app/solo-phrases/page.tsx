@@ -2,6 +2,7 @@ import type { Metadata } from "next"
 import { ServiceAccessGate } from "@/components/app-shell/service-access-gate"
 import { SERVICE_CATALOG } from "@/components/app-shell/service-catalog"
 import { SoloPhrasesFixtureEntry } from "@/components/solo-phrases/fixture-entry"
+import { SoloPhrasesWorkspace } from "@/components/solo-phrases/solo-phrases-workspace"
 
 const service = SERVICE_CATALOG["solo-phrases"]
 
@@ -17,16 +18,7 @@ export default function SoloPhrasesAppPage() {
       {testFixtureEnabled ? (
         <SoloPhrasesFixtureEntry />
       ) : (
-        <section className="solo-compatibility-stop" role="alert">
-          <div>
-            <span>Service connection required</span>
-            <h2>Solo Phrases is not connected in this environment.</h2>
-            <p>
-              The first-release workspace requires an explicitly injected,
-              display-safe service adapter.
-            </p>
-          </div>
-        </section>
+        <SoloPhrasesWorkspace />
       )}
     </ServiceAccessGate>
   )
