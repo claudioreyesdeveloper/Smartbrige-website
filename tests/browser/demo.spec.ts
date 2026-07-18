@@ -190,6 +190,51 @@ test("Style Maker clearly requires a user donor file", async ({ page }, testInfo
   await expect(page.getByText("Drop your Yamaha style here")).toBeVisible()
   await expect(page.getByText(/Or click to browse/)).toBeVisible()
   await expect(page.getByText(/Nothing is uploaded to a server/i)).toBeVisible()
+  // Same factory-style picker as Jam Player (stylesForProfile + styleSelectCommand).
+  await expect(page.getByRole("combobox", { name: "Yamaha style" })).toBeVisible()
+  await expect(page.getByLabel("Search styles")).toBeVisible()
+  await expect(page.getByRole("combobox", { name: "Style category" })).toBeVisible()
+})
+
+test("Style Maker factory style pick sends the same SysEx as Jam Player", async ({
+  page,
+}, testInfo) => {
+  test.skip(testInfo.project.name !== "desktop", "Web MIDI routing is checked in Chromium")
+  await page.goto("/demo/style-maker")
+  await page.getByRole("button", { name: "Genos2" }).click()
+  await page.getByRole("button", { name: "Connect my keyboard" }).last().click()
+  await expect(page.getByRole("combobox", { name: "Yamaha style" })).toBeVisible()
+
+  await page.evaluate(() => {
+    ;(window as unknown as { __midiSends: unknown[] }).__midiSends = []
+  })
+  await page.getByRole("combobox", { name: "Yamaha style" }).selectOption({ index: 1 })
+  const styleSends = await page.evaluate(() =>
+    (window as unknown as { __midiSends: { data: number[] }[] }).__midiSends,
+  )
+  // styleSelectCommand header — identical to Jam Player demo.spec assertion.
+  expect(
+    styleSends.some(
+      ({ data }) => data.slice(0, 11).join(",") === "240,67,115,1,81,5,0,3,4,0,0",
+    ),
+  ).toBe(true)
+  expect(styleSends.filter(({ data }) => data.slice(0, 11).join(",") === "240,67,115,1,81,5,0,3,4,0,0").length).toBe(2)
+
+  await page.evaluate(() => {
+    ;(window as unknown as { __midiSends: unknown[] }).__midiSends = []
+  })
+  await page.getByLabel("Search styles").fill("JazzFunk")
+  await expect(page.locator(".style-maker-style-pick .style-catalog-controls > span")).toHaveText(
+    "JazzFunk",
+  )
+  const autocompleteSends = await page.evaluate(() =>
+    (window as unknown as { __midiSends: { data: number[] }[] }).__midiSends,
+  )
+  expect(
+    autocompleteSends.some(
+      ({ data }) => data.slice(0, 11).join(",") === "240,67,115,1,81,5,0,3,4,0,0",
+    ),
+  ).toBe(true)
 })
 
 test("Style Maker accepts a Yamaha donor style from the dropzone", async ({ page }, testInfo) => {

@@ -37,9 +37,14 @@ import {
   type SectionRecordTake,
 } from "@/lib/demo/section-record"
 import { StylePreviewPlayer } from "@/lib/demo/style-preview"
+import { styleSelectCommand } from "@/lib/demo/yamaha/commands"
 import { MusicsoftTransfer } from "@/lib/demo/yamaha/musicsoft-transfer"
+import {
+  styleMappingForEntry,
+  stylesForProfile,
+} from "@/lib/demo/yamaha/style-catalog"
 import { useMidiSession } from "@/lib/demo/yamaha/use-midi-session"
-import type { TransferProgress } from "@/lib/demo/types"
+import type { StyleCatalogEntry, TransferProgress } from "@/lib/demo/types"
 
 type Part = {
   id: string
@@ -138,6 +143,9 @@ export function StyleMakerDemo() {
   const [recordPhase, setRecordPhase] = useState<"idle" | "recording" | "drag">("idle")
   const [recordTake, setRecordTake] = useState<SectionRecordTake | null>(null)
   const [recordStatus, setRecordStatus] = useState("")
+  const [styleCategory, setStyleCategory] = useState("All")
+  const [styleSearch, setStyleSearch] = useState("")
+  const [styleKey, setStyleKey] = useState("")
   const preview = useRef<StylePreviewPlayer | null>(null)
   const donorInput = useRef<HTMLInputElement | null>(null)
   const recorder = useRef<SectionRecorder | null>(null)
@@ -185,6 +193,38 @@ export function StyleMakerDemo() {
     .map((section) => section.label)
   const exportBytes = workingStyle?.originalBytes || null
   const hasSavedSections = savedSectionLabels.length > 0
+
+  // Same factory-style catalog path as Jam Player demo (stylesForProfile + styleSelectCommand).
+  const availableStyles = useMemo(
+    () => (midi.profile ? stylesForProfile(midi.profile) : []),
+    [midi.profile],
+  )
+  const styleCategories = useMemo(
+    () => ["All", ...Array.from(new Set(availableStyles.map((style) => style.category))).sort()],
+    [availableStyles],
+  )
+  const filteredStyles = useMemo(() => {
+    const search = styleSearch.trim().toLowerCase()
+    return availableStyles.filter(
+      (style) =>
+        (styleCategory === "All" || style.category === styleCategory) &&
+        (!search || style.name.toLowerCase().includes(search)),
+    )
+  }, [availableStyles, styleCategory, styleSearch])
+  const entryKey = (style: StyleCatalogEntry) => `${style.styleNumber}:${style.name}`
+  const selectedStyle =
+    availableStyles.find((style) => entryKey(style) === styleKey) ||
+    availableStyles.find((style) => style.name === "EasyPop") ||
+    availableStyles[0]
+  const selectedStyleVisible =
+    selectedStyle && filteredStyles.some((style) => entryKey(style) === entryKey(selectedStyle))
+
+  useEffect(() => {
+    const first = availableStyles.find((style) => style.name === "EasyPop") || availableStyles[0]
+    setStyleKey(first ? entryKey(first) : "")
+    setStyleCategory("All")
+    setStyleSearch("")
+  }, [availableStyles])
 
   useEffect(() => {
     if (!workingStyle || !bass || !drums || !selectedSection) {
@@ -472,6 +512,17 @@ export function StyleMakerDemo() {
     setEngagements((value) => value + 2)
   }
 
+  const changeStyle = (next: StyleCatalogEntry) => {
+    setStyleKey(entryKey(next))
+    setStyleSearch(next.name)
+    if (midi.profile && midi.connected) {
+      // Same as JamScheduler.changeStyle → styleSelectCommand on both ports.
+      session.sendBoth(styleSelectCommand(styleMappingForEntry(midi.profile, next)))
+      setNotice(`${next.name} selected on your ${midi.profile.displayName}.`)
+      setEngagements((value) => value + 1)
+    }
+  }
+
   const startSectionRecord = () => {
     if (!midi.connected || !selectedSection || !donor || !recorder.current) {
       setNotice("Connect the Yamaha keyboard and choose a Main section first.")
@@ -479,6 +530,10 @@ export function StyleMakerDemo() {
     }
     stopPreview()
     try {
+      // Same as JamScheduler.start: re-send the selected factory style before arranging.
+      if (midi.profile && selectedStyle) {
+        session.sendBoth(styleSelectCommand(styleMappingForEntry(midi.profile, selectedStyle)))
+      }
       setRecordPhase("recording")
       setRecordTake(null)
       setRecordStatus("Recording…")
@@ -599,6 +654,69 @@ export function StyleMakerDemo() {
                 <i>{index + 1}</i>{step}
               </span>
             ))}
+          </div>
+        </section>
+
+        <section className="style-maker-style-pick" aria-label="Yamaha factory style">
+          <div className="panel-heading">
+            <div>
+              <span className="demo-eyebrow">Factory style</span>
+              <h2>Pick the Yamaha style</h2>
+            </div>
+            <p>Same catalog as Jam Player — selects the style on your keyboard via SysEx.</p>
+          </div>
+          <div className="style-catalog-controls">
+            <input
+              type="search"
+              list="style-maker-yamaha-style-suggestions"
+              value={styleSearch}
+              placeholder={`Search ${availableStyles.length} styles`}
+              aria-label="Search styles"
+              autoComplete="off"
+              onChange={(event) => {
+                const value = event.target.value
+                setStyleSearch(value)
+                const exact = availableStyles.find(
+                  (style) => style.name.toLowerCase() === value.trim().toLowerCase(),
+                )
+                if (exact) changeStyle(exact)
+              }}
+            />
+            <datalist id="style-maker-yamaha-style-suggestions">
+              {filteredStyles.map((style) => (
+                <option key={entryKey(style)} value={style.name}>
+                  {style.category}
+                </option>
+              ))}
+            </datalist>
+            <select
+              value={styleCategory}
+              aria-label="Style category"
+              onChange={(event) => setStyleCategory(event.target.value)}
+            >
+              {styleCategories.map((item) => (
+                <option key={item}>{item}</option>
+              ))}
+            </select>
+            <select
+              value={selectedStyleVisible && selectedStyle ? entryKey(selectedStyle) : ""}
+              aria-label="Yamaha style"
+              onChange={(event) => {
+                const next = availableStyles.find((style) => entryKey(style) === event.target.value)
+                if (next) changeStyle(next)
+              }}
+            >
+              <option value="" disabled>
+                {filteredStyles.length ? "Choose a matching style" : "No matching styles"}
+              </option>
+              {filteredStyles.map((style) => (
+                <option key={entryKey(style)} value={entryKey(style)}>
+                  {style.name}
+                  {style.bpm ? ` · ${style.bpm} BPM` : ""}
+                </option>
+              ))}
+            </select>
+            <span>{selectedStyle?.name || "No style available"}</span>
           </div>
         </section>
 

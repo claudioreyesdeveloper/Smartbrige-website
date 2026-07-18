@@ -1601,6 +1601,29 @@ body:has(.demo-station) .site-footer {
   line-height: 1.02;
 }
 
+.style-maker-style-pick {
+  margin: 0 0 1.2rem;
+  padding: 1rem 1.1rem 1.1rem;
+  border: 1px solid #2a4d66;
+  border-radius: 12px;
+  background: linear-gradient(180deg, #0c2436 0%, #091c2b 100%);
+}
+
+.style-maker-style-pick .panel-heading {
+  margin-bottom: 0.75rem;
+}
+
+.style-maker-style-pick .panel-heading h2 {
+  margin: 0.2rem 0 0;
+  font-size: 1.05rem;
+}
+
+.style-maker-style-pick .panel-heading p {
+  margin: 0.35rem 0 0;
+  color: #8fb0c6;
+  font-size: 0.82rem;
+}
+
 .style-steps {
   display: flex;
   gap: 0.25rem;
