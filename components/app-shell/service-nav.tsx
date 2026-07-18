@@ -54,7 +54,7 @@ export function ServiceNav({ entitlements }: ServiceNavProps) {
                 <span
                   className="app-shell-nav-item is-disabled"
                   aria-disabled="true"
-                  title="Style Maker is coming soon"
+                  title={`${service.name} is coming soon`}
                 >
                   <Icon size={18} aria-hidden="true" />
                   <span>{service.name}</span>

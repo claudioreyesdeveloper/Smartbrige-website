@@ -47,10 +47,20 @@ test("Style Maker nav entry is disabled without a workspace route", async ({ pag
   expect(response?.status()).toBe(404)
 })
 
-test("App shell sidebar links to public demo without changing demo routes", async ({ page }) => {
+test("App shell sidebar links to public demo without changing demo routes", async ({
+  page,
+}, testInfo) => {
   await page.goto("/app")
   await page.getByRole("link", { name: "Public demo" }).click()
   await expect(page).toHaveURL("/demo")
+  if (testInfo.project.name !== "desktop") {
+    await expect(
+      page.getByRole("heading", {
+        name: /Please open this demo in Chrome or Microsoft Edge/,
+      }),
+    ).toBeVisible()
+    return
+  }
   await expect(page.getByText("No login. No registration.")).toBeVisible()
 })
 
