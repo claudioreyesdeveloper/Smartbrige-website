@@ -1,61 +1,51 @@
 import type { MidiSendTarget } from "@/lib/yamaha/types"
 
-/** Opaque MIDI routing target from a server-precomputed plan. */
 export type DispatchTarget = MidiSendTarget
 
-/**
- * One precomputed MIDI outbound event.
- * Same-time order is the array order supplied by the server — never reordered.
- */
+/** Exact public/private prepare-contract event shape. */
 export type DispatchEvent = {
   atMs: number
   target: DispatchTarget
-  bytes: number[]
+  bytes: string
 }
 
-/** A playable slice (full song or one section) with opaque byte schedules. */
-export type DispatchPlanSlice = {
-  durationMs: number
-  events: DispatchEvent[]
-  /**
-   * When true, pause/resume are allowed.
-   * Absent or false means pause is rejected (not safely defined).
-   */
-  pauseSafe?: boolean
+export type TimeSignature = {
+  numerator: number
+  denominator: 1 | 2 | 4 | 8 | 16
 }
 
-export type DisplayTimelineChord = {
-  atMs: number
-  name: string
+export type DisplayChord = {
+  symbol: string
+  startBar: number
+  durationBars: number
 }
 
 export type DisplayTimelineSection = {
   id: string
-  label: string
-  startMs: number
-  endMs: number
-  chords?: DisplayTimelineChord[]
+  name: string
+  startBar: number
+  barCount: number
 }
 
-/** UI-only timeline metadata. Never used for MIDI decisions. */
+/** Exact public/private prepare-contract display shape. */
 export type DisplayTimeline = {
+  tempoBpm: number
+  key: string
+  timeSignature: TimeSignature
+  durationMs: number
   sections: DisplayTimelineSection[]
-  tempoBpm?: number
-  key?: string
-  timeSignature?: readonly [number, number]
+  chords: DisplayChord[]
 }
 
-/**
- * Opaque server-precomputed performance plan.
- * Contains no arranger/anticipation/reharmonization logic — only bytes + display.
- */
+/** Exact final response from private prepare and the A15 proxy. */
 export type PreparedPerformancePlan = {
   planId: string
-  engineVersion: string
   expiresAt: string
   display: DisplayTimeline
-  full: DispatchPlanSlice
-  sections: Record<string, DispatchPlanSlice>
+  dispatch: {
+    fullSong: DispatchEvent[]
+    sections: Record<string, DispatchEvent[]>
+  }
 }
 
 export type ValidatedDispatchEvent = {
@@ -67,17 +57,17 @@ export type ValidatedDispatchEvent = {
 export type ValidatedPlanSlice = {
   durationMs: number
   events: ValidatedDispatchEvent[]
-  pauseSafe: boolean
 }
 
 export type ValidatedPerformancePlan = {
   planId: string
-  engineVersion: string
   expiresAtMs: number
   expiresAt: string
   display: DisplayTimeline
-  full: ValidatedPlanSlice
-  sections: Record<string, ValidatedPlanSlice>
+  dispatch: {
+    fullSong: ValidatedPlanSlice
+    sections: Record<string, ValidatedPlanSlice>
+  }
 }
 
 export type DispatchSelection =
@@ -88,7 +78,6 @@ export type DispatchStatus =
   | "idle"
   | "ready"
   | "playing"
-  | "paused"
   | "stopped"
   | "completed"
   | "error"
@@ -97,14 +86,12 @@ export type DispatchPlaybackState = {
   status: DispatchStatus
   generation: number
   planId: string | null
-  engineVersion: string | null
   selection: DispatchSelection | null
   positionMs: number
   durationMs: number
   scheduledCount: number
   sentCount: number
   expiresAt: string | null
-  pauseSafe: boolean
   error: string | null
 }
 
@@ -120,15 +107,11 @@ export type DispatchTimer = {
   setTimeout(callback: () => void, delayMs: number): DispatchTimerHandle
 }
 
-/** Wall clock for plan expiry checks (separate from scheduling clock). */
 export type DispatchWallClock = {
   now(): number
 }
 
-/**
- * Minimal production YamahaMidiSession surface used by the dispatcher.
- * Does not depend on audition player types.
- */
+/** Minimal surface implemented by the production YamahaMidiSession. */
 export type DispatchMidiSession = {
   readonly state: { connected: boolean }
   send(data: Uint8Array, timestamp?: number, target?: MidiSendTarget): void
@@ -149,7 +132,6 @@ export type PlanDispatcherDeps = {
   session: DispatchMidiSession
   clock?: DispatchClock
   timer?: DispatchTimer
-  /** Defaults to Date.now — used only for expiry rejection. */
   wallClock?: DispatchWallClock
   lookaheadMs?: number
   scheduleIntervalMs?: number
@@ -165,19 +147,18 @@ export type PlanDispatcherStartOptions = {
 export const DEFAULT_LOOKAHEAD_MS = 100
 export const DEFAULT_SCHEDULE_INTERVAL_MS = 25
 
-/** Hard limits for opaque plan acceptance (fail closed). */
+/** Mirrors final contract limits where they affect browser acceptance. */
 export const PLAN_LIMITS = {
   maxSections: 64,
-  maxEventsPerSlice: 20_000,
-  maxTotalEvents: 100_000,
-  maxDurationMs: 30 * 60 * 1000,
-  maxBytesPerEvent: 256,
-  maxSysExBytes: 128,
+  maxFullSongEvents: 20_000,
+  maxEventsPerSection: 5_000,
+  maxDurationMs: 86_400_000,
+  maxBytesFieldChars: 16_384,
+  maxDecodedBytes: 12_288,
+  maxSysExBytes: 12_288,
   maxPlanIdLength: 128,
-  maxEngineVersionLength: 64,
-  maxDisplaySections: 128,
-  maxDisplayChordsPerSection: 512,
-  maxChordNameLength: 64,
+  maxDisplayChords: 512,
+  maxChordNameLength: 32,
   maxSectionIdLength: 64,
-  maxSectionLabelLength: 128,
+  maxSectionNameLength: 64,
 } as const

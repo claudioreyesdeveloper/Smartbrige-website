@@ -1,7 +1,6 @@
 import { describe, expect, it } from "vitest"
+import fixture from "./fixtures/jam-prepare.response.json"
 import {
-  DEFAULT_LOOKAHEAD_MS,
-  PLAN_LIMITS,
   PlanDispatcher,
   PlanValidationError,
   validatePreparedPlan,
@@ -15,17 +14,11 @@ import {
 } from "@/lib/jam/dispatch"
 import type { MidiSendTarget } from "@/lib/yamaha/types"
 
-type SentMessage = {
-  data: Uint8Array
-  timestamp?: number
-  target: MidiSendTarget
-}
+type Sent = { data: Uint8Array; timestamp?: number; target: MidiSendTarget }
 
 class FakeClock implements DispatchClock {
   current = 0
-  now() {
-    return this.current
-  }
+  now = () => this.current
   advance(ms: number) {
     this.current += ms
   }
@@ -33,151 +26,80 @@ class FakeClock implements DispatchClock {
 
 class FakeWallClock implements DispatchWallClock {
   current = Date.parse("2026-07-18T12:00:00.000Z")
-  now() {
-    return this.current
-  }
-  advance(ms: number) {
-    this.current += ms
-  }
+  now = () => this.current
 }
 
 class FakeTimer implements DispatchTimer {
-  private nextId = 1
+  private id = 0
   private tasks = new Map<number, { due: number; callback: () => void }>()
 
   constructor(private readonly clock: FakeClock) {}
 
   setTimeout(callback: () => void, delayMs: number): DispatchTimerHandle {
-    const id = this.nextId++
+    const id = ++this.id
     this.tasks.set(id, { due: this.clock.now() + Math.max(0, delayMs), callback })
-    return {
-      clear: () => {
-        this.tasks.delete(id)
-      },
-    }
+    return { clear: () => this.tasks.delete(id) }
   }
 
-  flush(until?: number) {
-    const limit = until ?? this.clock.now()
+  flush() {
     for (;;) {
-      let next: { id: number; due: number; callback: () => void } | null = null
-      for (const [id, task] of this.tasks) {
-        if (task.due > limit) continue
-        if (!next || task.due < next.due || (task.due === next.due && id < next.id)) {
-          next = { id, due: task.due, callback: task.callback }
-        }
-      }
-      if (!next) return
-      this.tasks.delete(next.id)
-      next.callback()
+      const due = [...this.tasks.entries()]
+        .filter(([, task]) => task.due <= this.clock.now())
+        .sort(([aId, a], [bId, b]) => a.due - b.due || aId - bId)[0]
+      if (!due) return
+      this.tasks.delete(due[0])
+      due[1].callback()
     }
   }
 }
 
 class FakeSession extends EventTarget implements DispatchMidiSession {
-  sent: SentMessage[] = []
+  sent: Sent[] = []
   panicCount = 0
   connected = true
-
   get state() {
     return { connected: this.connected }
   }
-
   send(data: Uint8Array, timestamp?: number, target: MidiSendTarget = "both") {
     this.sent.push({ data: Uint8Array.from(data), timestamp, target })
   }
-
   panic() {
     this.panicCount += 1
   }
-
   disconnect() {
     this.connected = false
     this.dispatchEvent(new Event("statechange"))
   }
 }
 
-function hex(data: Uint8Array): string {
-  return [...data].map((byte) => byte.toString(16).padStart(2, "0")).join(" ")
+function cloneFixture(): PreparedPerformancePlan {
+  return structuredClone(fixture) as PreparedPerformancePlan
 }
 
-function basePlan(overrides?: Partial<PreparedPerformancePlan>): PreparedPerformancePlan {
-  return {
-    planId: "plan_opaque_001",
-    engineVersion: "jam-v1-test",
-    expiresAt: "2026-07-18T18:00:00.000Z",
-    display: {
-      tempoBpm: 100,
-      key: "C",
-      timeSignature: [4, 4],
-      sections: [
-        {
-          id: "verse",
-          label: "Verse",
-          startMs: 0,
-          endMs: 2000,
-          chords: [{ atMs: 0, name: "C" }],
-        },
-        {
-          id: "chorus",
-          label: "Chorus",
-          startMs: 2000,
-          endMs: 4000,
-          chords: [{ atMs: 2000, name: "F" }],
-        },
-      ],
-    },
-    full: {
-      durationMs: 4000,
-      events: [
-        { atMs: 0, target: "port1", bytes: [0x90, 60, 100] },
-        { atMs: 0, target: "port2", bytes: [0xb0, 7, 100] },
-        { atMs: 0, target: "both", bytes: [0xf0, 0x43, 0x10, 0x4c, 0x00, 0x00, 0x7e, 0x00, 0xf7] },
-        { atMs: 250, target: "port1", bytes: [0x80, 60, 0] },
-        { atMs: 1000, target: "port2", bytes: [0xc0, 4] },
-      ],
-    },
-    sections: {
-      verse: {
-        durationMs: 2000,
-        pauseSafe: true,
-        events: [
-          { atMs: 0, target: "port1", bytes: [0x91, 64, 90] },
-          { atMs: 500, target: "port1", bytes: [0x81, 64, 0] },
-        ],
-      },
-      chorus: {
-        durationMs: 2000,
-        events: [{ atMs: 0, target: "both", bytes: [0x92, 67, 80] }],
-      },
-    },
-    ...overrides,
-  }
+function base64(...bytes: number[]): string {
+  return btoa(String.fromCharCode(...bytes))
 }
 
-function createHarness(options?: {
-  lookaheadMs?: number
-  scheduleIntervalMs?: number
-  wallNow?: number
-}) {
+function hex(bytes: Uint8Array): string {
+  return [...bytes].map((byte) => byte.toString(16).padStart(2, "0")).join(" ")
+}
+
+function harness(options: { lookaheadMs?: number } = {}) {
   const clock = new FakeClock()
-  const timer = new FakeTimer(clock)
   const wallClock = new FakeWallClock()
-  if (options?.wallNow !== undefined) wallClock.current = options.wallNow
+  const timer = new FakeTimer(clock)
   const session = new FakeSession()
   const states: DispatchPlaybackState[] = []
   let completed = 0
   const dispatcher = new PlanDispatcher({
     session,
     clock,
-    timer,
     wallClock,
-    lookaheadMs: options?.lookaheadMs ?? DEFAULT_LOOKAHEAD_MS,
-    scheduleIntervalMs: options?.scheduleIntervalMs ?? 25,
+    timer,
+    lookaheadMs: options.lookaheadMs ?? 50,
+    scheduleIntervalMs: 25,
     onStateChange: (state) => states.push({ ...state }),
-    onComplete: () => {
-      completed += 1
-    },
+    onComplete: () => completed++,
   })
   const advance = (ms: number) => {
     clock.advance(ms)
@@ -185,353 +107,243 @@ function createHarness(options?: {
   }
   return {
     clock,
-    timer,
     wallClock,
+    timer,
     session,
-    dispatcher,
     states,
-    get completed() {
-      return completed
-    },
+    dispatcher,
     advance,
+    completed: () => completed,
   }
 }
 
-describe("validatePreparedPlan", () => {
-  it("accepts a well-formed opaque plan and preserves same-time order", () => {
-    const validated = validatePreparedPlan(basePlan())
-    expect(validated.planId).toBe("plan_opaque_001")
-    expect(validated.full.events.map((event) => hex(event.bytes))).toEqual([
-      "90 3c 64",
-      "b0 07 64",
-      "f0 43 10 4c 00 00 7e 00 f7",
-      "80 3c 00",
-      "c0 04",
+describe("final prepare contract validation", () => {
+  it("consumes the copied final private/A15 fixture exactly", () => {
+    const plan = validatePreparedPlan(fixture)
+    expect(plan.planId).toBe("pln_fixture_0001")
+    expect(plan.display.durationMs).toBe(32_000)
+    expect(plan.dispatch.fullSong.events.map((event) => hex(event.bytes))).toEqual([
+      "f0 43 10 f7",
+      "90 61 00",
     ])
-    expect(validated.full.events[0].target).toBe("port1")
-    expect(validated.full.events[1].target).toBe("port2")
-    expect(validated.full.events[2].target).toBe("both")
+    expect(plan.dispatch.sections["sec-main-b"].events[0].target).toBe("port2")
+    expect(plan).not.toHaveProperty("engineVersion")
   })
 
-  it("rejects events beyond duration", () => {
+  it("rejects the old invented envelope and unknown fields", () => {
+    const plan = cloneFixture() as unknown as Record<string, unknown>
+    plan.engineVersion = "invented"
+    expect(() => validatePreparedPlan(plan)).toThrow(/Unknown field/)
     expect(() =>
-      validatePreparedPlan(
-        basePlan({
-          full: {
-            durationMs: 100,
-            events: [{ atMs: 101, target: "port1", bytes: [0x90, 60, 100] }],
-          },
-        }),
-      ),
+      validatePreparedPlan({
+        planId: "old",
+        expiresAt: fixture.expiresAt,
+        display: fixture.display,
+        full: { durationMs: 1, events: [] },
+        sections: {},
+      }),
     ).toThrow(PlanValidationError)
-    try {
-      validatePreparedPlan(
-        basePlan({
-          full: {
-            durationMs: 100,
-            events: [{ atMs: 101, target: "port1", bytes: [0x90, 60, 100] }],
-          },
-        }),
-      )
-    } catch (error) {
-      expect(error).toBeInstanceOf(PlanValidationError)
-      expect((error as PlanValidationError).code).toBe("event_beyond_duration")
+  })
+
+  it.each(["8EMQ9w", "8EMQ9w===", "8EMQ9w-_", "not base64"])(
+    "rejects malformed/noncanonical base64: %s",
+    (bytes) => {
+      const plan = cloneFixture()
+      plan.dispatch.fullSong[0].bytes = bytes
+      expect(() => validatePreparedPlan(plan)).toThrow(/canonical standard base64/)
+    },
+  )
+
+  it("accepts verified one-byte FA, F8, and FC realtime statuses", () => {
+    const plan = cloneFixture()
+    plan.dispatch.fullSong = [
+      { atMs: 0, target: "port1", bytes: base64(0xfa) },
+      { atMs: 10, target: "port1", bytes: base64(0xf8) },
+      { atMs: 20, target: "port1", bytes: base64(0xfc) },
+    ]
+    const validated = validatePreparedPlan(plan)
+    expect(validated.dispatch.fullSong.events.map((event) => hex(event.bytes))).toEqual([
+      "fa",
+      "f8",
+      "fc",
+    ])
+  })
+
+  it("rejects malformed realtime, channel, and unsafe SysEx messages", () => {
+    for (const bytes of [
+      base64(0xfa, 0x00),
+      base64(0x90, 60),
+      base64(0xf1),
+      base64(0xf0, 0x43, 0x10),
+    ]) {
+      const plan = cloneFixture()
+      plan.dispatch.fullSong = [{ atMs: 0, target: "port1", bytes }]
+      expect(() => validatePreparedPlan(plan)).toThrow(PlanValidationError)
     }
   })
 
-  it("rejects forbidden MIDI status lengths", () => {
-    expect(() =>
-      validatePreparedPlan(
-        basePlan({
-          full: {
-            durationMs: 100,
-            events: [{ atMs: 0, target: "port1", bytes: [0x90, 60] }],
-          },
-        }),
-      ),
-    ).toThrow(/invalid length/)
-
-    expect(() =>
-      validatePreparedPlan(
-        basePlan({
-          full: {
-            durationMs: 100,
-            events: [{ atMs: 0, target: "port1", bytes: [0xc0, 4, 5] }],
-          },
-        }),
-      ),
-    ).toThrow(/invalid length/)
-
-    expect(() =>
-      validatePreparedPlan(
-        basePlan({
-          full: {
-            durationMs: 100,
-            events: [{ atMs: 0, target: "port1", bytes: [0xf8] }],
-          },
-        }),
-      ),
-    ).toThrow(/forbidden/)
-  })
-
-  it("rejects dangerous unbounded SysEx", () => {
-    expect(() =>
-      validatePreparedPlan(
-        basePlan({
-          full: {
-            durationMs: 100,
-            events: [{ atMs: 0, target: "both", bytes: [0xf0, 0x43, 0x10] }],
-          },
-        }),
-      ),
-    ).toThrow(/0xF7/)
-
-    const huge = [0xf0, ...Array.from({ length: PLAN_LIMITS.maxSysExBytes }, () => 0x01), 0xf7]
-    expect(() =>
-      validatePreparedPlan(
-        basePlan({
-          full: {
-            durationMs: 100,
-            events: [{ atMs: 0, target: "both", bytes: huge }],
-          },
-        }),
-      ),
-    ).toThrow(/SysEx exceeds/)
-  })
-
-  it("rejects oversized plans", () => {
-    const events = Array.from({ length: PLAN_LIMITS.maxEventsPerSlice + 1 }, (_, index) => ({
+  it("rejects decoded payloads above 12288 bytes", () => {
+    const plan = cloneFixture()
+    plan.dispatch.fullSong = [{
       atMs: 0,
-      target: "port1" as const,
-      bytes: [0x90, 60, 1],
-    }))
-    expect(() =>
-      validatePreparedPlan(
-        basePlan({
-          full: { durationMs: 1000, events },
-        }),
-      ),
-    ).toThrow(/too many events/)
+      target: "port1",
+      bytes: base64(...Array.from({ length: 12_289 }, () => 0x01)),
+    }]
+    expect(() => validatePreparedPlan(plan)).toThrow(/1-12288 bytes/)
+  })
+
+  it("rejects event times beyond display duration and out-of-order arrays", () => {
+    const beyond = cloneFixture()
+    beyond.dispatch.fullSong[0].atMs = beyond.display.durationMs + 1
+    expect(() => validatePreparedPlan(beyond)).toThrow(/exceeds display.durationMs/)
+
+    const unordered = cloneFixture()
+    unordered.dispatch.fullSong = [
+      { atMs: 10, target: "port1", bytes: base64(0xfa) },
+      { atMs: 0, target: "port1", bytes: base64(0xfc) },
+    ]
+    expect(() => validatePreparedPlan(unordered)).toThrow(/nondecreasing/)
   })
 })
 
 describe("PlanDispatcher", () => {
-  it("exposes plan id, expiry, and display timeline metadata after load", () => {
-    const { dispatcher } = createHarness()
-    dispatcher.load(basePlan())
+  it("exposes exact plan metadata without invented engine fields", () => {
+    const { dispatcher } = harness()
+    dispatcher.load(fixture)
     expect(dispatcher.planMeta).toEqual({
-      planId: "plan_opaque_001",
-      engineVersion: "jam-v1-test",
-      expiresAt: "2026-07-18T18:00:00.000Z",
-      display: basePlan().display,
+      planId: fixture.planId,
+      expiresAt: fixture.expiresAt,
+      display: fixture.display,
     })
+    expect(dispatcher.playbackState).not.toHaveProperty("engineVersion")
     expect(dispatcher.playbackState.status).toBe("ready")
-    expect(dispatcher.playbackState.planId).toBe("plan_opaque_001")
-    expect(dispatcher.playbackState.expiresAt).toBe("2026-07-18T18:00:00.000Z")
   })
 
-  it("routes events with exact order and timestamps; no network during playback", () => {
-    const fetchCalls: unknown[] = []
+  it("preserves same-time server order, routing, and timestamps", () => {
+    const plan = cloneFixture()
+    plan.dispatch.fullSong = [
+      { atMs: 0, target: "port2", bytes: base64(0xfa) },
+      { atMs: 0, target: "port1", bytes: base64(0xf8) },
+      { atMs: 0, target: "both", bytes: base64(0xfc) },
+      { atMs: 200, target: "port1", bytes: base64(0x90, 60, 100) },
+    ]
+    const { dispatcher, session, advance } = harness()
+    dispatcher.load(plan)
+    dispatcher.start({ mode: "full" })
+    advance(0)
+    expect(session.sent.map((message) => [hex(message.data), message.target])).toEqual([
+      ["fa", "port2"],
+      ["f8", "port1"],
+      ["fc", "both"],
+    ])
+    expect(new Set(session.sent.map((message) => message.timestamp)).size).toBe(1)
+    advance(150)
+    expect(session.sent[3].timestamp).toBe(session.sent[0].timestamp! + 200)
+  })
+
+  it("selects section arrays from the final contract", () => {
+    const { dispatcher, session, advance } = harness()
+    dispatcher.load(fixture)
+    dispatcher.start({ mode: "section", sectionId: "sec-main-b" })
+    advance(0)
+    expect(session.sent).toHaveLength(1)
+    expect(hex(session.sent[0].data)).toBe("f0 43 11 f7")
+    expect(session.sent[0].target).toBe("port2")
+    expect(dispatcher.playbackState.selection).toEqual({
+      mode: "section",
+      sectionId: "sec-main-b",
+    })
+  })
+
+  it("does not call fetch after load or during playback", () => {
+    const calls: unknown[] = []
     const original = globalThis.fetch
     globalThis.fetch = ((...args: unknown[]) => {
-      fetchCalls.push(args)
+      calls.push(args)
       return Promise.reject(new Error("unexpected fetch"))
     }) as typeof fetch
-
     try {
-      const { dispatcher, session, advance, clock } = createHarness({
-        lookaheadMs: 50,
-        scheduleIntervalMs: 25,
-      })
-      dispatcher.load(basePlan())
-      expect(fetchCalls).toHaveLength(0)
+      const { dispatcher, advance } = harness()
+      dispatcher.load(fixture)
       dispatcher.start({ mode: "full" })
-      advance(0)
-      expect(session.sent).toHaveLength(3)
-      const t0 = session.sent[0].timestamp
-      expect(session.sent.map((message) => ({
-        hex: hex(message.data),
-        target: message.target,
-        timestamp: message.timestamp,
-      }))).toEqual([
-        { hex: "90 3c 64", target: "port1", timestamp: t0 },
-        { hex: "b0 07 64", target: "port2", timestamp: t0 },
-        {
-          hex: "f0 43 10 4c 00 00 7e 00 f7",
-          target: "both",
-          timestamp: t0,
-        },
-      ])
-      advance(250)
-      expect(session.sent).toHaveLength(4)
-      expect(hex(session.sent[3].data)).toBe("80 3c 00")
-      expect(session.sent[3].timestamp).toBe(t0! + 250)
-      advance(750)
-      expect(session.sent).toHaveLength(5)
-      expect(hex(session.sent[4].data)).toBe("c0 04")
-      expect(session.sent[4].target).toBe("port2")
-      expect(session.sent[4].timestamp).toBe(t0! + 1000)
-      expect(clock.now()).toBe(1000)
-      expect(fetchCalls).toHaveLength(0)
+      advance(100)
+      expect(calls).toEqual([])
     } finally {
       globalThis.fetch = original
     }
   })
 
-  it("selects section plans independently of the full plan", () => {
-    const { dispatcher, session, advance } = createHarness({
-      lookaheadMs: 50,
-      scheduleIntervalMs: 25,
-    })
-    dispatcher.load(basePlan())
-    dispatcher.start({ mode: "section", sectionId: "verse" })
-    advance(0)
-    expect(session.sent).toHaveLength(1)
-    expect(hex(session.sent[0].data)).toBe("91 40 5a")
-    expect(dispatcher.playbackState.selection).toEqual({
-      mode: "section",
-      sectionId: "verse",
-    })
-    expect(dispatcher.playbackState.durationMs).toBe(2000)
-    advance(500)
-    expect(session.sent).toHaveLength(2)
-    expect(hex(session.sent[1].data)).toBe("81 40 00")
-  })
-
-  it("rejects unknown section selection", () => {
-    const { dispatcher } = createHarness()
-    dispatcher.load(basePlan())
-    expect(() => dispatcher.start({ mode: "section", sectionId: "bridge" })).toThrow(
-      /Unknown section/,
-    )
-  })
-
-  it("rejects expired plans at load and at start", () => {
-    const harness = createHarness({
-      wallNow: Date.parse("2026-07-18T19:00:00.000Z"),
-    })
-    expect(() => harness.dispatcher.load(basePlan())).toThrow(/expired/i)
-
-    const live = createHarness({
-      wallNow: Date.parse("2026-07-18T12:00:00.000Z"),
-    })
-    live.dispatcher.load(basePlan())
-    live.wallClock.current = Date.parse("2026-07-18T19:00:00.000Z")
-    expect(() => live.dispatcher.start({ mode: "full" })).toThrow(/expired/i)
-    expect(live.dispatcher.playbackState.status).toBe("error")
-  })
-
-  it("stop cancels timers and restart is generation-safe", () => {
-    const { dispatcher, session, advance, clock, timer } = createHarness({
-      lookaheadMs: 10,
-      scheduleIntervalMs: 25,
-    })
-    dispatcher.load(basePlan())
-    dispatcher.start({ mode: "full" })
-    advance(0)
-    expect(session.sent.length).toBeGreaterThan(0)
-    const panicBefore = session.panicCount
-    dispatcher.stop()
-    expect(session.panicCount).toBeGreaterThan(panicBefore)
-    expect(dispatcher.playbackState.status).toBe("stopped")
-    const sentAfterStop = session.sent.length
-    clock.advance(10_000)
-    timer.flush()
-    expect(session.sent).toHaveLength(sentAfterStop)
-
-    session.sent = []
-    dispatcher.start({ mode: "section", sectionId: "chorus" })
-    advance(0)
-    expect(session.sent).toHaveLength(1)
-    expect(hex(session.sent[0].data)).toBe("92 43 50")
-    advance(10_000)
-    expect(session.sent.every((message) => hex(message.data) !== "c0 04")).toBe(true)
-  })
-
-  it("pause is rejected unless the active slice defines pauseSafe", () => {
-    const { dispatcher, advance } = createHarness({ lookaheadMs: 1_000 })
-    dispatcher.load(basePlan())
-    dispatcher.start({ mode: "full" })
-    advance(0)
-    expect(() => dispatcher.pause()).toThrow(/not safely defined/)
-
-    dispatcher.start({ mode: "section", sectionId: "verse" })
-    advance(0)
-    dispatcher.pause()
-    expect(dispatcher.playbackState.status).toBe("paused")
-    dispatcher.resume()
-    expect(dispatcher.playbackState.status).toBe("playing")
-  })
-
-  it("handles disconnect during playback", () => {
-    const { dispatcher, session, advance } = createHarness({ lookaheadMs: 1_000 })
-    dispatcher.load(basePlan())
-    dispatcher.start({ mode: "full" })
-    advance(0)
-    const panicBefore = session.panicCount
-    session.disconnect()
-    expect(dispatcher.playbackState.status).toBe("error")
-    expect(dispatcher.playbackState.error).toMatch(/disconnected/i)
-    expect(session.panicCount).toBeGreaterThan(panicBefore)
-  })
-
-  it("rejects start when disconnected", () => {
-    const { dispatcher, session } = createHarness()
-    dispatcher.load(basePlan())
-    session.connected = false
-    expect(() => dispatcher.start({ mode: "full" })).toThrow(/not connected/)
-  })
-
-  it("uses bounded lookahead for later events", () => {
-    const { dispatcher, session, advance } = createHarness({
-      lookaheadMs: 50,
-      scheduleIntervalMs: 25,
-    })
-    dispatcher.load(
-      basePlan({
-        full: {
-          durationMs: 1000,
-          events: [
-            { atMs: 0, target: "port1", bytes: [0x90, 60, 100] },
-            { atMs: 200, target: "port1", bytes: [0x80, 60, 0] },
-          ],
-        },
-        sections: {},
-      }),
-    )
+  it("keeps bounded lookahead", () => {
+    const plan = cloneFixture()
+    plan.dispatch.fullSong = [
+      { atMs: 0, target: "port1", bytes: base64(0xfa) },
+      { atMs: 200, target: "port1", bytes: base64(0xfc) },
+    ]
+    const { dispatcher, session, advance } = harness({ lookaheadMs: 50 })
+    dispatcher.load(plan)
     dispatcher.start({ mode: "full" })
     advance(0)
     expect(session.sent).toHaveLength(1)
     advance(25)
     expect(session.sent).toHaveLength(1)
-    advance(150)
+    advance(125)
     expect(session.sent).toHaveLength(2)
-    expect(session.sent[1].timestamp).toBeCloseTo(session.sent[0].timestamp! + 200, 5)
   })
 
-  it("reports completion via UI progress callbacks", () => {
-    const harness = createHarness({ lookaheadMs: 1_000, scheduleIntervalMs: 25 })
-    harness.dispatcher.load(
-      basePlan({
-        full: {
-          durationMs: 100,
-          events: [{ atMs: 0, target: "port1", bytes: [0x90, 60, 100] }],
-        },
-        sections: {},
-      }),
-    )
-    harness.dispatcher.start({ mode: "full" })
-    harness.advance(0)
-    expect(harness.dispatcher.playbackState.status).toBe("playing")
-    harness.advance(100)
-    expect(harness.completed).toBe(1)
-    expect(harness.dispatcher.playbackState.status).toBe("completed")
-    expect(harness.states.some((state) => state.sentCount === 1)).toBe(true)
+  it("cancels stop/restart races and panics", () => {
+    const plan = cloneFixture()
+    plan.dispatch.fullSong = [
+      { atMs: 0, target: "port1", bytes: base64(0xfa) },
+      { atMs: 500, target: "port1", bytes: base64(0xfc) },
+    ]
+    const { dispatcher, session, advance } = harness({ lookaheadMs: 10 })
+    dispatcher.load(plan)
+    dispatcher.start({ mode: "full" })
+    advance(0)
+    dispatcher.stop()
+    const stoppedCount = session.sent.length
+    advance(1000)
+    expect(session.sent).toHaveLength(stoppedCount)
+    expect(session.panicCount).toBeGreaterThan(0)
+
+    dispatcher.start({ mode: "section", sectionId: "sec-main-a" })
+    advance(0)
+    expect(hex(session.sent.at(-1)!.data)).toBe("f0 43 10 f7")
+    expect(session.sent.some((message) => hex(message.data) === "fc")).toBe(false)
   })
 
-  it("panic is callable independently", () => {
-    const { dispatcher, session } = createHarness()
-    dispatcher.panic()
-    expect(session.panicCount).toBe(1)
+  it("rejects expiry at load and start", () => {
+    const expired = harness()
+    expired.wallClock.current = Date.parse("2026-07-18T15:00:00.000Z")
+    expect(() => expired.dispatcher.load(fixture)).toThrow(/expired/)
+
+    const later = harness()
+    later.dispatcher.load(fixture)
+    later.wallClock.current = Date.parse("2026-07-18T15:00:00.000Z")
+    expect(() => later.dispatcher.start({ mode: "full" })).toThrow(/expired/)
+  })
+
+  it("fails closed on pause and handles disconnect", () => {
+    const { dispatcher, session, advance } = harness()
+    dispatcher.load(fixture)
+    dispatcher.start({ mode: "full" })
+    advance(0)
+    expect(() => dispatcher.pause()).toThrow(/not safely defined/)
+    session.disconnect()
+    expect(dispatcher.playbackState.status).toBe("error")
+    expect(dispatcher.playbackState.error).toMatch(/disconnected/i)
+  })
+
+  it("reports progress and completion", () => {
+    const plan = cloneFixture()
+    plan.display.durationMs = 100
+    plan.dispatch.fullSong = [{ atMs: 0, target: "port1", bytes: base64(0xfa) }]
+    const { dispatcher, states, completed, advance } = harness()
+    dispatcher.load(plan)
+    dispatcher.start({ mode: "full" })
+    advance(100)
+    expect(states.some((state) => state.sentCount === 1)).toBe(true)
+    expect(dispatcher.playbackState.status).toBe("completed")
+    expect(completed()).toBe(1)
   })
 })

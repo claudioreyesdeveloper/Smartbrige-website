@@ -1,10 +1,11 @@
 import {
   PLAN_LIMITS,
   type DispatchTarget,
+  type DisplayChord,
   type DisplayTimeline,
-  type DisplayTimelineChord,
   type DisplayTimelineSection,
   type PreparedPerformancePlan,
+  type TimeSignature,
   type ValidatedDispatchEvent,
   type ValidatedPerformancePlan,
   type ValidatedPlanSlice,
@@ -21,392 +22,307 @@ export class PlanValidationError extends Error {
 }
 
 const TARGETS = new Set<DispatchTarget>(["port1", "port2", "both"])
+const ID_PATTERN = /^[A-Za-z0-9._:-]+$/
+const STANDARD_BASE64 =
+  /^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/
+const REALTIME_STATUSES = new Set([0xf8, 0xfa, 0xfc])
+const DENOMINATORS = new Set([1, 2, 4, 8, 16])
+
+function fail(code: string, message: string): never {
+  throw new PlanValidationError(code, message)
+}
 
 function isPlainObject(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value)
 }
 
-function assertFiniteNumber(value: unknown, code: string, label: string): number {
-  if (typeof value !== "number" || !Number.isFinite(value)) {
-    throw new PlanValidationError(code, `${label} must be a finite number.`)
+function exactKeys(
+  value: Record<string, unknown>,
+  allowed: readonly string[],
+  path: string,
+): void {
+  for (const key of Object.keys(value)) {
+    if (!allowed.includes(key)) fail("malformed_plan", `Unknown field: ${path}.${key}`)
+  }
+}
+
+function integer(
+  value: unknown,
+  path: string,
+  min: number,
+  max: number,
+): number {
+  if (typeof value !== "number" || !Number.isInteger(value) || value < min || value > max) {
+    fail("malformed_plan", `${path} must be an integer from ${min} to ${max}.`)
   }
   return value
 }
 
-function assertNonNegativeMs(value: unknown, code: string, label: string): number {
-  const n = assertFiniteNumber(value, code, label)
-  if (n < 0) {
-    throw new PlanValidationError(code, `${label} must be >= 0.`)
+function text(value: unknown, path: string, max: number, pattern?: RegExp): string {
+  if (
+    typeof value !== "string" ||
+    value.length < 1 ||
+    value.length > max ||
+    (pattern && !pattern.test(value))
+  ) {
+    fail("malformed_plan", `${path} is invalid.`)
   }
-  return n
+  return value
 }
 
-function expectedChannelByteLength(status: number): number | null {
+function encodeBase64(bytes: Uint8Array): string {
+  let binary = ""
+  const chunkSize = 0x8000
+  for (let offset = 0; offset < bytes.length; offset += chunkSize) {
+    binary += String.fromCharCode(...bytes.subarray(offset, offset + chunkSize))
+  }
+  return btoa(binary)
+}
+
+/** Decode strict canonical standard-base64 without accepting URL-safe or loose padding. */
+export function decodeCanonicalBase64(value: unknown, path: string): Uint8Array {
+  if (typeof value !== "string" || value.length < 4 || !STANDARD_BASE64.test(value)) {
+    fail("malformed_base64", `${path} must be canonical standard base64.`)
+  }
+  if (value.length > PLAN_LIMITS.maxBytesFieldChars) {
+    fail(
+      "oversized_event",
+      `${path} must decode to 1-${PLAN_LIMITS.maxDecodedBytes} bytes.`,
+    )
+  }
+
+  let decoded: string
+  try {
+    decoded = atob(value)
+  } catch {
+    fail("malformed_base64", `${path} must be canonical standard base64.`)
+  }
+  if (decoded.length < 1 || decoded.length > PLAN_LIMITS.maxDecodedBytes) {
+    fail(
+      "oversized_event",
+      `${path} must decode to 1-${PLAN_LIMITS.maxDecodedBytes} bytes.`,
+    )
+  }
+  const bytes = Uint8Array.from(decoded, (character) => character.charCodeAt(0))
+  if (encodeBase64(bytes) !== value) {
+    fail("malformed_base64", `${path} must use canonical standard-base64 padding.`)
+  }
+  return bytes
+}
+
+function expectedChannelLength(status: number): number | null {
   const type = status & 0xf0
   if (type === 0xc0 || type === 0xd0) return 2
-  if (
-    type === 0x80 ||
-    type === 0x90 ||
-    type === 0xa0 ||
-    type === 0xb0 ||
-    type === 0xe0
-  ) {
-    return 3
-  }
+  if ([0x80, 0x90, 0xa0, 0xb0, 0xe0].includes(type)) return 3
   return null
 }
 
-function validateMidiBytes(bytes: unknown, index: number): Uint8Array {
-  if (!Array.isArray(bytes) || bytes.length === 0) {
-    throw new PlanValidationError(
-      "malformed_bytes",
-      `Event ${index}: bytes must be a non-empty number array.`,
-    )
-  }
-  if (bytes.length > PLAN_LIMITS.maxBytesPerEvent) {
-    throw new PlanValidationError(
-      "oversized_event",
-      `Event ${index}: exceeds max ${PLAN_LIMITS.maxBytesPerEvent} bytes.`,
-    )
-  }
-
-  const out = new Uint8Array(bytes.length)
-  for (let i = 0; i < bytes.length; i += 1) {
-    const value = bytes[i]
-    if (typeof value !== "number" || !Number.isInteger(value) || value < 0 || value > 255) {
-      throw new PlanValidationError(
-        "malformed_bytes",
-        `Event ${index}: byte ${i} is not an integer 0–255.`,
-      )
-    }
-    out[i] = value
-  }
-
-  const status = out[0]
-  if (status < 0x80) {
-    throw new PlanValidationError(
-      "forbidden_midi",
-      `Event ${index}: running status / missing status byte is forbidden.`,
-    )
-  }
+function validateMidi(bytes: Uint8Array, path: string): void {
+  const status = bytes[0]
+  if (status < 0x80) fail("forbidden_midi", `${path} lacks a MIDI status byte.`)
 
   if (status === 0xf0) {
-    if (out.length > PLAN_LIMITS.maxSysExBytes) {
-      throw new PlanValidationError(
-        "unbounded_sysex",
-        `Event ${index}: SysEx exceeds max ${PLAN_LIMITS.maxSysExBytes} bytes.`,
-      )
+    if (bytes.length > PLAN_LIMITS.maxSysExBytes) {
+      fail("unbounded_sysex", `${path} SysEx exceeds the bounded maximum.`)
     }
-    if (out[out.length - 1] !== 0xf7) {
-      throw new PlanValidationError(
-        "unbounded_sysex",
-        `Event ${index}: SysEx must end with 0xF7.`,
-      )
+    if (bytes.length < 2 || bytes.at(-1) !== 0xf7) {
+      fail("unbounded_sysex", `${path} SysEx must terminate with 0xF7.`)
     }
-    for (let i = 1; i < out.length - 1; i += 1) {
-      if (out[i] > 0x7f) {
-        throw new PlanValidationError(
-          "malformed_bytes",
-          `Event ${index}: SysEx data byte ${i} must be 0–127.`,
-        )
-      }
+    for (let index = 1; index < bytes.length - 1; index += 1) {
+      if (bytes[index] > 0x7f) fail("malformed_midi", `${path} has invalid SysEx data.`)
     }
-    return out
+    return
   }
 
-  if (status >= 0xf1) {
-    throw new PlanValidationError(
-      "forbidden_midi",
-      `Event ${index}: system status 0x${status.toString(16)} is forbidden.`,
-    )
+  if (REALTIME_STATUSES.has(status)) {
+    if (bytes.length !== 1) {
+      fail("forbidden_midi", `${path} realtime status must be exactly one byte.`)
+    }
+    return
   }
 
-  const expected = expectedChannelByteLength(status)
-  if (expected === null || out.length !== expected) {
-    throw new PlanValidationError(
-      "forbidden_midi",
-      `Event ${index}: status 0x${status.toString(16)} has invalid length ${out.length}.`,
-    )
+  if (status >= 0xf0) {
+    fail("forbidden_midi", `${path} contains an unsupported system status.`)
   }
-  for (let i = 1; i < out.length; i += 1) {
-    if (out[i] > 0x7f) {
-      throw new PlanValidationError(
-        "malformed_bytes",
-        `Event ${index}: data byte ${i} must be 0–127.`,
-      )
-    }
+  const expected = expectedChannelLength(status)
+  if (expected === null || bytes.length !== expected) {
+    fail("forbidden_midi", `${path} has an invalid MIDI status length.`)
   }
-  return out
+  for (let index = 1; index < bytes.length; index += 1) {
+    if (bytes[index] > 0x7f) fail("malformed_midi", `${path} has an invalid data byte.`)
+  }
 }
 
-function validateEvent(raw: unknown, index: number, durationMs: number): ValidatedDispatchEvent {
-  if (!isPlainObject(raw)) {
-    throw new PlanValidationError("malformed_event", `Event ${index} must be an object.`)
+function parseEvent(
+  value: unknown,
+  path: string,
+  displayDurationMs: number,
+): ValidatedDispatchEvent {
+  if (!isPlainObject(value)) fail("malformed_plan", `${path} must be an object.`)
+  exactKeys(value, ["atMs", "target", "bytes"], path)
+  const atMs = integer(value.atMs, `${path}.atMs`, 0, PLAN_LIMITS.maxDurationMs)
+  if (atMs > displayDurationMs) {
+    fail("event_beyond_duration", `${path}.atMs exceeds display.durationMs.`)
   }
-  const atMs = assertNonNegativeMs(raw.atMs, "malformed_event", `Event ${index} atMs`)
-  if (atMs > durationMs) {
-    throw new PlanValidationError(
-      "event_beyond_duration",
-      `Event ${index}: atMs ${atMs} exceeds durationMs ${durationMs}.`,
-    )
+  if (typeof value.target !== "string" || !TARGETS.has(value.target as DispatchTarget)) {
+    fail("malformed_plan", `${path}.target must be port1, port2, or both.`)
   }
-  if (typeof raw.target !== "string" || !TARGETS.has(raw.target as DispatchTarget)) {
-    throw new PlanValidationError(
-      "malformed_event",
-      `Event ${index}: target must be port1|port2|both.`,
-    )
+  const bytes = decodeCanonicalBase64(value.bytes, `${path}.bytes`)
+  validateMidi(bytes, `${path}.bytes`)
+  return { atMs, target: value.target as DispatchTarget, bytes }
+}
+
+function parseEvents(
+  value: unknown,
+  path: string,
+  limit: number,
+  displayDurationMs: number,
+): ValidatedDispatchEvent[] {
+  if (!Array.isArray(value)) fail("malformed_plan", `${path} must be an array.`)
+  if (value.length > limit) fail("oversized_plan", `${path} exceeds its event limit.`)
+  let priorAtMs = -1
+  return value.map((event, index) => {
+    const parsed = parseEvent(event, `${path}[${index}]`, displayDurationMs)
+    if (parsed.atMs < priorAtMs) {
+      fail("malformed_plan", `${path} must be ordered by nondecreasing atMs.`)
+    }
+    priorAtMs = parsed.atMs
+    return parsed
+  })
+}
+
+function parseTimeSignature(value: unknown): TimeSignature {
+  if (!isPlainObject(value)) fail("malformed_display", "display.timeSignature is invalid.")
+  exactKeys(value, ["numerator", "denominator"], "display.timeSignature")
+  const numerator = integer(value.numerator, "display.timeSignature.numerator", 1, 32)
+  const denominator = integer(value.denominator, "display.timeSignature.denominator", 1, 16)
+  if (!DENOMINATORS.has(denominator)) {
+    fail("malformed_display", "display.timeSignature.denominator is invalid.")
+  }
+  return { numerator, denominator: denominator as TimeSignature["denominator"] }
+}
+
+function parseSection(value: unknown, index: number): DisplayTimelineSection {
+  const path = `display.sections[${index}]`
+  if (!isPlainObject(value)) fail("malformed_display", `${path} must be an object.`)
+  exactKeys(value, ["id", "name", "startBar", "barCount"], path)
+  return {
+    id: text(value.id, `${path}.id`, PLAN_LIMITS.maxSectionIdLength, ID_PATTERN),
+    name: text(value.name, `${path}.name`, PLAN_LIMITS.maxSectionNameLength),
+    startBar: integer(value.startBar, `${path}.startBar`, 0, 10_000),
+    barCount: integer(value.barCount, `${path}.barCount`, 1, 256),
+  }
+}
+
+function parseChord(value: unknown, index: number): DisplayChord {
+  const path = `display.chords[${index}]`
+  if (!isPlainObject(value)) fail("malformed_display", `${path} must be an object.`)
+  exactKeys(value, ["symbol", "startBar", "durationBars"], path)
+  return {
+    symbol: text(value.symbol, `${path}.symbol`, PLAN_LIMITS.maxChordNameLength),
+    startBar: integer(value.startBar, `${path}.startBar`, 0, 10_000),
+    durationBars: integer(value.durationBars, `${path}.durationBars`, 1, 256),
+  }
+}
+
+function parseDisplay(value: unknown): DisplayTimeline {
+  if (!isPlainObject(value)) fail("malformed_display", "display must be an object.")
+  exactKeys(
+    value,
+    ["tempoBpm", "key", "timeSignature", "durationMs", "sections", "chords"],
+    "display",
+  )
+  if (!Array.isArray(value.sections) || value.sections.length < 1 ||
+      value.sections.length > PLAN_LIMITS.maxSections) {
+    fail("malformed_display", "display.sections length is invalid.")
+  }
+  if (!Array.isArray(value.chords) || value.chords.length < 1 ||
+      value.chords.length > PLAN_LIMITS.maxDisplayChords) {
+    fail("malformed_display", "display.chords length is invalid.")
+  }
+  const sections = value.sections.map(parseSection)
+  const ids = new Set<string>()
+  for (const section of sections) {
+    if (ids.has(section.id)) fail("malformed_display", `Duplicate section id: ${section.id}`)
+    ids.add(section.id)
   }
   return {
-    atMs,
-    target: raw.target as DispatchTarget,
-    bytes: validateMidiBytes(raw.bytes, index),
+    tempoBpm: integer(value.tempoBpm, "display.tempoBpm", 20, 400),
+    key: text(value.key, "display.key", 16),
+    timeSignature: parseTimeSignature(value.timeSignature),
+    durationMs: integer(value.durationMs, "display.durationMs", 0, PLAN_LIMITS.maxDurationMs),
+    sections,
+    chords: value.chords.map(parseChord),
   }
 }
 
-function validateSlice(raw: unknown, label: string): ValidatedPlanSlice {
-  if (!isPlainObject(raw)) {
-    throw new PlanValidationError("malformed_plan", `${label} must be an object.`)
-  }
-  const durationMs = assertNonNegativeMs(raw.durationMs, "malformed_plan", `${label}.durationMs`)
-  if (durationMs > PLAN_LIMITS.maxDurationMs) {
-    throw new PlanValidationError(
-      "oversized_plan",
-      `${label}.durationMs exceeds max ${PLAN_LIMITS.maxDurationMs}.`,
-    )
-  }
-  if (!Array.isArray(raw.events)) {
-    throw new PlanValidationError("malformed_plan", `${label}.events must be an array.`)
-  }
-  if (raw.events.length > PLAN_LIMITS.maxEventsPerSlice) {
-    throw new PlanValidationError(
-      "oversized_plan",
-      `${label} has too many events (max ${PLAN_LIMITS.maxEventsPerSlice}).`,
-    )
-  }
-  if (raw.pauseSafe !== undefined && typeof raw.pauseSafe !== "boolean") {
-    throw new PlanValidationError("malformed_plan", `${label}.pauseSafe must be a boolean.`)
-  }
-
-  // Preserve server order exactly; do not sort.
-  const events = raw.events.map((event, index) => validateEvent(event, index, durationMs))
-  return {
-    durationMs,
-    events,
-    pauseSafe: raw.pauseSafe === true,
-  }
+function sectionDurationMs(display: DisplayTimeline, sectionId: string, events: ValidatedDispatchEvent[]): number {
+  const section = display.sections.find((candidate) => candidate.id === sectionId)
+  const lastEventMs = events.at(-1)?.atMs ?? 0
+  if (!section) return lastEventMs
+  const quarterNotesPerBar =
+    display.timeSignature.numerator * (4 / display.timeSignature.denominator)
+  const metadataDuration =
+    section.barCount * quarterNotesPerBar * (60_000 / display.tempoBpm)
+  return Math.min(display.durationMs, Math.max(lastEventMs, metadataDuration))
 }
 
-function validateChord(raw: unknown, sectionId: string, index: number): DisplayTimelineChord {
-  if (!isPlainObject(raw)) {
-    throw new PlanValidationError(
-      "malformed_display",
-      `display.sections[${sectionId}].chords[${index}] must be an object.`,
-    )
-  }
-  const atMs = assertNonNegativeMs(
-    raw.atMs,
-    "malformed_display",
-    `display chord ${sectionId}[${index}].atMs`,
-  )
-  if (typeof raw.name !== "string" || raw.name.length === 0) {
-    throw new PlanValidationError(
-      "malformed_display",
-      `display chord ${sectionId}[${index}].name must be a non-empty string.`,
-    )
-  }
-  if (raw.name.length > PLAN_LIMITS.maxChordNameLength) {
-    throw new PlanValidationError(
-      "oversized_plan",
-      `display chord name exceeds max ${PLAN_LIMITS.maxChordNameLength}.`,
-    )
-  }
-  return { atMs, name: raw.name }
-}
-
-function validateDisplaySection(raw: unknown, index: number): DisplayTimelineSection {
-  if (!isPlainObject(raw)) {
-    throw new PlanValidationError(
-      "malformed_display",
-      `display.sections[${index}] must be an object.`,
-    )
-  }
-  if (typeof raw.id !== "string" || raw.id.length === 0) {
-    throw new PlanValidationError("malformed_display", `display.sections[${index}].id required.`)
-  }
-  const sectionId = raw.id
-  if (sectionId.length > PLAN_LIMITS.maxSectionIdLength) {
-    throw new PlanValidationError("oversized_plan", `display section id too long.`)
-  }
-  if (typeof raw.label !== "string" || raw.label.length === 0) {
-    throw new PlanValidationError(
-      "malformed_display",
-      `display.sections[${index}].label required.`,
-    )
-  }
-  const label = raw.label
-  if (label.length > PLAN_LIMITS.maxSectionLabelLength) {
-    throw new PlanValidationError("oversized_plan", `display section label too long.`)
-  }
-  const startMs = assertNonNegativeMs(
-    raw.startMs,
-    "malformed_display",
-    `display.sections[${index}].startMs`,
-  )
-  const endMs = assertNonNegativeMs(
-    raw.endMs,
-    "malformed_display",
-    `display.sections[${index}].endMs`,
-  )
-  if (endMs < startMs) {
-    throw new PlanValidationError(
-      "malformed_display",
-      `display.sections[${index}]: endMs must be >= startMs.`,
-    )
-  }
-
-  let chords: DisplayTimelineChord[] | undefined
-  if (raw.chords !== undefined) {
-    if (!Array.isArray(raw.chords)) {
-      throw new PlanValidationError(
-        "malformed_display",
-        `display.sections[${index}].chords must be an array.`,
-      )
-    }
-    if (raw.chords.length > PLAN_LIMITS.maxDisplayChordsPerSection) {
-      throw new PlanValidationError(
-        "oversized_plan",
-        `display.sections[${index}] has too many chords.`,
-      )
-    }
-    chords = raw.chords.map((chord, chordIndex) =>
-      validateChord(chord, sectionId, chordIndex),
-    )
-  }
-
-  return {
-    id: sectionId,
-    label,
-    startMs,
-    endMs,
-    ...(chords ? { chords } : {}),
-  }
-}
-
-function validateDisplay(raw: unknown): DisplayTimeline {
-  if (!isPlainObject(raw)) {
-    throw new PlanValidationError("malformed_display", "display must be an object.")
-  }
-  if (!Array.isArray(raw.sections)) {
-    throw new PlanValidationError("malformed_display", "display.sections must be an array.")
-  }
-  if (raw.sections.length > PLAN_LIMITS.maxDisplaySections) {
-    throw new PlanValidationError("oversized_plan", "display.sections exceeds limit.")
-  }
-  const sections = raw.sections.map((section, index) => validateDisplaySection(section, index))
-
-  const display: DisplayTimeline = { sections }
-  if (raw.tempoBpm !== undefined) {
-    const tempo = assertFiniteNumber(raw.tempoBpm, "malformed_display", "display.tempoBpm")
-    if (tempo <= 0 || tempo > 400) {
-      throw new PlanValidationError("malformed_display", "display.tempoBpm out of range.")
-    }
-    display.tempoBpm = tempo
-  }
-  if (raw.key !== undefined) {
-    if (typeof raw.key !== "string" || raw.key.length === 0 || raw.key.length > 16) {
-      throw new PlanValidationError("malformed_display", "display.key is invalid.")
-    }
-    display.key = raw.key
-  }
-  if (raw.timeSignature !== undefined) {
-    if (
-      !Array.isArray(raw.timeSignature) ||
-      raw.timeSignature.length !== 2 ||
-      typeof raw.timeSignature[0] !== "number" ||
-      typeof raw.timeSignature[1] !== "number"
-    ) {
-      throw new PlanValidationError(
-        "malformed_display",
-        "display.timeSignature must be [numerator, denominator].",
-      )
-    }
-    display.timeSignature = [raw.timeSignature[0], raw.timeSignature[1]]
-  }
-  return display
-}
-
-/**
- * Validate and normalize an opaque prepared plan.
- * Rejects oversized/malformed plans, forbidden MIDI lengths, unbounded SysEx,
- * and events beyond duration. Preserves same-time event order.
- */
+/** Validate the exact final prepare response and decode event bytes once at load. */
 export function validatePreparedPlan(input: unknown): ValidatedPerformancePlan {
-  if (!isPlainObject(input)) {
-    throw new PlanValidationError("malformed_plan", "Plan must be an object.")
-  }
-  if (typeof input.planId !== "string" || input.planId.length === 0) {
-    throw new PlanValidationError("malformed_plan", "planId is required.")
-  }
-  if (input.planId.length > PLAN_LIMITS.maxPlanIdLength) {
-    throw new PlanValidationError("oversized_plan", "planId too long.")
-  }
-  if (typeof input.engineVersion !== "string" || input.engineVersion.length === 0) {
-    throw new PlanValidationError("malformed_plan", "engineVersion is required.")
-  }
-  if (input.engineVersion.length > PLAN_LIMITS.maxEngineVersionLength) {
-    throw new PlanValidationError("oversized_plan", "engineVersion too long.")
-  }
-  if (typeof input.expiresAt !== "string" || input.expiresAt.length === 0) {
-    throw new PlanValidationError("malformed_plan", "expiresAt is required.")
-  }
-  const expiresAtMs = Date.parse(input.expiresAt)
+  if (!isPlainObject(input)) fail("malformed_plan", "Plan must be an object.")
+  exactKeys(input, ["planId", "expiresAt", "display", "dispatch"], "plan")
+
+  const planId = text(input.planId, "plan.planId", PLAN_LIMITS.maxPlanIdLength, ID_PATTERN)
+  const expiresAt = text(input.expiresAt, "plan.expiresAt", 64)
+  const expiresAtMs = Date.parse(expiresAt)
   if (!Number.isFinite(expiresAtMs)) {
-    throw new PlanValidationError("malformed_plan", "expiresAt must be an ISO-8601 timestamp.")
+    fail("malformed_plan", "plan.expiresAt must be an ISO datetime.")
   }
+  const display = parseDisplay(input.display)
 
-  const display = validateDisplay(input.display)
-  const full = validateSlice(input.full, "full")
-
-  if (!isPlainObject(input.sections)) {
-    throw new PlanValidationError("malformed_plan", "sections must be an object.")
+  if (!isPlainObject(input.dispatch)) fail("malformed_plan", "plan.dispatch must be an object.")
+  exactKeys(input.dispatch, ["fullSong", "sections"], "plan.dispatch")
+  if (!isPlainObject(input.dispatch.sections)) {
+    fail("malformed_plan", "plan.dispatch.sections must be an object.")
   }
-  const sectionKeys = Object.keys(input.sections)
+  const sectionKeys = Object.keys(input.dispatch.sections)
   if (sectionKeys.length > PLAN_LIMITS.maxSections) {
-    throw new PlanValidationError(
-      "oversized_plan",
-      `Too many section plans (max ${PLAN_LIMITS.maxSections}).`,
-    )
+    fail("oversized_plan", "plan.dispatch.sections exceeds its section limit.")
   }
 
+  const fullEvents = parseEvents(
+    input.dispatch.fullSong,
+    "plan.dispatch.fullSong",
+    PLAN_LIMITS.maxFullSongEvents,
+    display.durationMs,
+  )
   const sections: Record<string, ValidatedPlanSlice> = {}
-  let totalEvents = full.events.length
-  for (const key of sectionKeys) {
-    if (key.length === 0 || key.length > PLAN_LIMITS.maxSectionIdLength) {
-      throw new PlanValidationError("malformed_plan", "section id is invalid.")
+  for (const sectionId of sectionKeys) {
+    text(sectionId, "plan.dispatch.sections key", PLAN_LIMITS.maxSectionIdLength, ID_PATTERN)
+    const events = parseEvents(
+      input.dispatch.sections[sectionId],
+      `plan.dispatch.sections.${sectionId}`,
+      PLAN_LIMITS.maxEventsPerSection,
+      display.durationMs,
+    )
+    sections[sectionId] = {
+      durationMs: sectionDurationMs(display, sectionId, events),
+      events,
     }
-    const slice = validateSlice(input.sections[key], `sections.${key}`)
-    totalEvents += slice.events.length
-    if (totalEvents > PLAN_LIMITS.maxTotalEvents) {
-      throw new PlanValidationError(
-        "oversized_plan",
-        `Total events exceed max ${PLAN_LIMITS.maxTotalEvents}.`,
-      )
-    }
-    sections[key] = slice
   }
 
   return {
-    planId: input.planId,
-    engineVersion: input.engineVersion,
-    expiresAt: input.expiresAt,
+    planId,
+    expiresAt,
     expiresAtMs,
     display,
-    full,
-    sections,
+    dispatch: {
+      fullSong: { durationMs: display.durationMs, events: fullEvents },
+      sections,
+    },
   }
 }
 
-/** Type guard helper for callers that already hold a typed plan object. */
 export function asPreparedPlan(input: PreparedPerformancePlan): ValidatedPerformancePlan {
   return validatePreparedPlan(input)
 }
