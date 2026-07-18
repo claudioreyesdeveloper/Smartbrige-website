@@ -1,3 +1,4 @@
+import { getSharedServiceCatalogEntry } from "@/lib/services/catalog"
 import { SERVICE_CATALOG, SERVICE_NAV_ORDER } from "./service-catalog"
 import type {
   EntitlementProvider,
@@ -11,7 +12,9 @@ const MOCK_PURCHASED: ServiceKey[] = ["jam-player", "genos-mixer"]
 const MOCK_UPGRADE_BASE = "/app#upgrade"
 
 function resolveAccess(key: ServiceKey): ServiceEntitlement["access"] {
-  if (key === "style-maker") return "coming-soon"
+  if (getSharedServiceCatalogEntry(key).availability === "future") {
+    return "coming-soon"
+  }
   return MOCK_PURCHASED.includes(key) ? "active" : "upgrade"
 }
 

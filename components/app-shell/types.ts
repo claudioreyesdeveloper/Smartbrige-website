@@ -1,13 +1,6 @@
-export const SERVICE_KEYS = [
-  "jam-player",
-  "bass-drums",
-  "solo-phrases",
-  "lyrics",
-  "genos-mixer",
-  "style-maker",
-] as const
+import type { ServiceKey } from "@/lib/services/catalog"
 
-export type ServiceKey = (typeof SERVICE_KEYS)[number]
+export { SERVICE_KEYS, type ServiceKey } from "@/lib/services/catalog"
 
 export type ServiceAccess = "active" | "upgrade" | "coming-soon"
 
