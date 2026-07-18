@@ -1,8 +1,35 @@
 import AxeBuilder from "@axe-core/playwright"
 import { expect, test } from "@playwright/test"
 
+const ascii = (value: string) => Array.from(new TextEncoder().encode(value))
+const u32 = (value: number) => [
+  (value >>> 24) & 0xff,
+  (value >>> 16) & 0xff,
+  (value >>> 8) & 0xff,
+  value & 0xff,
+]
+
+function stylePreviewFixture() {
+  const track = [
+    0, 0xb0, 0, 127, 0, 0xb0, 32, 0, 0, 0xc0, 0,
+    0, 0xb2, 0, 0, 0, 0xb2, 32, 0, 0, 0xc2, 33,
+    0, 0x90, 36, 100, 0, 0x92, 40, 90, 0, 0x93, 60, 80,
+    96, 0x80, 36, 0, 0, 0x82, 40, 0, 0, 0x83, 60, 0,
+    0, 0xff, 0x2f, 0,
+  ]
+  const tail = [...ascii("CASM"), 0, 0, 0, 4, 1, 2, 3, 4]
+  return Uint8Array.from([
+    ...ascii("MThd"), 0, 0, 0, 6, 0, 0, 0, 1, 0, 96,
+    ...ascii("MTrk"), ...u32(track.length), ...track, ...tail,
+  ])
+}
+
 test.beforeEach(async ({ page }) => {
   await page.addInitScript(() => {
+    const midiWindow = window as unknown as {
+      __midiSends: { port: string; data: number[] }[]
+    }
+    midiWindow.__midiSends = []
     const makePort = (id: string, name: string) => ({
       id,
       name,
@@ -11,7 +38,9 @@ test.beforeEach(async ({ page }) => {
       onmidimessage: null as null | ((event: { data: Uint8Array }) => void),
       open: async () => {},
       close: async () => {},
-      send: (_data: Uint8Array) => {},
+      send: (data: Uint8Array) => {
+        midiWindow.__midiSends.push({ port: name, data: Array.from(data) })
+      },
     })
 
     const input1 = makePort("yamaha-in-1", "Digital Keyboard Port 1")
@@ -33,8 +62,14 @@ test.beforeEach(async ({ page }) => {
         }, 0)
       }
     }
-    output1.send = replyIdentity
-    output2.send = replyIdentity
+    output1.send = (data: Uint8Array) => {
+      midiWindow.__midiSends.push({ port: output1.name, data: Array.from(data) })
+      replyIdentity(data)
+    }
+    output2.send = (data: Uint8Array) => {
+      midiWindow.__midiSends.push({ port: output2.name, data: Array.from(data) })
+      replyIdentity(data)
+    }
 
     Object.defineProperty(navigator, "requestMIDIAccess", {
       configurable: true,
@@ -75,12 +110,12 @@ test("Jam Player exposes two complete 4/4 songs per category and mocked Web MIDI
   }
   await page.getByRole("button", { name: "Genos2" }).click()
   await page.getByRole("button", { name: "Connect my keyboard" }).last().click()
-  await expect(page.getByRole("heading", { name: "Choose a song" })).toBeVisible()
-  await expect(page.locator(".senior-song-grid button")).toHaveCount(2)
-  await page.getByRole("button", { name: /Rock/ }).click()
-  await expect(page.locator(".senior-song-grid button")).toHaveCount(2)
-  await page.getByRole("button", { name: /Continue with/ }).click()
-  await expect(page.getByRole("button", { name: "Play song" })).toBeVisible()
+  await expect(page.getByText("16 complete 4/4 arrangements")).toBeVisible()
+  await expect(page.locator(".song-list button")).toHaveCount(2)
+  await page.locator(".category-tabs").getByRole("button", { name: /Rock/ }).click()
+  await expect(page.locator(".song-list button")).toHaveCount(2)
+  await expect(page.getByPlaceholder("Search 796 styles")).toBeVisible()
+  await expect(page.getByRole("button", { name: "Play arrangement" })).toBeVisible()
 })
 
 test("Style Maker clearly requires a user donor file", async ({ page }, testInfo) => {
@@ -91,8 +126,35 @@ test("Style Maker clearly requires a user donor file", async ({ page }, testInfo
   }
   await page.getByRole("button", { name: "Genos2" }).click()
   await page.getByRole("button", { name: "Connect my keyboard" }).last().click()
-  await expect(page.getByRole("heading", { name: "Choose your Yamaha style file" })).toBeVisible()
-  await expect(page.getByText(/never uploaded to the internet/)).toBeVisible()
+  await expect(page.getByText("Drop your Yamaha style here")).toBeVisible()
+  await expect(page.getByText(/Nothing is uploaded to a server/)).toBeVisible()
+})
+
+test("Style Maker previews voices on Port 2 and notes on channels 9-16", async ({
+  page,
+}, testInfo) => {
+  test.skip(testInfo.project.name !== "desktop", "Web MIDI routing is checked in Chromium")
+  await page.goto("/demo/style-maker")
+  await page.getByRole("button", { name: "Genos2" }).click()
+  await page.getByRole("button", { name: "Connect my keyboard" }).last().click()
+  await page.locator(".style-dropzone input").setInputFiles({
+    name: "routing-test.prs",
+    mimeType: "application/octet-stream",
+    buffer: Buffer.from(stylePreviewFixture()),
+  })
+  await page.getByRole("button", { name: /AFTER/ }).click()
+  await page.waitForTimeout(100)
+
+  const sends = await page.evaluate(() =>
+    (window as unknown as { __midiSends: { port: string; data: number[] }[] }).__midiSends,
+  )
+  expect(sends.some(({ port, data }) =>
+    port.endsWith("Port 2") &&
+    data.slice(0, 7).join(",") === "240,67,16,76,8,10,1",
+  )).toBe(true)
+  expect(sends.some(({ port, data }) =>
+    port.endsWith("Port 1") && (data[0] === 0x98 || data[0] === 0x9a),
+  )).toBe(true)
 })
 
 test("demo landing has no serious accessibility violations", async ({ page }) => {

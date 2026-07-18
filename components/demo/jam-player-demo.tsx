@@ -1,9 +1,9 @@
 "use client"
 
-import { ArrowLeft, Pause, Play, RotateCcw, Sparkles, Square } from "lucide-react"
+import { Pause, Play, RotateCcw, Sparkles, Square } from "lucide-react"
 import { useEffect, useMemo, useRef, useState } from "react"
 import rawSongs from "@/data/demo/songs.json"
-import type { DemoSong, SongCategory, StyleGenre } from "@/lib/demo/types"
+import type { DemoSong, SongCategory, StyleCatalogEntry } from "@/lib/demo/types"
 import {
   JamScheduler,
   type JamPlaybackState,
@@ -11,6 +11,10 @@ import {
 import { useMidiSession } from "@/lib/demo/yamaha/use-midi-session"
 import { DemoShell } from "@/components/demo/demo-shell"
 import { FeedbackPrompt } from "@/components/demo/feedback-prompt"
+import {
+  styleMappingForEntry,
+  stylesForProfile,
+} from "@/lib/demo/yamaha/style-catalog"
 
 const songs = rawSongs as DemoSong[]
 const categories: SongCategory[] = [
@@ -23,8 +27,6 @@ const categories: SongCategory[] = [
   "R&B",
   "Country",
 ]
-const genres: StyleGenre[] = ["Pop", "Jazz", "Gospel", "Neo Soul", "Funk"]
-
 const initialPlayback: JamPlaybackState = {
   playing: false,
   beat: 0,
@@ -135,12 +137,12 @@ export function JamPlayerDemo() {
   const [session, midi] = useMidiSession()
   const [category, setCategory] = useState<SongCategory>("Pop")
   const [songId, setSongId] = useState(songs[0].id)
-  const [genre, setGenre] = useState<StyleGenre>("Pop")
+  const [styleCategory, setStyleCategory] = useState("All")
+  const [styleSearch, setStyleSearch] = useState("")
+  const [styleKey, setStyleKey] = useState("")
   const [playback, setPlayback] = useState(initialPlayback)
   const [notice, setNotice] = useState("")
   const [engagements, setEngagements] = useState(0)
-  const [choosingSong, setChoosingSong] = useState(true)
-  const [showFullSong, setShowFullSong] = useState(false)
   const scheduler = useRef<JamScheduler | null>(null)
 
   const visibleSongs = useMemo(
@@ -148,6 +150,30 @@ export function JamPlayerDemo() {
     [category],
   )
   const song = songs.find((candidate) => candidate.id === songId) || visibleSongs[0]
+  const availableStyles = useMemo(
+    () => midi.profile ? stylesForProfile(midi.profile) : [],
+    [midi.profile],
+  )
+  const styleCategories = useMemo(
+    () => ["All", ...Array.from(new Set(availableStyles.map((style) => style.category))).sort()],
+    [availableStyles],
+  )
+  const filteredStyles = useMemo(() => {
+    const search = styleSearch.trim().toLowerCase()
+    return availableStyles.filter((style) =>
+      (styleCategory === "All" || style.category === styleCategory) &&
+      (!search || style.name.toLowerCase().includes(search)),
+    )
+  }, [availableStyles, styleCategory, styleSearch])
+  const entryKey = (style: StyleCatalogEntry) => `${style.styleNumber}:${style.name}`
+  const selectedStyle =
+    availableStyles.find((style) => entryKey(style) === styleKey) ||
+    availableStyles.find((style) => style.name === "EasyPop") ||
+    availableStyles[0]
+  const catalogOptions =
+    selectedStyle && !filteredStyles.some((style) => entryKey(style) === entryKey(selectedStyle))
+      ? [selectedStyle, ...filteredStyles]
+      : filteredStyles
 
   useEffect(() => {
     scheduler.current = new JamScheduler(session, setPlayback)
@@ -160,6 +186,13 @@ export function JamPlayerDemo() {
     }
   }, [songId, visibleSongs])
 
+  useEffect(() => {
+    const first = availableStyles.find((style) => style.name === "EasyPop") || availableStyles[0]
+    setStyleKey(first ? entryKey(first) : "")
+    setStyleCategory("All")
+    setStyleSearch("")
+  }, [availableStyles])
+
   const stop = () => scheduler.current?.stop()
 
   const togglePlay = () => {
@@ -167,20 +200,20 @@ export function JamPlayerDemo() {
       stop()
       return
     }
-    if (!midi.connected || !midi.profile) {
+    if (!midi.connected || !midi.profile || !selectedStyle) {
       setNotice("Connect a supported Yamaha keyboard before starting the arrangement.")
       return
     }
     setNotice("")
-    scheduler.current?.start(song, midi.profile.styleMappings[genre])
+    scheduler.current?.start(song, styleMappingForEntry(midi.profile, selectedStyle))
     setEngagements((value) => value + 1)
   }
 
-  const changeGenre = (next: StyleGenre) => {
-    setGenre(next)
+  const changeStyle = (next: StyleCatalogEntry) => {
+    setStyleKey(entryKey(next))
     if (midi.profile && playback.playing) {
-      scheduler.current?.changeStyle(midi.profile.styleMappings[next])
-      setNotice(`Same arrangement, now playing ${next} on ${midi.profile.displayName}.`)
+      scheduler.current?.changeStyle(styleMappingForEntry(midi.profile, next))
+      setNotice(`Same arrangement, now playing ${next.name} on ${midi.profile.displayName}.`)
       setEngagements((value) => value + 1)
     }
   }
@@ -189,68 +222,58 @@ export function JamPlayerDemo() {
     <DemoShell
       title="Jam Player"
       eyebrow="Play any song instantly"
-      step="Four easy steps"
+      step="Choose · Connect · Play · Transform"
       onSafeStop={stop}
     >
-      <div className="guided-demo-page">
-        <nav className="guided-progress" aria-label="Jam Player progress">
-          <span className="is-complete"><i>1</i> Keyboard connected</span>
-          <span className={choosingSong ? "is-current" : "is-complete"}><i>2</i> Choose a song</span>
-          <span className={!choosingSong ? "is-current" : ""}><i>3</i> Play</span>
-          <span><i>4</i> Change the band</span>
-        </nav>
-
-        {choosingSong ? (
-          <section className="guided-card">
-            <span className="demo-eyebrow">Step 2 of 4</span>
-            <h1>Choose a song</h1>
-            <p className="guided-instruction">First choose a type of music, then choose one of the two songs.</p>
-            <div className="senior-category-grid" role="tablist" aria-label="Song types">
-              {categories.map((item) => (
-                <button
-                  key={item}
-                  type="button"
-                  className={item === category ? "is-selected" : ""}
-                  onClick={() => setCategory(item)}
-                >
-                  <span className="selection-light" />{item}
-                </button>
-              ))}
-            </div>
-            <div className="senior-song-grid">
-              {visibleSongs.map((item) => (
-                <button
-                  key={item.id}
-                  type="button"
-                  className={item.id === song.id ? "is-selected" : ""}
-                  onClick={() => {
-                    stop()
-                    setSongId(item.id)
-                    setEngagements((value) => value + 1)
-                  }}
-                >
-                  <span className="selection-light" />
+      <div className="jam-layout">
+        <aside className="jam-library">
+          <div className="panel-heading">
+            <span>Song library</span>
+            <strong>16 complete 4/4 arrangements</strong>
+          </div>
+          <div className="category-tabs" role="tablist" aria-label="Song categories">
+            {categories.map((item) => (
+              <button
+                key={item}
+                type="button"
+                className={item === category ? "is-active" : ""}
+                onClick={() => setCategory(item)}
+              >
+                {item}
+                <span>{songs.filter((songItem) => songItem.category === item).length}</span>
+              </button>
+            ))}
+          </div>
+          <div className="song-list">
+            {visibleSongs.map((item) => (
+              <button
+                key={item.id}
+                type="button"
+                className={item.id === song.id ? "is-active" : ""}
+                onClick={() => {
+                  stop()
+                  setSongId(item.id)
+                  setEngagements((value) => value + 1)
+                }}
+              >
+                <i style={{ background: item.accent }} />
+                <span>
                   <strong>{item.title}</strong>
-                  <span>{item.tempo} BPM · Key of {item.key}</span>
-                </button>
-              ))}
-            </div>
-            <button className="senior-primary-action" type="button" onClick={() => setChoosingSong(false)}>
-              Continue with {song.title}
-            </button>
-          </section>
-        ) : (
-        <section className="jam-stage guided-card">
-          <button className="senior-back-button" type="button" onClick={() => { stop(); setChoosingSong(true) }}>
-            <ArrowLeft size={20} /> Choose a different song
-          </button>
+                  <small>{item.key} · {item.tempo} BPM · {item.sections.length} sections</small>
+                </span>
+              </button>
+            ))}
+          </div>
+        </aside>
+
+        <section className="jam-stage">
           <header className="jam-song-header">
             <div className="song-art" style={{ "--song-accent": song.accent } as React.CSSProperties}>
               <Sparkles size={26} />
               <span>SB</span>
             </div>
             <div>
-              <span className="demo-eyebrow">Your selected song</span>
+              <span className="demo-eyebrow">{song.category} · Original progression</span>
               <h1>{song.title}</h1>
               <p>{song.subtitle}</p>
             </div>
@@ -261,10 +284,10 @@ export function JamPlayerDemo() {
             </div>
           </header>
 
-          <div className="performance-strip senior-transport">
+          <div className="performance-strip">
             <button className="transport-main" type="button" onClick={togglePlay}>
               {playback.playing ? <Pause size={22} /> : <Play size={22} fill="currentColor" />}
-              {playback.playing ? "Pause song" : "Play song"}
+              {playback.playing ? "Pause" : "Play arrangement"}
             </button>
             <button className="transport-stop" type="button" onClick={stop} disabled={!playback.playing}>
               <Square size={17} fill="currentColor" /> Stop
@@ -274,7 +297,9 @@ export function JamPlayerDemo() {
               type="button"
               onClick={() => {
                 stop()
-                if (midi.connected && midi.profile) scheduler.current?.start(song, midi.profile.styleMappings[genre])
+                if (midi.profile && selectedStyle) {
+                  scheduler.current?.start(song, styleMappingForEntry(midi.profile, selectedStyle))
+                }
               }}
               disabled={!playback.playing}
             >
@@ -283,41 +308,51 @@ export function JamPlayerDemo() {
             <div className="live-readout">
               <span><small>Now</small><strong>{playback.currentChord || "—"}</strong></span>
               <span><small>Next</small><strong>{playback.upcomingChord || "—"}</strong></span>
-              <span><small>Song section</small><strong>{playback.currentSection || playback.arrangerState}</strong></span>
+              <span><small>Arranger</small><strong>{playback.arrangerState}</strong></span>
             </div>
           </div>
 
           <div className="genre-transform">
             <div>
-              <span className="demo-eyebrow">Step 4 of 4</span>
-              <strong>Change the band while the song keeps playing</strong>
+              <span className="demo-eyebrow">Transform the keyboard</span>
+              <strong>Choose any factory style on your {midi.profile?.displayName}.</strong>
             </div>
-            <div className="genre-buttons">
-              {genres.map((item) => (
-                <button
-                  key={item}
-                  className={item === genre ? "is-active" : ""}
-                  type="button"
-                  onClick={() => changeGenre(item)}
-                >
-                  <span className="selection-light" />{item}
-                </button>
-              ))}
+            <div className="style-catalog-controls">
+              <input
+                type="search"
+                value={styleSearch}
+                placeholder={`Search ${availableStyles.length} styles`}
+                aria-label="Search styles"
+                onChange={(event) => setStyleSearch(event.target.value)}
+              />
+              <select
+                value={styleCategory}
+                aria-label="Style category"
+                onChange={(event) => setStyleCategory(event.target.value)}
+              >
+                {styleCategories.map((item) => <option key={item}>{item}</option>)}
+              </select>
+              <select
+                value={selectedStyle ? entryKey(selectedStyle) : ""}
+                aria-label="Yamaha style"
+                onChange={(event) => {
+                  const next = availableStyles.find((style) => entryKey(style) === event.target.value)
+                  if (next) changeStyle(next)
+                }}
+              >
+                {catalogOptions.map((style) => (
+                  <option key={entryKey(style)} value={entryKey(style)}>
+                    {style.name}{style.bpm ? ` · ${style.bpm} BPM` : ""}
+                  </option>
+                ))}
+              </select>
+              <span>{selectedStyle?.name || "No style available"}</span>
             </div>
           </div>
 
           {notice && <div className="demo-status" role="status">{notice}</div>}
-          <section className="simple-song-progress">
-            <div><small>Now playing</small><strong>{playback.currentSection || "Ready to begin"}</strong></div>
-            <div><small>Current chord</small><strong>{playback.currentChord || "—"}</strong></div>
-            <div><small>Next chord</small><strong>{playback.upcomingChord || "—"}</strong></div>
-            <button type="button" onClick={() => setShowFullSong((value) => !value)}>
-              {showFullSong ? "Hide full song" : "Show full song"}
-            </button>
-          </section>
-          {showFullSong && <SongTimeline song={song} playback={playback} />}
+          <SongTimeline song={song} playback={playback} />
         </section>
-        )}
       </div>
       <FeedbackPrompt meaningfulActions={engagements} />
     </DemoShell>

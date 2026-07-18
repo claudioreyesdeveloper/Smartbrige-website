@@ -48,6 +48,13 @@ export type StyleWireMapping = {
   sourceCatalogValue: number
 }
 
+export type StyleCatalogEntry = {
+  name: string
+  category: string
+  styleNumber: number
+  bpm: number
+}
+
 export type KeyboardProfile = {
   id: YamahaModelId
   displayName: string

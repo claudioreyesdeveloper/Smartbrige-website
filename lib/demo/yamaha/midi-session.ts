@@ -312,6 +312,10 @@ export class YamahaMidiSession extends EventTarget {
     this.send(data, timestamp, "port1")
   }
 
+  sendPort2(data: Uint8Array, timestamp?: number) {
+    this.send(data, timestamp, "port2")
+  }
+
   sendBoth(data: Uint8Array, timestamp?: number) {
     this.send(data, timestamp, "both")
   }

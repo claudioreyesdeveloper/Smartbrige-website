@@ -8,8 +8,7 @@ export type MidiNote = {
 export type MidiPreviewEvent = {
   tick: number
   status: number
-  data1: number
-  data2: number
+  data: number[]
 }
 
 type MidiEvent = {
@@ -221,6 +220,17 @@ export function replaceStyleLanes(
   const target = tracks[0]
   const endTick = Math.max(...tracks.map((track) => track.endTick))
   let order = Math.max(0, ...target.events.map((event) => event.order)) + 1
+  const noteChannels = tracks.flatMap((track) =>
+    track.events
+      .filter((event) => {
+        const kind = event.status & 0xf0
+        return kind === 0x80 || kind === 0x90
+      })
+      .map((event) => event.status & 0x0f),
+  )
+  const nativeStyleChannels = noteChannels.filter((channel) => channel >= 8).length
+    > noteChannels.filter((channel) => channel < 8).length
+  const channelBase = nativeStyleChannels ? 8 : 0
 
   const removeNotesOnChannels = (channels: number[]) => {
     tracks.forEach((track) => {
@@ -236,10 +246,10 @@ export function replaceStyleLanes(
   }
 
   if (replacements.drums) {
-    removeNotesOnChannels([0, 1])
+    removeNotesOnChannels([0, 1, 8, 9])
     const events = notesToEvents(
       replacements.drums.notes,
-      0,
+      channelBase,
       replacements.drums.cycleTicks,
       endTick,
       order,
@@ -248,10 +258,10 @@ export function replaceStyleLanes(
     target.events.push(...events)
   }
   if (replacements.bass) {
-    removeNotesOnChannels([2])
+    removeNotesOnChannels([2, 10])
     const events = notesToEvents(
       replacements.bass.notes,
-      2,
+      channelBase + 2,
       replacements.bass.cycleTicks,
       endTick,
       order,
@@ -324,6 +334,14 @@ export function extractMidiNotes(bytes: Uint8Array): {
 }
 
 export function extractStylePreviewEvents(style: ParsedYamahaStyle): MidiPreviewEvent[] {
+  const eventPriority = (event: MidiPreviewEvent) => {
+    const kind = event.status & 0xf0
+    if (kind === 0xb0 && (event.data[0] === 0 || event.data[0] === 32)) return 0
+    if (kind === 0xc0) return 1
+    if (kind === 0x80 || (kind === 0x90 && (event.data[1] || 0) === 0)) return 2
+    if (kind === 0x90) return 4
+    return 3
+  }
   return style.tracks
     .flatMap((track) =>
       track.events
@@ -337,10 +355,9 @@ export function extractStylePreviewEvents(style: ParsedYamahaStyle): MidiPreview
           return {
             tick: event.tick,
             status: (event.status & 0xf0) | previewChannel,
-            data1: event.data[0] || 0,
-            data2: event.data[1] || 0,
+            data: [...event.data],
           }
         }),
     )
-    .sort((a, b) => a.tick - b.tick)
+    .sort((a, b) => a.tick - b.tick || eventPriority(a) - eventPriority(b))
 }

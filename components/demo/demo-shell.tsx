@@ -38,7 +38,7 @@ export function DemoShell({
 
   return (
     <BrowserCompatibility>
-    <div className="demo-app senior-demo">
+    <div className={`demo-app${midi.connected ? "" : " senior-demo"}`}>
       <header className="demo-topbar">
         <div className="demo-topbar-left">
           <Link href="/demo" className="demo-back" aria-label="Back to Demo Station">

@@ -17,5 +17,5 @@ test("detects a supported Yamaha keyboard over physical Web MIDI", async ({
   await page.getByRole("button", { name: model, exact: true }).click()
   await page.getByRole("button", { name: "Connect my keyboard" }).last().click()
   await expect(page.locator(".keyboard-badge.is-connected")).toContainText(model, { timeout: 10000 })
-  await expect(page.getByRole("heading", { name: "Choose a song" })).toBeVisible()
+  await expect(page.getByText("16 complete 4/4 arrangements")).toBeVisible()
 })

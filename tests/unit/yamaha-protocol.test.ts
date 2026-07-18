@@ -14,6 +14,10 @@ import {
   KEYBOARD_PROFILES,
   profileFromUniversalIdentity,
 } from "@/lib/demo/yamaha/profiles"
+import {
+  styleMappingForEntry,
+  stylesForProfile,
+} from "@/lib/demo/yamaha/style-catalog"
 import { MusicsoftTransfer } from "@/lib/demo/yamaha/musicsoft-transfer"
 import {
   findYamahaPortPair,
@@ -60,6 +64,18 @@ describe("Yamaha commands", () => {
       .toEqual([0x2b, 0x62])
     expect([...styleSelectCommand(KEYBOARD_PROFILES.tyros5.styleMappings.Gospel)].slice(-3, -1))
       .toEqual([0x15, 0x62])
+  })
+
+  it("exposes every supported model catalog with desktop-compatible encoding", () => {
+    expect(stylesForProfile(KEYBOARD_PROFILES.genos)).toHaveLength(550)
+    expect(stylesForProfile(KEYBOARD_PROFILES.genos2)).toHaveLength(796)
+    expect(stylesForProfile(KEYBOARD_PROFILES.tyros4)).toHaveLength(509)
+    expect(stylesForProfile(KEYBOARD_PROFILES.tyros5)).toHaveLength(537)
+
+    const genosStyle = { name: "Test", category: "Pop", bpm: 120, styleNumber: 5635 }
+    const tyrosStyle = { ...genosStyle, styleNumber: 5602 }
+    expect(styleMappingForEntry(KEYBOARD_PROFILES.genos, genosStyle).bytes).toEqual([0x2c, 0x03])
+    expect(styleMappingForEntry(KEYBOARD_PROFILES.tyros5, tyrosStyle).bytes).toEqual([0x15, 0x62])
   })
 
   it("recognizes verified Yamaha universal identity tuples", () => {

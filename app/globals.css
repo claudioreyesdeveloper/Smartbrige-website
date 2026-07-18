@@ -1359,6 +1359,39 @@ body:has(.demo-station) .site-footer {
   color: #9ed9ff;
 }
 
+.style-catalog-controls {
+  display: grid;
+  grid-template-columns: minmax(9rem, 0.8fr) minmax(9rem, 0.7fr) minmax(15rem, 1.4fr);
+  gap: 0.55rem;
+  align-items: center;
+}
+
+.style-catalog-controls input,
+.style-catalog-controls select {
+  min-height: 2.7rem;
+  min-width: 0;
+  padding: 0 0.75rem;
+  border: 1px solid #315671;
+  border-radius: 7px;
+  background: #091d2d;
+  color: #e8f5fc;
+  font: inherit;
+}
+
+.style-catalog-controls input:focus,
+.style-catalog-controls select:focus {
+  border-color: #48bff7;
+  outline: 2px solid rgba(72, 191, 247, 0.25);
+}
+
+.style-catalog-controls > span {
+  grid-column: 1 / -1;
+  color: #91d8ff;
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-align: right;
+}
+
 .song-timeline {
   display: grid;
   gap: 0.65rem;
@@ -2614,6 +2647,8 @@ body:has(.demo-station) .site-footer {
   .senior-category-grid,
   .senior-part-grid { grid-template-columns: repeat(2, 1fr); }
   .simple-song-progress { grid-template-columns: 1fr 1fr; }
+  .style-catalog-controls { grid-template-columns: 1fr; width: 100%; }
+  .style-catalog-controls > span { grid-column: 1; text-align: left; }
 }
 
 @media (prefers-reduced-motion: reduce) {

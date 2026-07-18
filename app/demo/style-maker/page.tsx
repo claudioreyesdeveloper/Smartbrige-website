@@ -1,4 +1,4 @@
-import { GuidedStyleMakerDemo } from "@/components/demo/guided-style-maker-demo"
+import { StyleMakerDemo } from "@/components/demo/style-maker-demo"
 
 export const metadata = {
   title: "Style Maker Demo",
@@ -6,5 +6,5 @@ export const metadata = {
 }
 
 export default function StyleMakerDemoPage() {
-  return <GuidedStyleMakerDemo />
+  return <StyleMakerDemo />
 }
