@@ -1,7 +1,8 @@
 import type { Metadata } from "next"
-import { PlaceholderWorkspace } from "@/components/app-shell/placeholder-workspace"
 import { ServiceAccessGate } from "@/components/app-shell/service-access-gate"
 import { SERVICE_CATALOG } from "@/components/app-shell/service-catalog"
+import { LyricsFixtureEntry } from "@/components/lyrics/fixture-entry"
+import { LyricsWorkspace } from "@/components/lyrics/lyrics-workspace"
 
 const service = SERVICE_CATALOG.lyrics
 
@@ -10,12 +11,11 @@ export const metadata: Metadata = {
 }
 
 export default function LyricsAppPage() {
+  const fixtureEnabled = process.env.SMARTBRIDGE_ACCESS_FIXTURE === "1"
+
   return (
     <ServiceAccessGate serviceKey="lyrics">
-      <PlaceholderWorkspace
-        title={service.name}
-        description={service.description}
-      />
+      {fixtureEnabled ? <LyricsFixtureEntry /> : <LyricsWorkspace />}
     </ServiceAccessGate>
   )
 }
