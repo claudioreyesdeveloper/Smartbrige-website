@@ -41,6 +41,13 @@ function AppShellFrame({ children, email }: AppShellFrameProps) {
 
             <nav className="app-shell-utility-nav" aria-label="Account and support">
               <Link
+                href="/app/settings"
+                className={`app-shell-utility-link${pathname === "/app/settings" ? " is-active" : ""}`}
+                aria-current={pathname === "/app/settings" ? "page" : undefined}
+              >
+                Settings
+              </Link>
+              <Link
                 href="/app/account"
                 className={`app-shell-utility-link${pathname === "/app/account" ? " is-active" : ""}`}
                 aria-current={pathname === "/app/account" ? "page" : undefined}
@@ -69,6 +76,11 @@ function AppShellFrame({ children, email }: AppShellFrameProps) {
                 <>
                   <p className="app-shell-topbar-eyebrow">{activeService.tagline}</p>
                   <h1 className="app-shell-topbar-title">{activeService.name}</h1>
+                </>
+              ) : pathname === "/app/settings" ? (
+                <>
+                  <p className="app-shell-topbar-eyebrow">Workspace</p>
+                  <h1 className="app-shell-topbar-title">Settings</h1>
                 </>
               ) : pathname === "/app/account" ? (
                 <>

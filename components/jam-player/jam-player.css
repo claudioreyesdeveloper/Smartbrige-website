@@ -383,49 +383,45 @@
   margin: 0;
 }
 
-.paid-keyboard-connected,
 .paid-keyboard-status {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
+  align-items: flex-start;
   gap: 0.85rem;
   padding: 0.9rem 1rem;
   border-radius: 0.75rem;
-  border: 1px solid rgba(52, 211, 153, 0.42);
-  border-left: 4px solid #34d399;
-  background: rgba(8, 48, 48, 0.55);
+  border: 1px solid var(--paid-jam-line);
+  border-left: 4px solid #6b8294;
+  background: rgba(10, 30, 46, 0.75);
   order: -2;
 }
 
-.paid-keyboard-connected {
-  display: grid;
-  grid-template-columns: 1fr auto;
+.paid-keyboard-status.is-connected {
+  border-color: rgba(52, 211, 153, 0.42);
+  border-left-color: #34d399;
+  background: rgba(8, 48, 48, 0.55);
 }
 
-.paid-keyboard-connected strong,
+.paid-keyboard-status.is-disconnected a {
+  color: #6ee7b7;
+  text-decoration: underline;
+}
+
 .paid-keyboard-status strong {
   display: block;
   font-size: 1.05rem;
 }
 
-.paid-keyboard-connected button,
-.paid-keyboard-status button,
-.paid-keyboard-action {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  border-radius: 999px;
-  border: 1px solid rgba(148, 163, 184, 0.45);
-  background: transparent;
-  color: #e2e8f0;
-  padding: 0.45rem 0.85rem;
-  cursor: pointer;
+.paid-keyboard-status p {
+  margin: 0.25rem 0 0;
+  color: #9eb6ca;
+  font-size: 0.9rem;
+  line-height: 1.45;
 }
 
-.paid-keyboard-error {
-  margin: 0.5rem 0 0;
-  color: #fca5a5;
-  font-size: 0.9rem;
+.paid-keyboard-connected,
+.paid-keyboard-status.is-connected > svg {
+  flex-shrink: 0;
+  margin-top: 0.15rem;
 }
 
 .paid-jam-connection.is-connected {

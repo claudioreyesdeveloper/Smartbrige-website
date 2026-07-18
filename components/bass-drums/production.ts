@@ -18,6 +18,7 @@ import {
 } from "@/lib/rhythm/domain"
 import type { KeyboardModel } from "@/lib/jam/domain/models"
 import { getMidiSession, type YamahaMidiSession } from "@/lib/yamaha"
+import { getPreferredKeyboardModel } from "@/lib/yamaha/preferred-model"
 import {
   RhythmAdapterError,
   type AuditionState,
@@ -269,8 +270,12 @@ export function createProductionBassDrumsAdapters(options: {
   const projectSession = options.projects ?? createProjectSession({ fetch: fetchImpl })
   const projectAdapter = createRhythmProjectAdapter(projectSession)
   const api = createRhythmApi(fetchImpl)
-  const model = options.model ?? "genos2"
   const midiSession = options.midiSession ?? getMidiSession()
+  const model =
+    options.model ??
+    getPreferredKeyboardModel() ??
+    midiSession.state.profile?.id ??
+    "genos2"
   const renderedPlayer = options.playAudition
     ? null
     : new RhythmRenderedAuditionPlayer({

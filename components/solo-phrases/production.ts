@@ -15,6 +15,7 @@ import { RhythmRenderedAuditionPlayer } from "@/lib/midi/audition"
 import { createProjectSession, ProjectClientError, type ProjectSession } from "@/lib/projects/client"
 import type { ProjectSoloTake } from "@/lib/projects/document"
 import { getMidiSession, type YamahaMidiSession } from "@/lib/yamaha"
+import { getPreferredKeyboardModel } from "@/lib/yamaha/preferred-model"
 import type { z } from "zod"
 import type {
   PreparedSoloAudition,
@@ -143,7 +144,11 @@ export function createProductionSoloAdapters(options: {
   const projects = options.projects ?? createProjectSession({ fetch: fetchImpl })
   const api = createApi(fetchImpl)
   const midiSession = options.midiSession ?? getMidiSession()
-  const model = options.model ?? "genos2"
+  const model =
+    options.model ??
+    getPreferredKeyboardModel() ??
+    midiSession.state.profile?.id ??
+    "genos2"
   const player = new RhythmRenderedAuditionPlayer({ session: midiSession })
 
   return {

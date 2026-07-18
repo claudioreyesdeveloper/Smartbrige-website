@@ -18,6 +18,7 @@ import type {
 import type { KeyboardModel } from "@/lib/jam/domain/models"
 import { RhythmRenderedAuditionPlayer } from "@/lib/midi/audition"
 import { getMidiSession, type YamahaMidiSession } from "@/lib/yamaha"
+import { getPreferredKeyboardModel } from "@/lib/yamaha/preferred-model"
 import type { z } from "zod"
 import type {
   CreativeDirection,
@@ -355,6 +356,11 @@ export function createProductionLyricsWorkspaceAdapters(options: {
   const base = createProductionLyricsAdapters(options)
   const projects = base.projects
   const midiSession = options.midiSession ?? getMidiSession()
+  const preferredModel =
+    options.model ??
+    getPreferredKeyboardModel() ??
+    midiSession.state.profile?.id ??
+    "genos2"
   const player = new RhythmRenderedAuditionPlayer({ session: midiSession })
   const fits = new Map<string, LyricFitResponse>()
 
@@ -495,7 +501,7 @@ export function createProductionLyricsWorkspaceAdapters(options: {
           editedLines(context, input.assignments),
         )
         if (!midiSession.state.connected) {
-          const connected = await midiSession.requestAccess(options.model ?? "genos2")
+          const connected = await midiSession.requestAccess(preferredModel)
           if (!connected.connected) {
             throw new LyricsAdapterError(
               "unavailable",

@@ -84,7 +84,10 @@ export function KeyboardSetupPanel({
       <div className="keyboard-setup-copy">
         <span className="demo-eyebrow">First, choose your keyboard</span>
         <h2 id="paid-keyboard-setup-title">Which Yamaha keyboard do you have?</h2>
-        <p>Turn it on and connect it to this computer with a USB cable.</p>
+        <p>
+          Turn it on and connect it with a USB cable. This connection is shared by every SmartBridge
+          feature.
+        </p>
       </div>
       <div className="keyboard-model-grid">
         {MODEL_OPTIONS.map((id) => (

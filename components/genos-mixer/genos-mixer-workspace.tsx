@@ -19,6 +19,7 @@ import {
   supportsGenosMixer,
 } from "./state"
 import { createProductionGenosMixerAdapters } from "./production"
+import { GlobalKeyboardStatus } from "@/components/keyboard/global-keyboard-status"
 import type {
   GenosMixerAdapters,
   MixerChannel,
@@ -215,6 +216,7 @@ export function GenosMixerWorkspace({ adapters: injected }: { adapters?: GenosMi
 
   return (
     <div className="genos-mixer">
+      <GlobalKeyboardStatus />
       <section className="mixer-command-bar" aria-label="Mixer status and project">
         <div className={`mixer-device-status is-${connection.phase}`} role="status">
           <span className="mixer-device-light" aria-hidden="true" />

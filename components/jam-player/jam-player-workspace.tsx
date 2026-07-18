@@ -8,7 +8,7 @@ import {
   TriangleAlert,
 } from "lucide-react"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
-import { KeyboardSetupPanel } from "@/components/keyboard/keyboard-setup-panel"
+import { GlobalKeyboardStatus } from "@/components/keyboard/global-keyboard-status"
 import { createProductionJamAdapters } from "./production"
 import { prepareAndPlay } from "./prepare-flow"
 import { SongTimeline } from "./song-timeline"
@@ -731,11 +731,7 @@ export function JamPlayerWorkspace({ adapters: injected }: JamPlayerWorkspacePro
             </div>
           </header>
 
-          <KeyboardSetupPanel
-            onSafeStop={() => {
-              adapters.dispatcher.stop()
-            }}
-          />
+          <GlobalKeyboardStatus />
 
           <section
             className="paid-jam-transform-panel"
