@@ -18,6 +18,7 @@ import {
   mixerWorkspaceReducer,
   supportsGenosMixer,
 } from "./state"
+import { createProductionGenosMixerAdapters } from "./production"
 import type {
   GenosMixerAdapters,
   MixerChannel,
@@ -36,7 +37,8 @@ const levelLabels: Record<LevelField, string> = {
   chorus: "Chorus",
 }
 
-export function GenosMixerWorkspace({ adapters }: { adapters: GenosMixerAdapters }) {
+export function GenosMixerWorkspace({ adapters: injected }: { adapters?: GenosMixerAdapters }) {
+  const [adapters] = useState(() => injected ?? createProductionGenosMixerAdapters())
   const [state, dispatch] = useReducer(mixerWorkspaceReducer, initialMixerWorkspaceState)
   const [supported, setSupported] = useState<boolean | null>(null)
   const [connection, setConnection] = useState<MixerConnectionState>(
@@ -63,6 +65,10 @@ export function GenosMixerWorkspace({ adapters }: { adapters: GenosMixerAdapters
     () => adapters.device.subscribe(setConnection),
     [adapters.device],
   )
+
+  useEffect(() => () => {
+    if (!injected) adapters.dispose?.()
+  }, [adapters, injected])
 
   useEffect(() => {
     let cancelled = false
@@ -132,16 +138,24 @@ export function GenosMixerWorkspace({ adapters }: { adapters: GenosMixerAdapters
 
   const changeLevel = (channel: MixerChannel, field: LevelField, value: number) => {
     const next = { ...channel, [field]: value }
-    dispatch({ type: "change-level", part: channel.part, field, value })
-    adapters.device.updateChannel(next)
-    setProjectStatus("Unsaved mixer changes")
+    try {
+      adapters.device.updateChannel(next, field)
+      dispatch({ type: "change-level", part: channel.part, field, value })
+      setProjectStatus("Unsaved mixer changes")
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "Mixer control failed.")
+    }
   }
 
   const toggleMute = (channel: MixerChannel) => {
     const next = { ...channel, mute: !channel.mute }
-    dispatch({ type: "toggle-mute", part: channel.part })
-    adapters.device.updateChannel(next)
-    setProjectStatus("Unsaved mixer changes")
+    try {
+      adapters.device.updateChannel(next, "mute")
+      dispatch({ type: "toggle-mute", part: channel.part })
+      setProjectStatus("Unsaved mixer changes")
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "Mixer mute failed.")
+    }
   }
 
   const refresh = async () => {
@@ -190,9 +204,13 @@ export function GenosMixerWorkspace({ adapters }: { adapters: GenosMixerAdapters
       voiceName: voice.name,
       known: true,
     }
-    dispatch({ type: "select-voice", part: voiceChannel.part, voice })
-    adapters.device.updateChannel(next)
-    setProjectStatus("Unsaved mixer changes")
+    try {
+      adapters.device.updateChannel(next, "voice")
+      dispatch({ type: "select-voice", part: voiceChannel.part, voice })
+      setProjectStatus("Unsaved mixer changes")
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "Voice selection failed.")
+    }
   }
 
   return (

@@ -172,9 +172,8 @@ export class YamahaMidiSession extends EventTarget {
       this.input2 = input2
       this.output1 = output1
       this.output2 = output2
-      const onMessage = (event: MidiMessage) => this.handleMessage(event.data)
-      this.input1.onmidimessage = onMessage
-      this.input2.onmidimessage = onMessage
+      this.input1.onmidimessage = (event) => this.handleMessage(event.data, "port1")
+      this.input2.onmidimessage = (event) => this.handleMessage(event.data, "port2")
       this.publish({
         connected: true,
         connecting: false,
@@ -300,8 +299,9 @@ export class YamahaMidiSession extends EventTarget {
     })
   }
 
-  private handleMessage(data: Uint8Array) {
+  private handleMessage(data: Uint8Array, source: "port1" | "port2") {
     this.dispatchEvent(new CustomEvent("midimessage", { detail: data }))
+    this.dispatchEvent(new CustomEvent("midiportmessage", { detail: { data, source } }))
     for (const pending of this.pending) {
       if (!pending.matcher(data)) continue
       clearTimeout(pending.timer)

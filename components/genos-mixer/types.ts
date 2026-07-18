@@ -7,6 +7,9 @@ export type MixerVoice = {
   id: string
   name: string
   category: string
+  msb?: number
+  lsb?: number
+  program?: number
 }
 
 export type MixerChannel = {
@@ -42,11 +45,13 @@ export type MixerProjectAdapter = {
   save(projectId: string, channels: readonly MixerChannel[]): Promise<MixerProject>
 }
 
+export type MixerChannelChange = "volume" | "pan" | "reverb" | "chorus" | "mute" | "voice"
+
 export type MixerDeviceAdapter = {
   getState(): MixerConnectionState
   subscribe(listener: (state: MixerConnectionState) => void): () => void
   refresh(): Promise<readonly MixerChannel[]>
-  updateChannel(channel: MixerChannel): void
+  updateChannel(channel: MixerChannel, change: MixerChannelChange): void
 }
 
 export type MixerVoiceAdapter = {
@@ -57,6 +62,7 @@ export type GenosMixerAdapters = {
   device: MixerDeviceAdapter
   projects: MixerProjectAdapter
   voices: MixerVoiceAdapter
+  dispose?(): void
 }
 
 export type MixerWorkspaceState = {

@@ -11,8 +11,8 @@ export class ProductionMixerSession {
   }
 
   private readonly onMidiMessage = (event: Event) => {
-    const detail = (event as CustomEvent<Uint8Array>).detail
-    this.engine.handleMidi(detail, null)
+    const detail = (event as CustomEvent<{ data: Uint8Array; source: MixerPort }>).detail
+    this.engine.handleMidi(detail.data, detail.source)
   }
 
   constructor(
@@ -24,7 +24,7 @@ export class ProductionMixerSession {
     this.engine = new MixerEngine(session, model, clock, refreshTimeoutMs)
     this.engine.setConnected(session.state.connected)
     session.addEventListener("statechange", this.onSessionState)
-    session.addEventListener("midimessage", this.onMidiMessage)
+    session.addEventListener("midiportmessage", this.onMidiMessage)
   }
 
   handlePortMessage(port: MixerPort, data: Uint8Array): boolean {
@@ -33,7 +33,7 @@ export class ProductionMixerSession {
 
   dispose(): void {
     this.session.removeEventListener("statechange", this.onSessionState)
-    this.session.removeEventListener("midimessage", this.onMidiMessage)
+    this.session.removeEventListener("midiportmessage", this.onMidiMessage)
     this.engine.setConnected(false)
   }
 }
