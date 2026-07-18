@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server"
+import { ensureFixtureUserExists } from "@/lib/access/ensure-fixture-user"
 import { getSessionUserId } from "@/lib/auth"
 import { isPlainObject, projectErrorResponse, readJsonBody } from "@/lib/projects/http"
 import { getProjectService } from "@/lib/projects/runtime"
@@ -21,6 +22,16 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     const userId = await getSessionUserId()
+    // Preview fixture users are synthetic; ensure the FK row exists before insert.
+    if (userId === "preview-user" || userId === "fixture-user") {
+      await ensureFixtureUserExists({
+        userId,
+        email:
+          userId === "preview-user"
+            ? "preview@thesmartbridge.io"
+            : "fixture@thesmartbridge.io",
+      })
+    }
     const body = await readJsonBody(request)
     if (!isPlainObject(body)) {
       throw new ProjectError("validation", "Request body must be a JSON object.")

@@ -14,6 +14,7 @@ import { sanitizeAppCallbackUrl } from "@/lib/access/safe-redirect"
 import { getEntitlementRecordsForUser } from "@/lib/auth/entitlements"
 import type { EntitlementRecord } from "@/lib/auth/entitlement-logic"
 import { getSessionUserId, auth } from "@/lib/auth"
+import { ensureFixtureUserExists } from "@/lib/access/ensure-fixture-user"
 import type { ServiceEntitlement } from "@/components/app-shell/types"
 
 export type AppAccessContext = {
@@ -33,6 +34,7 @@ async function readFixtureFromCookies(): Promise<ParsedAccessFixture | null> {
 export async function resolveAppAccessContext(): Promise<AppAccessContext | null> {
   const fixture = await readFixtureFromCookies()
   if (fixture) {
+    await ensureFixtureUserExists({ userId: fixture.userId, email: fixture.email })
     const entitlements = buildServiceEntitlements(fixture.records)
     return {
       userId: fixture.userId,

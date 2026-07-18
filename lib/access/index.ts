@@ -23,3 +23,4 @@ export {
   resolveAppAccessContext,
   type AppAccessContext,
 } from "@/lib/access/session"
+export { ensureFixtureUserExists } from "@/lib/access/ensure-fixture-user"
