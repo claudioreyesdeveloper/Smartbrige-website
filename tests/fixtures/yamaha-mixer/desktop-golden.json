@@ -1,0 +1,126 @@
+{
+  "schemaVersion": 1,
+  "surface": "yamaha_mixer_desktop_contract",
+  "verifiedModels": ["genos", "genos2", "tyros4", "tyros5"],
+  "channelCount": 32,
+  "banks": {
+    "style": {
+      "uiChannels": [1, 16],
+      "outputPort": "port2",
+      "uniqueRefreshParts": 15
+    },
+    "song": {
+      "uiChannels": [17, 32],
+      "outputPort": "port1",
+      "uniqueRefreshParts": 16
+    }
+  },
+  "envelope": {
+    "yamahaId": 67,
+    "modelIdXg": 76,
+    "parameterChange": 16,
+    "dumpRequest": 32,
+    "parameterRequest": 48,
+    "multiPartAddress": 8
+  },
+  "parameters": {
+    "bankMsb": 1,
+    "bankLsb": 2,
+    "program": 3,
+    "volume": 11,
+    "pan": 14,
+    "chorus": 18,
+    "reverb": 19,
+    "styleEqBass": 114,
+    "styleEqTreble": 115,
+    "songEqAddress": 10,
+    "songEqBass": 32,
+    "songEqTreble": 33
+  },
+  "defaults": {
+    "volume": 100,
+    "pan": 64,
+    "reverb": 0,
+    "chorus": 0,
+    "voiceMsb": 0,
+    "voiceLsb": 0,
+    "voiceProgram": 0,
+    "mute": false
+  },
+  "refreshProgress": [
+    { "value": 0, "status": "Reading style voices..." },
+    { "value": 0.15, "status": "Reading song voices..." },
+    { "value": 0.35, "status": "Scanning DSP effects..." },
+    { "value": 0.55, "status": "Reading voice DSP assignments..." },
+    { "value": 0.85, "status": "Applying DSP results..." },
+    { "value": 1, "status": "Refresh complete" }
+  ],
+  "timing": {
+    "recentCcConflictWindowMs": 3000,
+    "recentCcMinimumDifference": 2,
+    "songZeroReplyTimeoutMs": 1800,
+    "refreshSafetyTimeoutMs": 5000
+  },
+  "sharedPart": {
+    "part": 8,
+    "outboundUiChannels": [8, 9],
+    "authoritativeInboundUiChannel": 9,
+    "excludedRefreshUiChannel": 8
+  },
+  "essentialControls": ["volume", "pan", "reverb", "chorus", "voice", "mute"],
+  "evidence": [
+    {
+      "source": "SmartBridge/Source/Core/MixerModel.h",
+      "symbols": ["MixerModel::ChannelState", "MixerModel::kNumChannels"],
+      "facts": ["32 one-based UI channels", "channel defaults and essential state fields"]
+    },
+    {
+      "source": "SmartBridge/Source/Core/MixerModel.cpp",
+      "symbols": ["MixerModel::resetAll", "MixerModel::setVolume", "MixerModel::setPan", "MixerModel::setReverb", "MixerModel::setChorus", "MixerModel::setVoice", "MixerModel::setMute"],
+      "facts": ["default values", "0-127 clamping", "voice and mute state mutation"]
+    },
+    {
+      "source": "SmartBridge/Source/Core/YamahaProtocol.h",
+      "symbols": ["YamahaProtocol::xgPartFromUiChannel", "YamahaProtocol::uiChannelFromXgPart", "YamahaProtocol::MultiPart"],
+      "facts": ["port/channel mapping", "shared part 0x08", "canonical parameter offsets"]
+    },
+    {
+      "source": "SmartBridge/Source/Core/YamahaSysExBuilder.h",
+      "symbols": ["YamahaSysEx::paramChange", "YamahaSysEx::dumpRequest", "YamahaSysEx::paramRequest", "YamahaSysEx::multiPartVolume", "YamahaSysEx::multiPartPan", "YamahaSysEx::multiPartReverb", "YamahaSysEx::multiPartChorus"],
+      "facts": ["canonical SysEx envelopes and multipart control bytes"]
+    },
+    {
+      "source": "SmartBridge/Source/UI/screens/TyrosMixerScreen.cpp",
+      "symbols": ["TyrosMixerScreen::requestMixerBank", "TyrosMixerScreen::requestAllMixerBanks", "TyrosMixerScreen::matchPendingChannels", "TyrosMixerScreen::noteBankReplyForRequest", "TyrosMixerScreen::finishBankIfComplete", "TyrosMixerScreen::handleClassifiedMultiPartParam", "TyrosMixerScreen::handleClassifiedBulkDump", "TyrosMixerScreen::shouldPreferRecentCcVolume", "TyrosMixerScreen::sendVolume", "TyrosMixerScreen::sendPan", "TyrosMixerScreen::sendReverb", "TyrosMixerScreen::sendChorus", "TyrosMixerScreen::sendVoice", "TyrosMixerScreen::channelMuteToggled"],
+      "facts": ["sequential Style then Song refresh", "pending-request correlation", "stale reply rejection", "recent CC conflict rule", "essential control routing", "mute uses volume zero", "progress and timeout behavior"]
+    },
+    {
+      "source": "SmartBridge/Source/Connector/LocalMidiConnector.cpp",
+      "symbols": ["LocalMidiConnector::SendMessageToPort1", "LocalMidiConnector::SendMessageToPort2", "LocalMidiConnector::isInputFromPort1", "classifyInputAsSongPort"],
+      "facts": ["separate output routing", "runtime input-port classification"]
+    },
+    {
+      "source": "saas/a05-fixtures:SmartBridge/TestFixtures/generated/mixer_protocol.json",
+      "symbols": ["mixer_protocol.cases"],
+      "facts": ["A05 identity, model, dump, volume, pan, reverb, and voice provenance vectors"]
+    }
+  ],
+  "unknowns": [
+    {
+      "topic": "Tyros4 universal identity tuple",
+      "reason": "No verified tuple is present in the inspected desktop identity catalog or website profile matcher."
+    },
+    {
+      "topic": "Physical reply input port",
+      "reason": "Desktop explicitly states some Yamaha arrangers reply on one input regardless of request output; correlation must not infer it."
+    },
+    {
+      "topic": "Mute acknowledgement",
+      "reason": "Desktop mute is a local MixerModel flag plus volume-zero send, not an independently acknowledged wire parameter."
+    },
+    {
+      "topic": "A05 legacy pan and reverb offsets",
+      "reason": "A05 values 0x0C and 0x0D conflict with current YamahaProtocol canonical values 0x0E and 0x13 and are excluded."
+    }
+  ]
+}
