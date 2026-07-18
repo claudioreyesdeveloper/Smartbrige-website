@@ -30,6 +30,7 @@ export default defineConfig({
     env: {
       ...process.env,
       SMARTBRIDGE_ACCESS_FIXTURE: "1",
+      SMARTBRIDGE_UI_FIXTURE: "1",
       AUTH_SECRET: process.env.AUTH_SECRET ?? "playwright-auth-secret-not-for-production",
       AUTH_EMAIL_FROM: process.env.AUTH_EMAIL_FROM ?? "playwright@example.com",
     },

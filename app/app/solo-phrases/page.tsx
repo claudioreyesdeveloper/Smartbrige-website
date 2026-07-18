@@ -11,7 +11,7 @@ export const metadata: Metadata = {
 }
 
 export default function SoloPhrasesAppPage() {
-  const testFixtureEnabled = process.env.SMARTBRIDGE_ACCESS_FIXTURE === "1"
+  const testFixtureEnabled = process.env.SMARTBRIDGE_UI_FIXTURE === "1"
 
   return (
     <ServiceAccessGate serviceKey="solo-phrases">

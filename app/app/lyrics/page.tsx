@@ -11,7 +11,7 @@ export const metadata: Metadata = {
 }
 
 export default function LyricsAppPage() {
-  const fixtureEnabled = process.env.SMARTBRIDGE_ACCESS_FIXTURE === "1"
+  const fixtureEnabled = process.env.SMARTBRIDGE_UI_FIXTURE === "1"
 
   return (
     <ServiceAccessGate serviceKey="lyrics">
