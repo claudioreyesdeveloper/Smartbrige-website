@@ -75,6 +75,7 @@ const initialPlayback: JamPlaybackState = {
   playing: false,
   beat: 0,
   totalBeats: 0,
+  bpm: 120,
   currentChord: "",
   upcomingChord: "",
   currentSection: "",
@@ -171,7 +172,7 @@ function SongTimeline({
                           </span>
                         )
                       })}
-                      {progress > 0 && progress < 1 && (
+                      {playback.playing && progress >= 0 && progress <= 1 && active && (
                         <i className="timeline-playhead" style={{ left: `${progress * 100}%` }} />
                       )}
                     </div>
@@ -236,8 +237,9 @@ export function JamPlayerDemo() {
     filteredStyles.some((style) => entryKey(style) === entryKey(selectedStyle))
 
   useEffect(() => {
-    scheduler.current = new JamScheduler(session, setPlayback)
-    return () => scheduler.current?.stop()
+    const next = new JamScheduler(session, setPlayback)
+    scheduler.current = next
+    return () => next.dispose()
   }, [session])
 
   useEffect(() => {
@@ -378,7 +380,12 @@ export function JamPlayerDemo() {
               <p>{song.subtitle}</p>
             </div>
             <div className="song-facts">
-              <span><small>Tempo</small><strong>{song.tempo}</strong></span>
+              <span>
+                <small>Tempo</small>
+                <strong>
+                  {playback.playing ? Math.round(playback.bpm) : song.tempo}
+                </strong>
+              </span>
               <span><small>Key</small><strong>{song.key}</strong></span>
               <span><small>Meter</small><strong>4/4</strong></span>
             </div>

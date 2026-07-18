@@ -9,7 +9,14 @@ import {
   styleSelectCommand,
   tempoCommand,
 } from "@/lib/demo/yamaha/commands"
-import type { YamahaMidiSession } from "@/lib/demo/yamaha/midi-session"
+import type { MidiMessageDetail, YamahaMidiSession } from "@/lib/demo/yamaha/midi-session"
+import { TempoFollower } from "@/lib/demo/yamaha/tempo-follower"
+
+/** Match desktop JamPlayerScreen chord lead (~50ms). */
+export const CHORD_ANTICIPATION_MS = 50
+
+/** Wait this long for keyboard F8 before starting the beat clock anyway. */
+const CLOCK_FALLBACK_MS = 120
 
 export type ScheduledJamEvent = {
   id: string
@@ -24,15 +31,20 @@ export type JamPlaybackState = {
   playing: boolean
   beat: number
   totalBeats: number
+  bpm: number
   currentChord: string
   upcomingChord: string
   currentSection: string
   arrangerState: string
 }
 
-export function buildJamSchedule(song: DemoSong, anticipationMs = 85): ScheduledJamEvent[] {
+export function buildJamSchedule(
+  song: DemoSong,
+  anticipationMs = CHORD_ANTICIPATION_MS,
+  tempoBpm = song.tempo,
+): ScheduledJamEvent[] {
   const beatsPerBar = song.timeSignature[0]
-  const anticipationBeats = (anticipationMs * song.tempo) / 60000
+  const anticipationBeats = (anticipationMs * tempoBpm) / 60000
   const events: ScheduledJamEvent[] = []
   let sectionStart = beatsPerBar
 
@@ -68,10 +80,12 @@ export function buildJamSchedule(song: DemoSong, anticipationMs = 85): Scheduled
     const sectionEnd = sectionStart + section.bars * beatsPerBar
     if (sectionIndex < song.sections.length - 1) {
       const next = song.sections[sectionIndex + 1]
+      // Desktop fires fill ~0.2 beats before the last-bar line.
+      const fillBeat = sectionEnd - beatsPerBar - 0.2
       events.push({
         id: `transition-${section.id}`,
         beat: sectionEnd - beatsPerBar,
-        dispatchBeat: sectionEnd - beatsPerBar,
+        dispatchBeat: fillBeat,
         type: section.transition === "break" ? "break" : "fill",
         section: next,
       })
@@ -91,19 +105,36 @@ export function buildJamSchedule(song: DemoSong, anticipationMs = 85): Scheduled
   )
 }
 
+/**
+ * Jam scheduler matching desktop SmartBridge Slave (Keyboard Master) mode:
+ * - Push song tempo to the keyboard via SysEx
+ * - Do NOT send MIDI clock / Start / Stop (Tyros ignores external clock for styles)
+ * - Follow keyboard Port-1 F8 for live BPM once locked
+ * - Hold the beat clock until the keyboard clock starts (avoids playhead lag)
+ * - Report a visual beat that includes chord anticipation so the cursor sits on
+ *   the sounding block, not behind it
+ */
 export class JamScheduler {
   private timer: ReturnType<typeof setInterval> | null = null
-  private anchorMs = 0
+  private lastTickMs = 0
+  private beatPosition = 0
+  private startBeat = 0
+  private liveBpm = 120
+  private songTempo = 120
+  private anticipationBeats = 0
   private events: ScheduledJamEvent[] = []
   private sent = new Set<string>()
   private heldNotes: number[] = []
-  private lastClockPulse = -1
   private playing = false
-  private startBeat = 0
+  private transportArmed = false
+  private playCommandMs = 0
+  private tempoFollower = new TempoFollower()
+  private onMidi: ((event: Event) => void) | null = null
   private state: JamPlaybackState = {
     playing: false,
     beat: 0,
     totalBeats: 0,
+    bpm: 120,
     currentChord: "",
     upcomingChord: "",
     currentSection: "",
@@ -113,16 +144,42 @@ export class JamScheduler {
   constructor(
     private readonly session: YamahaMidiSession,
     private readonly onState: (state: JamPlaybackState) => void,
-  ) {}
+  ) {
+    this.onMidi = (event: Event) => {
+      const detail = (event as CustomEvent<MidiMessageDetail>).detail
+      if (!detail) return
+      // Desktop follows style clock on Port 1 only (avoid doubled F8 from Port 2).
+      if (detail.data[0] === 0xf8) {
+        if (detail.port !== 1) return
+        this.tempoFollower.handleMessage(detail.data)
+        this.armTransportFromClock()
+        return
+      }
+      this.tempoFollower.handleMessage(detail.data)
+    }
+    this.session.addEventListener("midimessage", this.onMidi)
+  }
+
+  dispose() {
+    this.stop(false)
+    if (this.onMidi) {
+      this.session.removeEventListener("midimessage", this.onMidi)
+      this.onMidi = null
+    }
+  }
 
   start(song: DemoSong, style: StyleWireMapping, startBeat = 0) {
     this.stop(false)
-    this.events = buildJamSchedule(song)
+    this.songTempo = song.tempo
+    this.liveBpm = song.tempo
+    this.anticipationBeats = (CHORD_ANTICIPATION_MS * song.tempo) / 60000
+    this.tempoFollower.reset()
+    this.events = buildJamSchedule(song, CHORD_ANTICIPATION_MS, this.liveBpm)
     this.sent.clear()
     this.startBeat = Math.max(0, startBeat)
-    this.anchorMs = performance.now()
+    this.beatPosition = this.startBeat
     this.playing = true
-    this.lastClockPulse = Math.floor(this.startBeat * 24) - 1
+    this.transportArmed = false
     const totalBeats =
       song.timeSignature[0] +
       song.sections.reduce(
@@ -131,31 +188,53 @@ export class JamScheduler {
       )
     this.state = {
       playing: true,
-      beat: this.startBeat,
+      beat: this.displayBeat(),
       totalBeats,
+      bpm: this.liveBpm,
       currentChord: "",
       upcomingChord: "",
-      currentSection: this.startBeat < song.timeSignature[0] ? "Intro" : "",
+      currentSection: this.beatPosition < song.timeSignature[0] ? "Intro" : "",
       arrangerState: "Intro",
     }
 
-    // Match desktop LocalMidiConnector: style/arranger SysEx → both ports;
-    // FA/FC realtime transport → Port 1 only.
+    // Match desktop LocalMidiConnector Slave mode:
+    // style/tempo/arranger SysEx → both ports; no FA/F8/FC outbound.
     this.session.sendBoth(styleSelectCommand(style))
     this.session.sendBoth(tempoCommand(song.tempo))
-    this.session.sendPort1(ARRANGER_COMMANDS.midiStart)
     this.session.sendBoth(ARRANGER_COMMANDS.start)
 
-    if (this.startBeat > 0) {
+    if (this.beatPosition > 0) {
       this.events.forEach((event) => {
-        if (event.dispatchBeat <= this.startBeat) this.sent.add(event.id)
+        if (event.dispatchBeat <= this.beatPosition) this.sent.add(event.id)
       })
-      this.primeMidSong(song, this.startBeat)
+      this.primeMidSong(song, this.beatPosition)
     } else {
-      this.session.sendBoth(ARRANGER_COMMANDS.intro1, performance.now() + 50)
+      this.session.sendBoth(ARRANGER_COMMANDS.intro1)
+    }
+
+    // Desktop anchors the section clock AFTER startup MIDI so the first tick
+    // does not include command latency (which made the playhead appear late).
+    this.playCommandMs = performance.now()
+    this.lastTickMs = this.playCommandMs
+    // Section jumps skip intro — start the beat clock immediately (desktop playClip).
+    if (this.startBeat > 0) {
+      this.transportArmed = true
     }
     this.onState(this.state)
     this.timer = setInterval(() => this.tick(song), 10)
+  }
+
+  private armTransportFromClock() {
+    if (!this.playing || this.transportArmed) return
+    this.transportArmed = true
+    this.beatPosition = this.startBeat
+    this.lastTickMs = performance.now()
+  }
+
+  private displayBeat() {
+    // Lead the cursor by the same amount chords are sent early so the line
+    // sits on the sounding block instead of trailing it.
+    return this.beatPosition + this.anticipationBeats
   }
 
   private primeMidSong(song: DemoSong, beat: number) {
@@ -181,8 +260,9 @@ export class JamScheduler {
 
   changeHarmony(song: DemoSong) {
     if (!this.playing) return
-    const beat = this.currentBeat(song)
-    this.events = buildJamSchedule(song)
+    const beat = this.beatPosition
+    this.events = buildJamSchedule(song, CHORD_ANTICIPATION_MS, this.liveBpm)
+    this.anticipationBeats = (CHORD_ANTICIPATION_MS * this.liveBpm) / 60000
     this.sent.clear()
     this.events.forEach((event) => {
       if (event.dispatchBeat <= beat) this.sent.add(event.id)
@@ -197,6 +277,7 @@ export class JamScheduler {
     if (activeChord?.chord) this.sendChord(activeChord.chord)
     this.state = {
       ...this.state,
+      beat: this.displayBeat(),
       currentChord: activeChord?.chord || "",
       upcomingChord: upcomingChord?.chord || "",
     }
@@ -206,18 +287,62 @@ export class JamScheduler {
     this.timer = setInterval(() => this.tick(song), 10)
   }
 
-  private currentBeat(song: DemoSong) {
-    return this.startBeat + ((performance.now() - this.anchorMs) * song.tempo) / 60000
+  /**
+   * Prefer the song tempo we pushed via SysEx until the keyboard clock has a
+   * stable lock. Early F8 intervals during style ramp-up read too slow and
+   * drag the playhead behind the blocks.
+   */
+  private syncLiveBpm() {
+    if (!this.tempoFollower.isTempoLocked()) {
+      this.liveBpm = this.songTempo
+      return
+    }
+    const followed = this.tempoFollower.getCurrentBPM()
+    if (followed < 30 || followed > 300) {
+      this.liveBpm = this.songTempo
+      return
+    }
+    const rounded = Math.round(followed)
+    // Ignore wild readings far from the commanded tempo (missed/duped clocks).
+    if (Math.abs(rounded - this.songTempo) > Math.max(8, this.songTempo * 0.08)) {
+      this.liveBpm = this.songTempo
+      return
+    }
+    if (Math.abs(rounded - this.liveBpm) >= 1) {
+      this.liveBpm = rounded
+      this.anticipationBeats = (CHORD_ANTICIPATION_MS * this.liveBpm) / 60000
+    }
   }
 
   private tick(song: DemoSong) {
     if (!this.playing) return
-    const beat = this.currentBeat(song)
-    const clockPulse = Math.floor(beat * 24)
-    while (this.lastClockPulse < clockPulse) {
-      this.lastClockPulse += 1
-      this.session.sendPort1(ARRANGER_COMMANDS.midiClock)
+
+    const now = performance.now()
+    if (!this.transportArmed) {
+      if (
+        this.tempoFollower.hasReceivedClock() ||
+        now - this.playCommandMs >= CLOCK_FALLBACK_MS
+      ) {
+        this.transportArmed = true
+        this.beatPosition = this.startBeat
+        this.lastTickMs = now
+      } else {
+        this.onState({
+          ...this.state,
+          beat: this.displayBeat(),
+          bpm: this.liveBpm,
+        })
+        return
+      }
     }
+
+    this.syncLiveBpm()
+
+    const elapsedSec = (now - this.lastTickMs) / 1000
+    this.lastTickMs = now
+    this.beatPosition += elapsedSec * (this.liveBpm / 60)
+    const beat = this.beatPosition
+    const uiBeat = this.displayBeat()
 
     for (const event of this.events) {
       if (this.sent.has(event.id) || event.dispatchBeat > beat) continue
@@ -226,22 +351,23 @@ export class JamScheduler {
     }
 
     const activeChord = [...this.events]
-      .filter((event) => event.type === "chord" && event.beat <= beat)
+      .filter((event) => event.type === "chord" && event.beat <= uiBeat)
       .at(-1)
     const upcomingChord = this.events.find(
-      (event) => event.type === "chord" && event.beat > beat,
+      (event) => event.type === "chord" && event.beat > uiBeat,
     )
     const activeSection = [...this.events]
-      .filter((event) => event.type === "section" && event.beat <= beat)
+      .filter((event) => event.type === "section" && event.beat <= uiBeat)
       .at(-1)
 
     this.state = {
       ...this.state,
-      beat: Math.min(beat, this.state.totalBeats),
+      beat: Math.min(uiBeat, this.state.totalBeats),
+      bpm: this.liveBpm,
       currentChord: activeChord?.chord || this.state.currentChord,
       upcomingChord: upcomingChord?.chord || "",
       currentSection:
-        beat < song.timeSignature[0]
+        uiBeat < song.timeSignature[0]
           ? "Intro"
           : activeSection?.section?.label || this.state.currentSection,
     }
@@ -298,10 +424,10 @@ export class JamScheduler {
     this.releaseChord()
     if (sendStop && this.playing) {
       this.session.sendBoth(ARRANGER_COMMANDS.stop)
-      this.session.sendPort1(ARRANGER_COMMANDS.midiStop)
       this.session.panic()
     }
     this.playing = false
+    this.transportArmed = false
     this.sent.clear()
     this.state = { ...this.state, playing: false, arrangerState: "Stopped" }
     this.onState(this.state)

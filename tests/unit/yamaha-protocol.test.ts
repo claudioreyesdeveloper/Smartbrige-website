@@ -163,7 +163,7 @@ describe("complete Jam Player catalog and schedule", () => {
   })
 
   it("anticipates chords without moving section commands early", () => {
-    const schedule = buildJamSchedule(catalog[0], 85)
+    const schedule = buildJamSchedule(catalog[0], 50)
     const firstChord = schedule.find((event) => event.type === "chord")
     expect(firstChord?.dispatchBeat).toBe(firstChord?.beat)
     const anticipated = schedule.find(
@@ -174,6 +174,9 @@ describe("complete Jam Player catalog and schedule", () => {
     schedule
       .filter((event) => event.type === "main" || event.type === "section")
       .forEach((event) => expect(event.dispatchBeat).toBe(event.beat))
+    schedule
+      .filter((event) => event.type === "fill")
+      .forEach((event) => expect(event.dispatchBeat).toBeCloseTo(event.beat - 0.2, 5))
     expect(schedule.filter((event) => event.type === "ending")).toHaveLength(1)
   })
 })
