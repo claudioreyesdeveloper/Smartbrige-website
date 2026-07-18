@@ -366,12 +366,30 @@ describe("parseJamCatalogResponse", () => {
     }
   })
 
-  it("fails closed on unsupported keyboard models", () => {
-    expect(() =>
-      parseJamCatalogResponse(
-        catalogPayload([songEntry(), clipEntry(), chordEntry(), keyboardEntry({ model_key: "psr-sx900" })]),
-      ),
-    ).toThrowError(/Unsupported keyboard model_key/)
+  it("skips unsupported keyboard models without failing the catalog", () => {
+    const snapshot = parseJamCatalogResponse(
+      catalogPayload([songEntry(), clipEntry(), chordEntry(), keyboardEntry({ model_key: "psr-sx900" })]),
+    )
+    expect(snapshot.songs).toHaveLength(1)
+    expect(snapshot.stylesByModel.genos).toEqual([])
+    expect(snapshot.stylesByModel.genos2).toEqual([])
+  })
+
+  it("skips invalid style_number rows without failing the catalog", () => {
+    const keyboard = keyboardEntry({ model_key: "genos1" })
+    const styles = (keyboard.metadata as { styles: Array<Record<string, unknown>> }).styles
+    styles.push({
+      ...styles[0],
+      id: 99999,
+      name: "BrokenZero",
+      style_number: 0,
+    })
+    const snapshot = parseJamCatalogResponse(
+      catalogPayload([songEntry(), clipEntry(), chordEntry(), keyboard]),
+    )
+    expect(snapshot.songs).toHaveLength(1)
+    expect(snapshot.stylesByModel.genos.every((style) => style.styleNumber >= 1)).toBe(true)
+    expect(snapshot.stylesByModel.genos.some((style) => style.name === "BrokenZero")).toBe(false)
   })
 
   it("rejects tampered filesystem path leakage in metadata", () => {

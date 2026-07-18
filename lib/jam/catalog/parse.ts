@@ -277,7 +277,7 @@ export function styleStableId(model: YamahaModelId, styleNumber: number): string
 function parseStylesFromKeyboardEntry(entry: Record<string, unknown>): {
   model: YamahaModelId
   styles: JamStyleSummary[]
-} {
+} | null {
   const metadata = entry.metadata
   if (!isPlainObject(metadata)) {
     throw new JamCatalogError(
@@ -295,10 +295,8 @@ function parseStylesFromKeyboardEntry(entry: Record<string, unknown>): {
   }
   const model = resolveYamahaModel(modelObj.model_key)
   if (!model) {
-    throw new JamCatalogError(
-      "unsupported_model",
-      `Unsupported keyboard model_key: ${String(modelObj.model_key)}.`,
-    )
+    // Desktop exports include PSR and other models Jam does not support yet.
+    return null
   }
   const stylesRaw = metadata.styles
   if (!Array.isArray(stylesRaw)) {
@@ -321,11 +319,9 @@ function parseStylesFromKeyboardEntry(entry: Record<string, unknown>): {
       throw new JamCatalogError("malformed", `Style row under ${model} is not an object.`)
     }
     const name = requireString(styleValue.name, `style.name (${model})`)
+    // Desktop rows can carry style_number 0 / null placeholders — skip them.
     if (!isFiniteNumber(styleValue.style_number) || styleValue.style_number < 1) {
-      throw new JamCatalogError(
-        "malformed",
-        `style_number under ${model} is invalid.`,
-      )
+      continue
     }
     const styleNumber = Math.trunc(styleValue.style_number)
     if (seenNumbers.has(styleNumber)) {
@@ -514,7 +510,9 @@ export function parseJamCatalogResponse(raw: unknown): JamCatalogSnapshot {
     tyros5: [],
   }
   for (const keyboard of keyboardEntries) {
-    const { model, styles } = parseStylesFromKeyboardEntry(keyboard)
+    const parsed = parseStylesFromKeyboardEntry(keyboard)
+    if (!parsed) continue
+    const { model, styles } = parsed
     if (stylesByModel[model].length > 0) {
       throw new JamCatalogError(
         "malformed",
