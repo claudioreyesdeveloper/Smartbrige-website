@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from "vitest"
 import { createProductionBassDrumsAdapters } from "@/components/bass-drums/production"
+import { createProjectSession } from "@/lib/projects/client"
 import type { ProjectApiClient } from "@/lib/projects/client/api"
 
 const detail = {
@@ -88,7 +89,10 @@ describe("production rhythm adapters", () => {
       }]),
       open: vi.fn(async () => ({ detail, migrationApplied: false })),
     } as unknown as ProjectApiClient
-    const adapters = createProductionBassDrumsAdapters({ fetch: fetchMock, projects })
+    const adapters = createProductionBassDrumsAdapters({
+      fetch: fetchMock,
+      projects: createProjectSession({ api: projects }),
+    })
 
     const mapped = await adapters.projects.list()
     expect(mapped[0]?.sections[0]).toMatchObject({
@@ -149,14 +153,14 @@ describe("production rhythm adapters", () => {
       open: vi.fn(),
     } as unknown as ProjectApiClient
     const quota = createProductionBassDrumsAdapters({
-      projects,
+      projects: createProjectSession({ api: projects }),
       fetch: async () => response({ code: "quota_exceeded", error: "Usage limit exceeded." }, 429),
     })
     await expect(quota.library.getFilterOptions("bass", "proj_1")).rejects.toMatchObject({
       code: "quota_exceeded",
     })
     const failure = createProductionBassDrumsAdapters({
-      projects,
+      projects: createProjectSession({ api: projects }),
       fetch: async () => response({ error: "private stack", trace: "secret" }, 500),
     })
     await expect(failure.library.getFilterOptions("bass", "proj_1")).rejects.toMatchObject({

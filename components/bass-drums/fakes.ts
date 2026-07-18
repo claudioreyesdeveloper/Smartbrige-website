@@ -231,6 +231,7 @@ export function createDeterministicBassDrumsAdapters(): BassDrumsAdapters {
         return {
           renderReferenceId: `render_${source.candidateId}`,
           recipeReferenceId: `recipe_${source.candidateId}`,
+          durationMs: 8_000,
           durationLabel: source.durationLabel,
           renderedSmf: "TVRoZAAAAAYAAQABA8BNVHJrAAAABAD/LwA=",
           playback: {

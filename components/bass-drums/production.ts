@@ -9,7 +9,6 @@ import {
 import type { ProjectDocument, ProjectRecipe } from "@/lib/projects/document"
 import {
   RhythmRenderedAuditionPlayer,
-  type AuditionMidiSession,
 } from "@/lib/midi/audition"
 import {
   parseRhythmFillsResponse,
@@ -18,7 +17,7 @@ import {
   parseRhythmRenderResponse,
 } from "@/lib/rhythm/domain"
 import type { KeyboardModel } from "@/lib/jam/domain/models"
-import { getMidiSession } from "@/lib/yamaha"
+import { getMidiSession, type YamahaMidiSession } from "@/lib/yamaha"
 import {
   RhythmAdapterError,
   type AuditionState,
@@ -264,17 +263,18 @@ export function createProductionBassDrumsAdapters(options: {
   projects?: ProjectSession
   model?: KeyboardModel
   playAudition?: AuditionPlayback
-  midiSession?: AuditionMidiSession
+  midiSession?: YamahaMidiSession
 } = {}): BassDrumsAdapters {
   const fetchImpl = options.fetch ?? fetch
   const projectSession = options.projects ?? createProjectSession({ fetch: fetchImpl })
   const projectAdapter = createRhythmProjectAdapter(projectSession)
   const api = createRhythmApi(fetchImpl)
   const model = options.model ?? "genos2"
+  const midiSession = options.midiSession ?? getMidiSession()
   const renderedPlayer = options.playAudition
     ? null
     : new RhythmRenderedAuditionPlayer({
-        session: options.midiSession ?? getMidiSession(),
+        session: midiSession,
       })
   const listeners = new Set<(state: AuditionState) => void>()
   let auditionState: AuditionState = {
@@ -423,13 +423,24 @@ export function createProductionBassDrumsAdapters(options: {
       getState: () => ({ ...auditionState }),
       async play(render, label) {
         if (options.playAudition) await options.playAudition(render, label)
-        else renderedPlayer!.start({
-          part: render.playback.kind === "drum-kit" ||
-            render.playback.kind === "channel-current" ? "drums" : "bass",
-          durationMs: render.durationMs,
-          renderedSmf: render.renderedSmf,
-          playback: render.playback,
-        })
+        else {
+          if (!midiSession.state.connected) {
+            const connected = await midiSession.requestAccess(model)
+            if (!connected.connected) {
+              throw new RhythmAdapterError(
+                "unavailable",
+                connected.error || "Connect the Yamaha keyboard before auditioning.",
+              )
+            }
+          }
+          renderedPlayer!.start({
+            part: render.playback.kind === "drum-kit" ||
+              render.playback.kind === "channel-current" ? "drums" : "bass",
+            durationMs: render.durationMs,
+            renderedSmf: render.renderedSmf,
+            playback: render.playback,
+          })
+        }
         auditionState = {
           status: "playing",
           renderReferenceId: render.renderReferenceId,
