@@ -15,7 +15,11 @@ import {
   profileFromUniversalIdentity,
 } from "@/lib/demo/yamaha/profiles"
 import { MusicsoftTransfer } from "@/lib/demo/yamaha/musicsoft-transfer"
-import { isYamahaMidiPort2 } from "@/lib/demo/yamaha/midi-session"
+import {
+  findYamahaPortPair,
+  isYamahaArrangerPort,
+  isYamahaMidiPort2,
+} from "@/lib/demo/yamaha/midi-session"
 import {
   checksum7,
   decodePayload7,
@@ -23,11 +27,24 @@ import {
 } from "@/lib/demo/yamaha/protocol-utils"
 
 describe("Yamaha commands", () => {
-  it("accepts only the Yamaha arranger Port 2 endpoint", () => {
-    expect(isYamahaMidiPort2({ name: "Digital Keyboard Port 2", manufacturer: "Yamaha Corporation" })).toBe(true)
+  it("pairs Yamaha arranger Port 1 and Port 2 like desktop SmartBridge", () => {
+    expect(isYamahaArrangerPort({ name: "Digital Keyboard Port 1", manufacturer: "Yamaha Corporation" }, 1)).toBe(true)
+    expect(isYamahaArrangerPort({ name: "Digital Keyboard Port 2", manufacturer: "Yamaha Corporation" }, 2)).toBe(true)
     expect(isYamahaMidiPort2({ name: "Digital Workstation-2", manufacturer: "Yamaha" })).toBe(true)
     expect(isYamahaMidiPort2({ name: "Digital Keyboard Port 1", manufacturer: "Yamaha Corporation" })).toBe(false)
-    expect(isYamahaMidiPort2({ name: "SmartBridge MIDI 2", manufacturer: "" })).toBe(false)
+    expect(isYamahaArrangerPort({ name: "SmartBridge MIDI 2", manufacturer: "" }, 2)).toBe(false)
+    const pair = findYamahaPortPair(
+      [
+        { id: "i1", name: "Digital Keyboard Port 1", manufacturer: "Yamaha", state: "connected" },
+        { id: "i2", name: "Digital Keyboard Port 2", manufacturer: "Yamaha", state: "connected" },
+      ],
+      [
+        { id: "o1", name: "Digital Keyboard Port 1", manufacturer: "Yamaha", state: "connected" },
+        { id: "o2", name: "Digital Keyboard Port 2", manufacturer: "Yamaha", state: "connected" },
+      ],
+    )
+    expect(pair?.input1.id).toBe("i1")
+    expect(pair?.output2.id).toBe("o2")
   })
 
   it("builds the desktop-compatible tempo and arranger messages", () => {

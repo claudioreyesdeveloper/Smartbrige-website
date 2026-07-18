@@ -8,6 +8,7 @@ import {
   Sparkles,
   Usb,
 } from "lucide-react"
+import { BrowserCompatibility } from "@/components/demo/browser-compatibility"
 
 export const metadata = {
   title: "Demo Station",
@@ -16,6 +17,7 @@ export const metadata = {
 
 export default function DemoStationPage() {
   return (
+    <BrowserCompatibility>
     <div className="demo-station">
       <div className="demo-station-orb demo-station-orb-one" />
       <div className="demo-station-orb demo-station-orb-two" />
@@ -29,10 +31,18 @@ export default function DemoStationPage() {
           <p className="demo-kicker">Your keyboard. Reimagined.</p>
           <h1>Experience the future of Yamaha arranger keyboards.</h1>
           <p>
-            Connect over USB and hear SmartBridge transform a full arrangement or
-            rebuild a Yamaha style—directly in your browser.
+            Choose a demo, connect your Yamaha keyboard with a USB cable, and follow
+            the large step-by-step instructions. No technical setup is required.
           </p>
         </div>
+
+        <section className="browser-requirement-card" aria-label="Browser requirement">
+          <Chrome size={34} />
+          <div>
+            <strong>Use Google Chrome or Microsoft Edge on a computer</strong>
+            <span>This demo does not work in Safari, Firefox, on phones, or on tablets.</span>
+          </div>
+        </section>
 
         <div className="demo-choice-grid">
           <Link href="/demo/jam-player" className="demo-choice-card demo-choice-jam">
@@ -44,10 +54,7 @@ export default function DemoStationPage() {
               <span className="demo-choice-number">01</span>
               <h2>Jam Player</h2>
               <h3>Play any song instantly.</h3>
-              <p>
-                Choose a complete arrangement, press Play, then switch from Jazz
-                to Gospel, Neo Soul, Pop, or Funk while the song keeps moving.
-              </p>
+              <p>Choose a song, press the large Play button, then change the band while the song continues.</p>
             </div>
             <div className="mini-timeline" aria-hidden="true">
               <span style={{ width: "28%" }}>VERSE</span>
@@ -67,10 +74,7 @@ export default function DemoStationPage() {
               <span className="demo-choice-number">02</span>
               <h2>Style Maker</h2>
               <h3>Build a better style.</h3>
-              <p>
-                Upload your Yamaha style, replace its bass and drums, compare the
-                result, then send it straight into USER:\STYLE.
-              </p>
+              <p>Choose a Yamaha style file, improve its bass and drums, then load it into your keyboard.</p>
             </div>
             <div className="lane-preview" aria-hidden="true">
               <span><i /> Original style</span>
@@ -82,11 +86,12 @@ export default function DemoStationPage() {
         </div>
 
         <div className="demo-requirements">
-          <span><Chrome size={17} /> Chrome or Edge desktop</span>
-          <span><Usb size={17} /> Genos, Genos2, Tyros4, or Tyros5 over USB</span>
+          <span><Chrome size={17} /> Chrome or Edge on a computer</span>
+          <span><Usb size={17} /> Genos, Genos2, Tyros4, or Tyros5 with a USB cable</span>
           <span>No login. No registration.</span>
         </div>
       </main>
     </div>
+    </BrowserCompatibility>
   )
 }

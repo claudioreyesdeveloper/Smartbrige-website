@@ -4,11 +4,10 @@ import Link from "next/link"
 import { ChevronLeft, CircleHelp, Plug, ShieldCheck, Unplug } from "lucide-react"
 import type { ReactNode } from "react"
 import { useState } from "react"
-import {
-  isYamahaMidiPort2,
-  type MidiPortChoice,
-} from "@/lib/demo/yamaha/midi-session"
+import type { YamahaModelId } from "@/lib/demo/types"
+import { KEYBOARD_PROFILES } from "@/lib/demo/yamaha/profiles"
 import { useMidiSession } from "@/lib/demo/yamaha/use-midi-session"
+import { BrowserCompatibility } from "@/components/demo/browser-compatibility"
 
 type DemoShellProps = {
   title: string
@@ -16,11 +15,6 @@ type DemoShellProps = {
   step: string
   children: ReactNode
   onSafeStop?: () => void
-}
-
-function preferredYamahaPort2(ports: MidiPortChoice[]): string {
-  const physical = ports.find(isYamahaMidiPort2)
-  return physical?.id || ""
 }
 
 export function DemoShell({
@@ -31,17 +25,10 @@ export function DemoShell({
   onSafeStop,
 }: DemoShellProps) {
   const [session, midi] = useMidiSession()
-  const [showPorts, setShowPorts] = useState(false)
-  const [inputId, setInputId] = useState("")
-  const [outputId, setOutputId] = useState("")
+  const [model, setModel] = useState<YamahaModelId | null>(null)
 
   const requestConnection = async () => {
-    const state = await session.requestAccess()
-    if (!state.connected && (state.inputs.length !== 1 || state.outputs.length !== 1)) {
-      setInputId(preferredYamahaPort2(state.inputs))
-      setOutputId(preferredYamahaPort2(state.outputs))
-      setShowPorts(true)
-    }
+    if (model) await session.requestAccess(model)
   }
 
   const disconnect = async () => {
@@ -50,7 +37,8 @@ export function DemoShell({
   }
 
   return (
-    <div className="demo-app">
+    <BrowserCompatibility>
+    <div className="demo-app senior-demo">
       <header className="demo-topbar">
         <div className="demo-topbar-left">
           <Link href="/demo" className="demo-back" aria-label="Back to Demo Station">
@@ -83,38 +71,45 @@ export function DemoShell({
               className="demo-connect-button"
               type="button"
               onClick={requestConnection}
-              disabled={midi.connecting}
+              disabled={midi.connecting || !model}
             >
               <Plug size={16} />
-              {midi.connecting ? "Connecting…" : "Connect keyboard"}
+              {midi.connecting ? "Connecting…" : model ? "Connect my keyboard" : "Choose keyboard below"}
             </button>
           )}
         </div>
       </header>
 
-      {showPorts && !midi.connected && (
-        <section className="port-picker" aria-label="Choose Yamaha MIDI ports">
-          <div>
-            <label htmlFor="midi-input">Keyboard input</label>
-            <select id="midi-input" value={inputId} onChange={(event) => setInputId(event.target.value)}>
-              <option value="">Choose input</option>
-              {midi.inputs.map((port) => <option key={port.id} value={port.id}>{port.name}</option>)}
-            </select>
+      {!midi.connected && (
+        <section className="keyboard-setup" aria-labelledby="keyboard-setup-title">
+          <div className="guided-step-number">1</div>
+          <div className="keyboard-setup-copy">
+            <span className="demo-eyebrow">First, choose your keyboard</span>
+            <h1 id="keyboard-setup-title">Which Yamaha keyboard do you have?</h1>
+            <p>Turn it on and connect it to this computer with a USB cable.</p>
           </div>
-          <div>
-            <label htmlFor="midi-output">Keyboard output</label>
-            <select id="midi-output" value={outputId} onChange={(event) => setOutputId(event.target.value)}>
-              <option value="">Choose output</option>
-              {midi.outputs.map((port) => <option key={port.id} value={port.id}>{port.name}</option>)}
-            </select>
+          <div className="keyboard-model-grid">
+            {(["genos", "genos2", "tyros4", "tyros5"] as YamahaModelId[]).map((id) => (
+              <button
+                key={id}
+                type="button"
+                className={model === id ? "is-selected" : ""}
+                onClick={() => setModel(id)}
+                aria-pressed={model === id}
+              >
+                <span className="selection-light" />
+                {KEYBOARD_PROFILES[id].displayName}
+              </button>
+            ))}
           </div>
           <button
-            className="btn-primary"
+            className="senior-primary-action"
             type="button"
-            disabled={!inputId || !outputId}
-            onClick={() => session.connect(inputId, outputId).then(() => setShowPorts(false))}
+            disabled={!model || midi.connecting}
+            onClick={requestConnection}
           >
-            Pair ports
+            <Plug size={24} />
+            {midi.connecting ? "Connecting…" : "Connect my keyboard"}
           </button>
         </section>
       )}
@@ -124,7 +119,8 @@ export function DemoShell({
         <div className="demo-status is-error">Use Chrome or Edge desktop. Safari does not support Web MIDI.</div>
       )}
 
-      <main className="demo-workspace">{children}</main>
+      {midi.connected && <main className="demo-workspace">{children}</main>}
     </div>
+    </BrowserCompatibility>
   )
 }

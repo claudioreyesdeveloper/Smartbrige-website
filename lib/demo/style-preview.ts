@@ -27,7 +27,7 @@ export class StylePreviewPlayer {
     preview.forEach((event) => {
       const timer = setTimeout(() => {
         if (!this.playing) return
-        this.session.send(
+        this.session.sendPort1(
           Uint8Array.of(event.status, event.data1, event.data2),
         )
       }, Math.max(0, (event.tick - startTick) * millisecondsPerTick))

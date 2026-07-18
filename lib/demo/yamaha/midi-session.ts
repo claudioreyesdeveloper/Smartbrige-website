@@ -1,7 +1,8 @@
-import type { KeyboardProfile } from "@/lib/demo/types"
+import type { KeyboardProfile, YamahaModelId } from "@/lib/demo/types"
 import { decodePayload7, startsWithBytes, text } from "@/lib/demo/yamaha/protocol-utils"
 import {
   detectProfile,
+  KEYBOARD_PROFILES,
   profileFromUniversalIdentity,
 } from "@/lib/demo/yamaha/profiles"
 
@@ -37,13 +38,43 @@ export type MidiPortChoice = {
   state: string
 }
 
-export function isYamahaMidiPort2(port: Pick<MidiPortChoice, "name" | "manufacturer">): boolean {
+export type MidiSendTarget = "port1" | "port2" | "both"
+
+export type YamahaPortPair = {
+  input1: MidiPortChoice
+  output1: MidiPortChoice
+  input2: MidiPortChoice
+  output2: MidiPortChoice
+}
+
+export function isYamahaArrangerPort(
+  port: Pick<MidiPortChoice, "name" | "manufacturer">,
+  portNumber: 1 | 2,
+): boolean {
   const identity = `${port.manufacturer} ${port.name}`
-  return (
-    /yamaha|digital keyboard|genos|tyros/i.test(identity) &&
-    /(?:port\s*2|[- ]2)$/i.test(port.name) &&
-    !/smartbridge/i.test(identity)
-  )
+  if (/smartbridge/i.test(identity)) return false
+  if (!/yamaha|digital keyboard|digital workstation|genos|tyros/i.test(identity)) {
+    return false
+  }
+  const tag = portNumber === 1 ? /(?:port\s*1|[- ]1)$/i : /(?:port\s*2|[- ]2)$/i
+  return tag.test(port.name)
+}
+
+/** @deprecated Prefer isYamahaArrangerPort(port, 2). Kept for older tests. */
+export function isYamahaMidiPort2(port: Pick<MidiPortChoice, "name" | "manufacturer">): boolean {
+  return isYamahaArrangerPort(port, 2)
+}
+
+export function findYamahaPortPair(
+  inputs: MidiPortChoice[],
+  outputs: MidiPortChoice[],
+): YamahaPortPair | null {
+  const input1 = inputs.find((port) => isYamahaArrangerPort(port, 1))
+  const input2 = inputs.find((port) => isYamahaArrangerPort(port, 2))
+  const output1 = outputs.find((port) => isYamahaArrangerPort(port, 1))
+  const output2 = outputs.find((port) => isYamahaArrangerPort(port, 2))
+  if (!input1 || !input2 || !output1 || !output2) return null
+  return { input1, input2, output1, output2 }
 }
 
 export type MidiSessionSnapshot = {
@@ -83,8 +114,10 @@ const initialSnapshot = (): MidiSessionSnapshot => ({
 
 export class YamahaMidiSession extends EventTarget {
   private access: MidiAccessLike | null = null
-  private input: MidiInputLike | null = null
-  private output: MidiOutputLike | null = null
+  private input1: MidiInputLike | null = null
+  private input2: MidiInputLike | null = null
+  private output1: MidiOutputLike | null = null
+  private output2: MidiOutputLike | null = null
   private pending = new Set<PendingResponse>()
   private snapshot: MidiSessionSnapshot = initialSnapshot()
 
@@ -97,7 +130,7 @@ export class YamahaMidiSession extends EventTarget {
     this.dispatchEvent(new CustomEvent("statechange", { detail: this.snapshot }))
   }
 
-  async requestAccess(): Promise<MidiSessionSnapshot> {
+  async requestAccess(modelId?: YamahaModelId): Promise<MidiSessionSnapshot> {
     if (!this.snapshot.supported) {
       this.publish({ error: "Web MIDI is not available. Use Chrome or Edge on desktop." })
       return this.snapshot
@@ -107,7 +140,13 @@ export class YamahaMidiSession extends EventTarget {
       return this.snapshot
     }
 
-    this.publish({ connecting: true, error: "" })
+    const chosenProfile = modelId ? KEYBOARD_PROFILES[modelId] : this.snapshot.profile
+    this.publish({
+      connecting: true,
+      error: "",
+      profile: chosenProfile,
+      modelName: chosenProfile?.displayName || this.snapshot.modelName,
+    })
     try {
       const request = (
         navigator as Navigator & {
@@ -117,21 +156,20 @@ export class YamahaMidiSession extends EventTarget {
       this.access = await request.call(navigator, { sysex: true })
       this.access.onstatechange = () => {
         this.refreshPorts()
-        if (this.input?.state !== "connected" || this.output?.state !== "connected") {
+        const ports = [this.input1, this.input2, this.output1, this.output2]
+        if (ports.some((port) => port && port.state !== "connected")) {
           void this.disconnect("Keyboard disconnected.")
         }
       }
       this.refreshPorts()
-
-      if (
-        this.snapshot.inputs.length === 1 &&
-        this.snapshot.outputs.length === 1 &&
-        isYamahaMidiPort2(this.snapshot.inputs[0]) &&
-        isYamahaMidiPort2(this.snapshot.outputs[0])
-      ) {
-        await this.connect(this.snapshot.inputs[0].id, this.snapshot.outputs[0].id)
+      const pair = findYamahaPortPair(this.snapshot.inputs, this.snapshot.outputs)
+      if (pair) {
+        await this.connectPair(pair)
       } else {
-        this.publish({ connecting: false })
+        this.publish({
+          connecting: false,
+          error: "Keyboard not found. Check the USB cable, turn the keyboard on, and try again.",
+        })
       }
     } catch (error) {
       this.publish({
@@ -159,41 +197,37 @@ export class YamahaMidiSession extends EventTarget {
     })
   }
 
-  async connect(inputId: string, outputId: string): Promise<MidiSessionSnapshot> {
+  async connectPair(pair: YamahaPortPair): Promise<MidiSessionSnapshot> {
     if (!this.access) await this.requestAccess()
-    const input = this.access?.inputs.get(inputId)
-    const output = this.access?.outputs.get(outputId)
-    if (!input || !output) {
-      this.publish({ connecting: false, error: "Select both a Yamaha MIDI input and output." })
-      return this.snapshot
-    }
-    if (!isYamahaMidiPort2({
-      name: input.name || "",
-      manufacturer: input.manufacturer || "",
-    }) || !isYamahaMidiPort2({
-      name: output.name || "",
-      manufacturer: output.manufacturer || "",
-    })) {
+    const input1 = this.access?.inputs.get(pair.input1.id)
+    const input2 = this.access?.inputs.get(pair.input2.id)
+    const output1 = this.access?.outputs.get(pair.output1.id)
+    const output2 = this.access?.outputs.get(pair.output2.id)
+    if (!input1 || !input2 || !output1 || !output2) {
       this.publish({
         connecting: false,
-        error: "SmartBridge requires Yamaha USB MIDI Port 2 for both input and output.",
+        error: "Keyboard not found. Check the USB cable and try again.",
       })
       return this.snapshot
     }
 
     this.publish({ connecting: true, error: "" })
     try {
-      await Promise.all([input.open(), output.open()])
-      this.input = input
-      this.output = output
-      this.input.onmidimessage = (event) => this.handleMessage(event.data)
+      await Promise.all([input1.open(), input2.open(), output1.open(), output2.open()])
+      this.input1 = input1
+      this.input2 = input2
+      this.output1 = output1
+      this.output2 = output2
+      const onMessage = (event: MidiMessage) => this.handleMessage(event.data)
+      this.input1.onmidimessage = onMessage
+      this.input2.onmidimessage = onMessage
       this.publish({
         connected: true,
         connecting: false,
-        inputName: input.name || "Yamaha input",
-        outputName: output.name || "Yamaha output",
+        inputName: `${input1.name} + ${input2.name}`,
+        outputName: `${output1.name} + ${output2.name}`,
       })
-      await this.detectKeyboard()
+      if (!this.snapshot.profile) await this.detectKeyboard()
     } catch (error) {
       this.publish({
         connected: false,
@@ -204,61 +238,89 @@ export class YamahaMidiSession extends EventTarget {
     return this.snapshot
   }
 
+  /** Legacy single-port entry: if either port is chosen, open the full Yamaha pair. */
+  async connect(inputId: string, outputId: string): Promise<MidiSessionSnapshot> {
+    this.refreshPorts()
+    const pair = findYamahaPortPair(this.snapshot.inputs, this.snapshot.outputs)
+    if (pair) return this.connectPair(pair)
+    this.publish({
+      connecting: false,
+      error: "Keyboard not found. Check the USB cable and try again.",
+    })
+    return this.snapshot
+  }
+
   async detectKeyboard(): Promise<KeyboardProfile | null> {
     try {
       const identity = await this.request(
         Uint8Array.from([0xf0, 0x7e, 0x7f, 0x06, 0x01, 0xf7]),
         (data) => startsWithBytes(data, [0xf0, 0x7e]) && data[3] === 0x06 && data[4] === 0x02,
-        1200,
+        5000,
+        "both",
       )
-      const universalProfile = profileFromUniversalIdentity(identity)
-      if (universalProfile) {
+      const profile = profileFromUniversalIdentity(identity)
+      if (profile) {
         this.publish({
-          modelName: universalProfile.displayName,
-          profile: universalProfile,
+          modelName: profile.displayName,
+          profile,
           error: "",
         })
-        return universalProfile
+        return profile
       }
     } catch {
-      // Older Tyros firmware may only answer the Musicsoft model query below.
+      // SmartBridge's file-transfer model query below is the proven fallback.
     }
 
     try {
+      // Musicsoft model query must go Port 1 only (desktop YamahaStyleFileTransfer).
       const response = await this.request(
         Uint8Array.from([0xf0, 0x43, 0x50, 0x00, 0x00, 0x07, 0x01, 0xf7]),
         (data) => startsWithBytes(data, [0xf0, 0x43, 0x50, 0x00, 0x00, 0x07, 0x02]),
         3500,
+        "port1",
       )
       const modelName = text(decodePayload7(response.slice(8, -1)))
       const profile = detectProfile(modelName)
       this.publish({
         modelName,
         profile,
-        error: profile ? "" : `Connected to ${modelName || "Yamaha"}, but this model is not supported.`,
+        error: profile
+          ? ""
+          : `Connected to unsupported Yamaha model: ${modelName || "unknown"}.`,
       })
       return profile
     } catch {
       this.publish({
         modelName: "",
         profile: null,
-        error: "Connected, but the Yamaha model did not answer the identity request.",
+        error:
+          "Both Yamaha ports are open, but the keyboard did not answer SmartBridge identity or Musicsoft model requests.",
       })
       return null
     }
   }
 
-  send(data: Uint8Array, timestamp?: number) {
-    if (!this.output || !this.snapshot.connected) {
+  send(data: Uint8Array, timestamp?: number, target: MidiSendTarget = "both") {
+    if (!this.snapshot.connected || (!this.output1 && !this.output2)) {
       throw new Error("Connect the keyboard before sending MIDI.")
     }
-    this.output.send(data, timestamp)
+    if (target === "port1" || target === "both") this.output1?.send(data, timestamp)
+    if (target === "port2" || target === "both") this.output2?.send(data, timestamp)
+  }
+
+  sendPort1(data: Uint8Array, timestamp?: number) {
+    this.send(data, timestamp, "port1")
+  }
+
+  sendBoth(data: Uint8Array, timestamp?: number) {
+    this.send(data, timestamp, "both")
   }
 
   request(
     data: Uint8Array,
     matcher: (response: Uint8Array) => boolean,
     timeoutMs = 3000,
+    target: MidiSendTarget = "port1",
   ): Promise<Uint8Array> {
     return new Promise((resolve, reject) => {
       const pending: PendingResponse = {
@@ -272,7 +334,7 @@ export class YamahaMidiSession extends EventTarget {
       }
       this.pending.add(pending)
       try {
-        this.send(data)
+        this.send(data, undefined, target)
       } catch (error) {
         clearTimeout(pending.timer)
         this.pending.delete(pending)
@@ -293,9 +355,10 @@ export class YamahaMidiSession extends EventTarget {
   }
 
   panic() {
-    if (!this.output) return
     for (let channel = 0; channel < 16; channel += 1) {
-      this.output.send(Uint8Array.of(0xb0 | channel, 123, 0))
+      const message = Uint8Array.of(0xb0 | channel, 123, 0)
+      this.output1?.send(message)
+      this.output2?.send(message)
     }
   }
 
@@ -306,10 +369,17 @@ export class YamahaMidiSession extends EventTarget {
     })
     this.pending.clear()
     this.panic()
-    if (this.input) this.input.onmidimessage = null
-    await Promise.allSettled([this.input?.close(), this.output?.close()].filter(Boolean))
-    this.input = null
-    this.output = null
+    if (this.input1) this.input1.onmidimessage = null
+    if (this.input2) this.input2.onmidimessage = null
+    await Promise.allSettled(
+      [this.input1?.close(), this.input2?.close(), this.output1?.close(), this.output2?.close()].filter(
+        Boolean,
+      ),
+    )
+    this.input1 = null
+    this.input2 = null
+    this.output1 = null
+    this.output2 = null
     this.publish({
       connected: false,
       connecting: false,

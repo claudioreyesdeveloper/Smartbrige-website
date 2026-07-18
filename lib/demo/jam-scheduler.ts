@@ -138,11 +138,13 @@ export class JamScheduler {
       arrangerState: "Intro 1",
     }
 
-    this.session.send(styleSelectCommand(style))
-    this.session.send(tempoCommand(song.tempo))
-    this.session.send(ARRANGER_COMMANDS.midiStart)
-    this.session.send(ARRANGER_COMMANDS.start)
-    this.session.send(ARRANGER_COMMANDS.intro1, performance.now() + 50)
+    // Match desktop LocalMidiConnector: style/arranger SysEx → both ports;
+    // FA/FC realtime transport → Port 1 only.
+    this.session.sendBoth(styleSelectCommand(style))
+    this.session.sendBoth(tempoCommand(song.tempo))
+    this.session.sendPort1(ARRANGER_COMMANDS.midiStart)
+    this.session.sendBoth(ARRANGER_COMMANDS.start)
+    this.session.sendBoth(ARRANGER_COMMANDS.intro1, performance.now() + 50)
 
     if (this.startBeat > 0) this.primeMidSong(song, this.startBeat)
     this.onState(this.state)
@@ -154,7 +156,7 @@ export class JamScheduler {
       .filter((event) => event.type === "section" && event.beat <= beat)
       .at(-1)
     if (activeSection?.section) {
-      this.session.send(mainCommand(activeSection.section.variation))
+      this.session.sendBoth(mainCommand(activeSection.section.variation))
       this.sent.add(`main-${activeSection.section.id}`)
       this.sent.add(`section-${activeSection.section.id}`)
     }
@@ -167,7 +169,7 @@ export class JamScheduler {
 
   changeStyle(style: StyleWireMapping) {
     if (!this.playing) return
-    this.session.send(styleSelectCommand(style))
+    this.session.sendBoth(styleSelectCommand(style))
   }
 
   private currentBeat(song: DemoSong) {
@@ -180,7 +182,7 @@ export class JamScheduler {
     const clockPulse = Math.floor(beat * 24)
     while (this.lastClockPulse < clockPulse) {
       this.lastClockPulse += 1
-      this.session.send(ARRANGER_COMMANDS.midiClock)
+      this.session.sendPort1(ARRANGER_COMMANDS.midiClock)
     }
 
     for (const event of this.events) {
@@ -220,22 +222,22 @@ export class JamScheduler {
         break
       case "main":
         if (event.section) {
-          this.session.send(mainCommand(event.section.variation))
+          this.session.sendBoth(mainCommand(event.section.variation))
           this.state.arrangerState = `Main ${event.section.variation}`
         }
         break
       case "fill":
         if (event.section) {
-          this.session.send(fillCommand(event.section.variation))
+          this.session.sendBoth(fillCommand(event.section.variation))
           this.state.arrangerState = `Fill to Main ${event.section.variation}`
         }
         break
       case "break":
-        this.session.send(ARRANGER_COMMANDS.break)
+        this.session.sendBoth(ARRANGER_COMMANDS.break)
         this.state.arrangerState = "Break"
         break
       case "ending":
-        this.session.send(ARRANGER_COMMANDS.ending1)
+        this.session.sendBoth(ARRANGER_COMMANDS.ending1)
         this.state.arrangerState = "Ending 1"
         this.releaseChord()
         break
@@ -246,14 +248,14 @@ export class JamScheduler {
   }
 
   private releaseChord() {
-    chordOffMessages(this.heldNotes).forEach((message) => this.session.send(message))
+    chordOffMessages(this.heldNotes).forEach((message) => this.session.sendPort1(message))
     this.heldNotes = []
   }
 
   private sendChord(chord: string) {
     this.releaseChord()
     this.heldNotes = chordNotes(chord)
-    chordOnMessages(chord).forEach((message) => this.session.send(message))
+    chordOnMessages(chord).forEach((message) => this.session.sendPort1(message))
   }
 
   stop(sendStop = true) {
@@ -261,8 +263,8 @@ export class JamScheduler {
     this.timer = null
     this.releaseChord()
     if (sendStop && this.playing) {
-      this.session.send(ARRANGER_COMMANDS.stop)
-      this.session.send(ARRANGER_COMMANDS.midiStop)
+      this.session.sendBoth(ARRANGER_COMMANDS.stop)
+      this.session.sendPort1(ARRANGER_COMMANDS.midiStop)
       this.session.panic()
     }
     this.playing = false

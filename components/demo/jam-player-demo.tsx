@@ -1,6 +1,6 @@
 "use client"
 
-import { Pause, Play, RotateCcw, Sparkles, Square } from "lucide-react"
+import { ArrowLeft, Pause, Play, RotateCcw, Sparkles, Square } from "lucide-react"
 import { useEffect, useMemo, useRef, useState } from "react"
 import rawSongs from "@/data/demo/songs.json"
 import type { DemoSong, SongCategory, StyleGenre } from "@/lib/demo/types"
@@ -139,6 +139,8 @@ export function JamPlayerDemo() {
   const [playback, setPlayback] = useState(initialPlayback)
   const [notice, setNotice] = useState("")
   const [engagements, setEngagements] = useState(0)
+  const [choosingSong, setChoosingSong] = useState(true)
+  const [showFullSong, setShowFullSong] = useState(false)
   const scheduler = useRef<JamScheduler | null>(null)
 
   const visibleSongs = useMemo(
@@ -187,58 +189,68 @@ export function JamPlayerDemo() {
     <DemoShell
       title="Jam Player"
       eyebrow="Play any song instantly"
-      step="Choose · Connect · Play · Transform"
+      step="Four easy steps"
       onSafeStop={stop}
     >
-      <div className="jam-layout">
-        <aside className="jam-library">
-          <div className="panel-heading">
-            <span>Song library</span>
-            <strong>16 complete 4/4 arrangements</strong>
-          </div>
-          <div className="category-tabs" role="tablist" aria-label="Song categories">
-            {categories.map((item) => (
-              <button
-                key={item}
-                type="button"
-                className={item === category ? "is-active" : ""}
-                onClick={() => setCategory(item)}
-              >
-                {item}
-                <span>{songs.filter((songItem) => songItem.category === item).length}</span>
-              </button>
-            ))}
-          </div>
-          <div className="song-list">
-            {visibleSongs.map((item) => (
-              <button
-                key={item.id}
-                type="button"
-                className={item.id === song.id ? "is-active" : ""}
-                onClick={() => {
-                  stop()
-                  setSongId(item.id)
-                  setEngagements((value) => value + 1)
-                }}
-              >
-                <i style={{ background: item.accent }} />
-                <span>
-                  <strong>{item.title}</strong>
-                  <small>{item.key} · {item.tempo} BPM · {item.sections.length} sections</small>
-                </span>
-              </button>
-            ))}
-          </div>
-        </aside>
+      <div className="guided-demo-page">
+        <nav className="guided-progress" aria-label="Jam Player progress">
+          <span className="is-complete"><i>1</i> Keyboard connected</span>
+          <span className={choosingSong ? "is-current" : "is-complete"}><i>2</i> Choose a song</span>
+          <span className={!choosingSong ? "is-current" : ""}><i>3</i> Play</span>
+          <span><i>4</i> Change the band</span>
+        </nav>
 
-        <section className="jam-stage">
+        {choosingSong ? (
+          <section className="guided-card">
+            <span className="demo-eyebrow">Step 2 of 4</span>
+            <h1>Choose a song</h1>
+            <p className="guided-instruction">First choose a type of music, then choose one of the two songs.</p>
+            <div className="senior-category-grid" role="tablist" aria-label="Song types">
+              {categories.map((item) => (
+                <button
+                  key={item}
+                  type="button"
+                  className={item === category ? "is-selected" : ""}
+                  onClick={() => setCategory(item)}
+                >
+                  <span className="selection-light" />{item}
+                </button>
+              ))}
+            </div>
+            <div className="senior-song-grid">
+              {visibleSongs.map((item) => (
+                <button
+                  key={item.id}
+                  type="button"
+                  className={item.id === song.id ? "is-selected" : ""}
+                  onClick={() => {
+                    stop()
+                    setSongId(item.id)
+                    setEngagements((value) => value + 1)
+                  }}
+                >
+                  <span className="selection-light" />
+                  <strong>{item.title}</strong>
+                  <span>{item.tempo} BPM · Key of {item.key}</span>
+                </button>
+              ))}
+            </div>
+            <button className="senior-primary-action" type="button" onClick={() => setChoosingSong(false)}>
+              Continue with {song.title}
+            </button>
+          </section>
+        ) : (
+        <section className="jam-stage guided-card">
+          <button className="senior-back-button" type="button" onClick={() => { stop(); setChoosingSong(true) }}>
+            <ArrowLeft size={20} /> Choose a different song
+          </button>
           <header className="jam-song-header">
             <div className="song-art" style={{ "--song-accent": song.accent } as React.CSSProperties}>
               <Sparkles size={26} />
               <span>SB</span>
             </div>
             <div>
-              <span className="demo-eyebrow">{song.category} · Original progression</span>
+              <span className="demo-eyebrow">Your selected song</span>
               <h1>{song.title}</h1>
               <p>{song.subtitle}</p>
             </div>
@@ -249,10 +261,10 @@ export function JamPlayerDemo() {
             </div>
           </header>
 
-          <div className="performance-strip">
+          <div className="performance-strip senior-transport">
             <button className="transport-main" type="button" onClick={togglePlay}>
               {playback.playing ? <Pause size={22} /> : <Play size={22} fill="currentColor" />}
-              {playback.playing ? "Pause" : "Play arrangement"}
+              {playback.playing ? "Pause song" : "Play song"}
             </button>
             <button className="transport-stop" type="button" onClick={stop} disabled={!playback.playing}>
               <Square size={17} fill="currentColor" /> Stop
@@ -271,14 +283,14 @@ export function JamPlayerDemo() {
             <div className="live-readout">
               <span><small>Now</small><strong>{playback.currentChord || "—"}</strong></span>
               <span><small>Next</small><strong>{playback.upcomingChord || "—"}</strong></span>
-              <span><small>Arranger</small><strong>{playback.arrangerState}</strong></span>
+              <span><small>Song section</small><strong>{playback.currentSection || playback.arrangerState}</strong></span>
             </div>
           </div>
 
           <div className="genre-transform">
             <div>
-              <span className="demo-eyebrow">Transform the keyboard</span>
-              <strong>Keep the song. Change the entire band.</strong>
+              <span className="demo-eyebrow">Step 4 of 4</span>
+              <strong>Change the band while the song keeps playing</strong>
             </div>
             <div className="genre-buttons">
               {genres.map((item) => (
@@ -288,16 +300,24 @@ export function JamPlayerDemo() {
                   type="button"
                   onClick={() => changeGenre(item)}
                 >
-                  {item}
-                  {midi.profile && <small>{midi.profile.styleMappings[item].name}</small>}
+                  <span className="selection-light" />{item}
                 </button>
               ))}
             </div>
           </div>
 
           {notice && <div className="demo-status" role="status">{notice}</div>}
-          <SongTimeline song={song} playback={playback} />
+          <section className="simple-song-progress">
+            <div><small>Now playing</small><strong>{playback.currentSection || "Ready to begin"}</strong></div>
+            <div><small>Current chord</small><strong>{playback.currentChord || "—"}</strong></div>
+            <div><small>Next chord</small><strong>{playback.upcomingChord || "—"}</strong></div>
+            <button type="button" onClick={() => setShowFullSong((value) => !value)}>
+              {showFullSong ? "Hide full song" : "Show full song"}
+            </button>
+          </section>
+          {showFullSong && <SongTimeline song={song} playback={playback} />}
         </section>
+        )}
       </div>
       <FeedbackPrompt meaningfulActions={engagements} />
     </DemoShell>
