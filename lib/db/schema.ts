@@ -11,6 +11,7 @@ import {
   text,
   timestamp,
   uniqueIndex,
+  type AnyPgColumn,
 } from "drizzle-orm/pg-core"
 import { SERVICE_KEYS } from "@/lib/db/services"
 
@@ -166,7 +167,10 @@ export const projects = pgTable(
       .notNull()
       .references(() => users.id, { onDelete: "cascade" }),
     title: text("title").notNull(),
-    currentRevisionId: text("current_revision_id"),
+    currentRevisionId: text("current_revision_id").references(
+      (): AnyPgColumn => projectRevisions.id,
+      { onDelete: "set null" },
+    ),
     createdAt: timestamp("created_at", { mode: "date" }).defaultNow().notNull(),
     updatedAt: timestamp("updated_at", { mode: "date" }).defaultNow().notNull(),
     deletedAt: timestamp("deleted_at", { mode: "date" }),

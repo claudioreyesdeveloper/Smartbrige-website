@@ -440,6 +440,19 @@
           ],
           "onDelete": "cascade",
           "onUpdate": "no action"
+        },
+        "projects_current_revision_id_project_revisions_id_fk": {
+          "name": "projects_current_revision_id_project_revisions_id_fk",
+          "tableFrom": "projects",
+          "tableTo": "project_revisions",
+          "columnsFrom": [
+            "current_revision_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {},
