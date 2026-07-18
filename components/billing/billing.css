@@ -1,0 +1,84 @@
+.billing-panel,
+.billing-return {
+  display: grid;
+  gap: 1.5rem;
+  max-width: 56rem;
+}
+
+.billing-panel-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.billing-panel-title {
+  margin: 0.35rem 0 0;
+  font-size: 1.5rem;
+  font-weight: 650;
+  letter-spacing: -0.02em;
+}
+
+.billing-panel-copy {
+  margin: 0.65rem 0 0;
+  max-width: 40rem;
+  color: #94a3b8;
+  line-height: 1.6;
+}
+
+.billing-service-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.85rem;
+}
+
+.billing-service-card {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.1rem 1.25rem;
+  border-radius: 1rem;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+}
+
+.billing-service-card-highlight {
+  border-color: color-mix(in srgb, var(--color-accent) 45%, var(--color-border));
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-accent) 20%, transparent);
+}
+
+.billing-service-name {
+  margin: 0;
+  font-size: 1.05rem;
+}
+
+.billing-service-copy,
+.billing-service-status {
+  margin: 0.35rem 0 0;
+  color: #94a3b8;
+  line-height: 1.5;
+  font-size: 0.9375rem;
+}
+
+.billing-action {
+  display: grid;
+  gap: 0.4rem;
+  justify-items: start;
+}
+
+.billing-action-error {
+  margin: 0;
+  color: #fca5a5;
+  font-size: 0.875rem;
+}
+
+.billing-return-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
