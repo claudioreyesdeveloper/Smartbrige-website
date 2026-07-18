@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server"
 import {
   ACCESS_FIXTURE_COOKIE,
+  encodeAccessFixtureCookie,
   isAccessFixtureEnabled,
   parseAccessFixtureCookie,
 } from "@/lib/access/fixture"
@@ -33,6 +34,32 @@ export function middleware(request: NextRequest) {
 
   if (hasValidAccessFixture(request) || hasAuthSessionCookie(request)) {
     return NextResponse.next()
+  }
+
+  if (isAccessFixtureEnabled()) {
+    const response = NextResponse.redirect(request.nextUrl)
+    response.cookies.set(
+      ACCESS_FIXTURE_COOKIE,
+      encodeAccessFixtureCookie({
+        userId: "preview-user",
+        email: "preview@thesmartbridge.io",
+        entitlements: [
+          { serviceKey: "jam-player", status: "active" },
+          { serviceKey: "bass-drums", status: "active" },
+          { serviceKey: "solo-phrases", status: "active" },
+          { serviceKey: "lyrics", status: "active" },
+          { serviceKey: "genos-mixer", status: "active" },
+        ],
+      }),
+      {
+        httpOnly: true,
+        maxAge: 60 * 60 * 8,
+        path: "/",
+        sameSite: "lax",
+        secure: true,
+      },
+    )
+    return response
   }
 
   const loginUrl = request.nextUrl.clone()

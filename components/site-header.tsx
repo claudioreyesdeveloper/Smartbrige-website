@@ -7,6 +7,7 @@ import { Menu, X } from "lucide-react"
 import { SITE } from "@/lib/site"
 
 const NAV = [
+  { href: "/app", label: "Open app" },
   { href: "/demo", label: "Live demo" },
   { href: "/features", label: "Features" },
   { href: "/about", label: "About" },
