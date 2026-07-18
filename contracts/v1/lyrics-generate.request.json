@@ -1,0 +1,28 @@
+{
+  "subjectId": "sub_fixture_user_1",
+  "projectId": "proj_fixture_0001",
+  "entitlement": {
+    "product": "lyrics",
+    "grantId": "grant_fixture_lyrics_1"
+  },
+  "creative": {
+    "title": "Home",
+    "theme": "finding a way home",
+    "mood": "hopeful",
+    "keywords": ["road", "light"],
+    "avoidWords": ["fire"],
+    "style": "soul ballad",
+    "language": "en"
+  },
+  "prosody": {
+    "phrases": [
+      {
+        "phraseId": "phrase-a",
+        "sectionRole": "verse",
+        "syllables": 3,
+        "prominence": [2],
+        "sustain": []
+      }
+    ]
+  }
+}

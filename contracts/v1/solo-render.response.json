@@ -1,0 +1,14 @@
+{
+  "renderId": "solrnd_fixture_0001",
+  "recipeId": "solrcp_fixture_0001",
+  "durationMs": 8000,
+  "renderedSmf": "TVRoZAAAAAYAAQACA8BNVHJrAAAACwD/UQMHoSAA/y8ATVRyawAAAA0AkSRQgXCBJAAA/y8A",
+  "playback": {
+    "channel": 1,
+    "kind": "channel-current",
+    "label": "Alto Sax",
+    "bankMsb": null,
+    "bankLsb": null,
+    "programYamaha": null
+  }
+}

@@ -29,5 +29,21 @@
     "privateRecipeFieldsReturned": false,
     "renderedSmfEncoding": "standard-base64-canonical",
     "fillLookup": "private-same-family-only"
+  },
+  "solo": {
+    "optionIdentifiers": "opaque-subject-project-bound-expiring",
+    "takeIdentifiers": "opaque-subject-project-bound-expiring",
+    "sourceMidiAcceptedFromCaller": false,
+    "privateRecipeFieldsReturned": false,
+    "renderedSmfEncoding": "standard-base64-canonical",
+    "renderedSmfFormat": "type-1"
+  },
+  "lyrics": {
+    "generationInput": "validated-creative-text-and-prosody-only",
+    "rawMidiAcceptedForGeneration": false,
+    "fitInput": "display-safe-note-timeline-and-musical-context",
+    "entitlementSource": "authenticated-public-proxy",
+    "privateFittingFieldsReturned": false,
+    "renderedSmfEncoding": "standard-base64-canonical"
   }
 }

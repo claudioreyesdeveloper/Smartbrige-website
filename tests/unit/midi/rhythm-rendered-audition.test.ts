@@ -217,6 +217,15 @@ describe("RhythmRenderedAuditionPlayer", () => {
     expect(hex(session.sent[0].data)).toBe("99 3c 64")
   })
 
+  it("auditions rendered Solo MIDI on canonical channel 1 without voice setup", () => {
+    const { player, session } = harness()
+    player.start(payload("solo", playback(1, "channel-current")))
+
+    expect(session.sent).toHaveLength(1)
+    expect(session.sent[0].target).toBe("port2")
+    expect(hex(session.sent[0].data)).toBe("90 3c 64")
+  })
+
   it("sets a Genos percussion kit on channel 9 through XG Port 2", () => {
     const { player, session } = harness()
     player.start(payload("drums", playback(9, "drum-kit")))

@@ -88,6 +88,8 @@ export type ProjectLyricSyllable = {
 export type ProjectLyrics = {
   text?: string
   syllables?: ProjectLyricSyllable[]
+  recipeReferenceId?: string
+  renderReferenceId?: string
 }
 
 export type ProjectMixerChannel = {
@@ -351,6 +353,18 @@ function parseLyrics(raw: unknown, label: string): ProjectLyrics | undefined {
       return syllable
     })
   }
+  const recipeReferenceId = assertOptionalString(
+    raw.recipeReferenceId,
+    `${label}.recipeReferenceId`,
+    128,
+  )
+  const renderReferenceId = assertOptionalString(
+    raw.renderReferenceId,
+    `${label}.renderReferenceId`,
+    128,
+  )
+  if (recipeReferenceId !== undefined) lyrics.recipeReferenceId = recipeReferenceId
+  if (renderReferenceId !== undefined) lyrics.renderReferenceId = renderReferenceId
   return lyrics
 }
 

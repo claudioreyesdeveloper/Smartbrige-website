@@ -9,13 +9,17 @@ import {
 import { BODY_LIMIT_BYTES } from "@/lib/jam/domain/limits"
 
 export function jamErrorResponse(error: unknown): NextResponse {
+  const responseOptions = (status: number) => ({
+    status,
+    headers: { "Cache-Control": "no-store, private" },
+  })
   if (isJamError(error)) {
     return NextResponse.json(
       {
         error: abuseSafeJamMessage(error.code, error.message),
         code: error.code,
       },
-      { status: jamErrorHttpStatus(error.code) },
+      responseOptions(jamErrorHttpStatus(error.code)),
     )
   }
   if (error instanceof AuthorizationError) {
@@ -27,19 +31,19 @@ export function jamErrorResponse(error: unknown): NextResponse {
           : "forbidden"
     return NextResponse.json(
       { error: abuseSafeJamMessage(code, error.message), code },
-      { status: jamErrorHttpStatus(code) },
+      responseOptions(jamErrorHttpStatus(code)),
     )
   }
   if (error instanceof Error && error.message === "Authentication is required.") {
     return NextResponse.json(
       { error: abuseSafeJamMessage("unauthenticated"), code: "unauthenticated" },
-      { status: 401 },
+      responseOptions(401),
     )
   }
   console.error("Unexpected jam engine API error")
   return NextResponse.json(
     { error: abuseSafeJamMessage("internal"), code: "internal" },
-    { status: 500 },
+    responseOptions(500),
   )
 }
 

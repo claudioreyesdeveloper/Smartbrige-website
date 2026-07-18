@@ -1,0 +1,25 @@
+{
+  "subjectId": "sub_fixture_user_1",
+  "projectId": "proj_fixture_0001",
+  "model": "genos2",
+  "optionsExpiresAt": "2026-01-01T00:15:00.000Z",
+  "instrumentOptionId": "opt_fixture_alto_sax_0001",
+  "styleOptionId": "opt_fixture_smooth_jazz_01",
+  "feel": "straight",
+  "takeCount": 3,
+  "context": {
+    "sectionId": "sec-main-a",
+    "sectionName": "Verse",
+    "bars": 4,
+    "bpm": 120,
+    "key": "C",
+    "timeSignature": { "numerator": 4, "denominator": 4 },
+    "chords": [
+      { "symbol": "Cmaj7", "startBar": 0, "durationBars": 2 },
+      { "symbol": "Fmaj7", "startBar": 2, "durationBars": 2 }
+    ],
+    "melody": [
+      { "beat": 0, "durationBeats": 1, "pitch": 60 }
+    ]
+  }
+}

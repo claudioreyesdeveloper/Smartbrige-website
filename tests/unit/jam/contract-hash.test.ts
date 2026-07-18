@@ -24,8 +24,35 @@ describe("jam v1 contract fixtures", () => {
     const expected = readFileSync(path.join(contractsDir, "CONTRACT_HASH.txt"), "utf8").trim()
     expect(computeHash()).toBe(expected)
     expect(expected).toBe(
-      "6462580c1279eb08aaedc3be85439f41365a6988d6c45f1e0fbfa3b5a3f19eb1",
+      "05e583863ae44c9d8f110fb6d8c7df9ba6982af1af020b83b2b658935c224145",
     )
+  })
+
+  it("parses Solo and Lyrics fixtures with the pinned public schemas", async () => {
+    const {
+      lyricFitResponseSchema,
+      lyricFitEngineRequestSchema,
+      lyricGenerateResponseSchema,
+      lyricGenerateEngineRequestSchema,
+      soloGenerateEngineRequestSchema,
+      soloGenerateResponseSchema,
+      soloOptionsEngineRequestSchema,
+      soloOptionsResponseSchema,
+      soloRenderEngineRequestSchema,
+      soloRenderResponseSchema,
+    } = await import("@/lib/creative/contracts")
+    const read = (name: string) =>
+      JSON.parse(readFileSync(path.join(contractsDir, name), "utf8"))
+    expect(soloOptionsEngineRequestSchema.parse(read("solo-options.request.json")).projectId).toBeTruthy()
+    expect(soloGenerateEngineRequestSchema.parse(read("solo-generate.request.json")).context.bars).toBe(4)
+    expect(soloRenderEngineRequestSchema.parse(read("solo-render.request.json")).takeId).toBeTruthy()
+    expect(lyricGenerateEngineRequestSchema.parse(read("lyrics-generate.request.json")).prosody.phrases).toHaveLength(1)
+    expect(lyricFitEngineRequestSchema.parse(read("lyrics-fit.request.json")).notes).toHaveLength(3)
+    expect(soloOptionsResponseSchema.parse(read("solo-options.response.json")).styles).toHaveLength(1)
+    expect(soloGenerateResponseSchema.parse(read("solo-generate.response.json")).takes).toHaveLength(3)
+    expect(soloRenderResponseSchema.parse(read("solo-render.response.json")).renderId).toBeTruthy()
+    expect(lyricGenerateResponseSchema.parse(read("lyrics-generate.response.json")).lines).toHaveLength(1)
+    expect(lyricFitResponseSchema.parse(read("lyrics-fit.response.json")).phrases).toHaveLength(1)
   })
 
   it("fixture prepare/reharmonize shapes parse as public-safe responses", async () => {

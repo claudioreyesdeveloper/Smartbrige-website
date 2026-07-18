@@ -1,0 +1,9 @@
+{
+  "expiresAt": "2026-01-01T00:15:00.000Z",
+  "instruments": [
+    { "optionId": "opt_fixture_alto_sax_0001", "label": "Alto Sax" }
+  ],
+  "styles": [
+    { "optionId": "opt_fixture_smooth_jazz_01", "label": "Smooth Jazz" }
+  ]
+}

@@ -3,6 +3,7 @@ import type { ServiceKey } from "@/lib/db/services"
 export type EntitlementStatus = "active" | "trialing" | "canceled" | "expired"
 
 export type EntitlementRecord = {
+  grantId?: string
   serviceKey: ServiceKey
   status: EntitlementStatus
   validFrom: Date

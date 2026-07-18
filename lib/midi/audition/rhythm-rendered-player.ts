@@ -19,7 +19,7 @@ export const MAX_RENDERED_AUDITION_DURATION_MS = 86_400_000
 const STANDARD_BASE64 =
   /^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/
 
-export type RhythmRenderedPart = "bass" | "drums" | "fill"
+export type RhythmRenderedPart = "bass" | "drums" | "fill" | "solo"
 
 export type RhythmRenderedPlaybackKind =
   | "mega-voice"
@@ -127,8 +127,8 @@ function decodeRenderedSmf(value: unknown): Uint8Array {
 }
 
 function validatePart(value: unknown): RhythmRenderedPart {
-  if (value !== "bass" && value !== "drums" && value !== "fill") {
-    throw new Error("part must be bass, drums, or fill.")
+  if (value !== "bass" && value !== "drums" && value !== "fill" && value !== "solo") {
+    throw new Error("part must be bass, drums, fill, or solo.")
   }
   return value
 }
@@ -175,7 +175,8 @@ function validateDescriptor(
   const validDrums = (part === "drums" || part === "fill") &&
     ((channel === 10 && value.kind === "channel-current") ||
       (channel === 9 && value.kind === "drum-kit"))
-  if (!validBass && !validDrums) {
+  const validSolo = part === "solo" && channel === 1 && value.kind === "channel-current"
+  if (!validBass && !validDrums && !validSolo) {
     throw new Error(
       `Unexpected ${part} audition channel or playback kind; stored-project channels are not playable.`,
     )

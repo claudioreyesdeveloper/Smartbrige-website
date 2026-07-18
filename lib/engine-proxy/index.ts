@@ -1,4 +1,8 @@
-export { PrivateEngineClient } from "@/lib/engine-proxy/client"
+export {
+  ENGINE_REQUEST_MAX_ATTEMPTS,
+  ENGINE_REQUEST_TIMEOUT_MS,
+  PrivateEngineClient,
+} from "@/lib/engine-proxy/client"
 export {
   ENGINE_PROXY_ENV_VAR_NAMES,
   PRIVATE_ENGINE_SIGNING_SECRET_ENV,

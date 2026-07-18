@@ -1,0 +1,9 @@
+{
+  "generationId": "solgen_fixture_0001",
+  "expiresAt": "2026-01-01T00:15:00.000Z",
+  "takes": [
+    { "takeId": "take_fixture_0001", "label": "Take 1", "durationMs": 8000 },
+    { "takeId": "take_fixture_0002", "label": "Take 2", "durationMs": 8000 },
+    { "takeId": "take_fixture_0003", "label": "Take 3", "durationMs": 8000 }
+  ]
+}

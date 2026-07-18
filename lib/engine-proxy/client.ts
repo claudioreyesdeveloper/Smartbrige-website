@@ -26,6 +26,25 @@ import {
   type RhythmRenderEngineRequest,
   type RhythmRenderResponse,
 } from "@/lib/rhythm/domain"
+import {
+  lyricFitEngineRequestSchema,
+  lyricFitResponseSchema,
+  lyricGenerateEngineRequestSchema,
+  lyricGenerateResponseSchema,
+  soloGenerateEngineRequestSchema,
+  soloGenerateResponseSchema,
+  soloOptionsEngineRequestSchema,
+  soloOptionsResponseSchema,
+  soloRenderEngineRequestSchema,
+  soloRenderResponseSchema,
+  type LyricFitResponse,
+  type LyricGenerationResponse,
+  type SoloGenerateEngineRequest,
+  type SoloGenerateResponse,
+  type SoloOptionsResponse,
+  type SoloRenderResponse,
+} from "@/lib/creative/contracts"
+import { z } from "zod"
 
 const ALLOWED_ENGINE_PATHS = {
   prepare: "/v1/jam/prepare",
@@ -34,7 +53,15 @@ const ALLOWED_ENGINE_PATHS = {
   rhythmQuery: "/v1/rhythm/query",
   rhythmFills: "/v1/rhythm/fills",
   rhythmRender: "/v1/rhythm/render",
+  soloOptions: "/v1/solo/options",
+  soloGenerate: "/v1/solo/generate",
+  soloRender: "/v1/solo/render",
+  lyricGenerate: "/v1/lyrics/generate",
+  lyricFit: "/v1/lyrics/fit",
 } as const
+
+export const ENGINE_REQUEST_TIMEOUT_MS = 15_000
+export const ENGINE_REQUEST_MAX_ATTEMPTS = 1
 
 export type EngineFetch = typeof fetch
 
@@ -70,24 +97,25 @@ async function postEngineJson<TResponse>(options: {
   config: EngineProxyConfig
   fetchImpl: EngineFetch
   nowMs: () => number
+  timeoutMs?: number
 }): Promise<TResponse> {
   const rawBody = JSON.stringify(options.body)
   const target = joinEngineUrl(options.config.baseUrl, options.path)
   assertSameOrigin(target, options.config.baseUrl)
 
-  const headers = signEngineRequest({
-    rawBody,
-    secret: options.config.signingSecret,
-    nowMs: options.nowMs(),
-  })
-
   let response: Response
   try {
+    const headers = signEngineRequest({
+      rawBody,
+      secret: options.config.signingSecret,
+      nowMs: options.nowMs(),
+    })
     response = await options.fetchImpl(target.toString(), {
       method: "POST",
       headers,
       body: rawBody,
       redirect: "manual",
+      signal: AbortSignal.timeout(options.timeoutMs ?? ENGINE_REQUEST_TIMEOUT_MS),
     })
   } catch {
     throw new JamError("unavailable", "The jam engine is temporarily unavailable.")
@@ -129,6 +157,12 @@ async function postEngineJson<TResponse>(options: {
     if (error instanceof JamError) throw error
     throw new JamError("unavailable", "The jam engine is temporarily unavailable.")
   }
+}
+
+function parseWithSchema<T>(schema: z.ZodType<T>, value: unknown): T {
+  const parsed = schema.safeParse(value)
+  if (!parsed.success) throw new JamError("unavailable", "The creative service is temporarily unavailable.")
+  return parsed.data
 }
 
 export class PrivateEngineClient {
@@ -202,6 +236,63 @@ export class PrivateEngineClient {
       path: ALLOWED_ENGINE_PATHS.rhythmRender,
       body: request,
       parseResponse: parseRhythmRenderResponse,
+      config: this.config,
+      fetchImpl: this.fetchImpl,
+      nowMs: this.nowMs,
+    })
+  }
+
+  soloOptions(request: z.infer<typeof soloOptionsEngineRequestSchema>): Promise<SoloOptionsResponse> {
+    return postEngineJson({
+      path: ALLOWED_ENGINE_PATHS.soloOptions,
+      body: soloOptionsEngineRequestSchema.parse(request),
+      parseResponse: (value) => parseWithSchema(soloOptionsResponseSchema, value),
+      config: this.config,
+      fetchImpl: this.fetchImpl,
+      nowMs: this.nowMs,
+    })
+  }
+
+  soloGenerate(request: SoloGenerateEngineRequest): Promise<SoloGenerateResponse> {
+    return postEngineJson({
+      path: ALLOWED_ENGINE_PATHS.soloGenerate,
+      body: soloGenerateEngineRequestSchema.parse(request),
+      parseResponse: (value) => parseWithSchema(soloGenerateResponseSchema, value),
+      config: this.config,
+      fetchImpl: this.fetchImpl,
+      nowMs: this.nowMs,
+    })
+  }
+
+  soloRender(request: z.infer<typeof soloRenderEngineRequestSchema>): Promise<SoloRenderResponse> {
+    return postEngineJson({
+      path: ALLOWED_ENGINE_PATHS.soloRender,
+      body: soloRenderEngineRequestSchema.parse(request),
+      parseResponse: (value) => parseWithSchema(soloRenderResponseSchema, value),
+      config: this.config,
+      fetchImpl: this.fetchImpl,
+      nowMs: this.nowMs,
+    })
+  }
+
+  lyricGenerate(
+    request: z.infer<typeof lyricGenerateEngineRequestSchema>,
+  ): Promise<LyricGenerationResponse> {
+    return postEngineJson({
+      path: ALLOWED_ENGINE_PATHS.lyricGenerate,
+      body: lyricGenerateEngineRequestSchema.parse(request),
+      parseResponse: (value) => parseWithSchema(lyricGenerateResponseSchema, value),
+      config: this.config,
+      fetchImpl: this.fetchImpl,
+      nowMs: this.nowMs,
+    })
+  }
+
+  lyricFit(request: z.infer<typeof lyricFitEngineRequestSchema>): Promise<LyricFitResponse> {
+    return postEngineJson({
+      path: ALLOWED_ENGINE_PATHS.lyricFit,
+      body: lyricFitEngineRequestSchema.parse(request),
+      parseResponse: (value) => parseWithSchema(lyricFitResponseSchema, value),
       config: this.config,
       fetchImpl: this.fetchImpl,
       nowMs: this.nowMs,

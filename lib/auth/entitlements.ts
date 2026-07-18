@@ -17,6 +17,7 @@ export async function getEntitlementRecordsForUser(userId: string): Promise<Enti
   const db = getDb()
   const rows = await db
     .select({
+      grantId: userEntitlements.id,
       serviceKey: services.key,
       status: userEntitlements.status,
       validFrom: userEntitlements.validFrom,
@@ -32,6 +33,7 @@ export async function getEntitlementRecordsForUser(userId: string): Promise<Enti
     }
     return [
       {
+        grantId: row.grantId,
         serviceKey: row.serviceKey,
         status: row.status,
         validFrom: row.validFrom,

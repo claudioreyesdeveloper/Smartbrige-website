@@ -1,0 +1,48 @@
+{
+  "subjectId": "sub_fixture_user_1",
+  "projectId": "proj_fixture_0001",
+  "operation": "fit",
+  "ppq": 480,
+  "tempoBpm": 120,
+  "key": "C",
+  "timeSignature": {
+    "numerator": 4,
+    "denominator": 4
+  },
+  "chords": [
+    {
+      "symbol": "C",
+      "startBar": 0,
+      "durationBars": 1
+    }
+  ],
+  "notes": [
+    {
+      "noteId": "note-1",
+      "pitch": 60,
+      "startTick": 0,
+      "durationTicks": 240,
+      "phraseId": "phrase-a"
+    },
+    {
+      "noteId": "note-2",
+      "pitch": 61,
+      "startTick": 480,
+      "durationTicks": 240,
+      "phraseId": "phrase-a"
+    },
+    {
+      "noteId": "note-3",
+      "pitch": 62,
+      "startTick": 960,
+      "durationTicks": 240,
+      "phraseId": "phrase-a"
+    }
+  ],
+  "lines": [
+    {
+      "phraseId": "phrase-a",
+      "text": "we go home"
+    }
+  ]
+}

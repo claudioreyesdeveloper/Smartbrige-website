@@ -1,0 +1,26 @@
+{
+  "recipeReferenceId": "lyrrec_fixture_0001",
+  "renderReferenceId": "lyrrnd_fixture_0001",
+  "phrases": [
+    {
+      "phraseId": "phrase-a",
+      "words": ["we", "go", "home"],
+      "syllables": ["we", "go", "home"],
+      "assignments": [
+        {
+          "noteId": "note-1",
+          "lyric": "we"
+        },
+        {
+          "noteId": "note-2",
+          "lyric": "go"
+        },
+        {
+          "noteId": "note-3",
+          "lyric": "home"
+        }
+      ]
+    }
+  ],
+  "renderedExport": "TVRoZAAAAAYAAAAAAeA="
+}

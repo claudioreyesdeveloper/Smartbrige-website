@@ -44,6 +44,12 @@ export const engineOperationEnum = pgEnum("engine_operation", [
   "rhythm_browse",
   "rhythm_fills",
   "rhythm_render",
+  "solo_options",
+  "solo_generate",
+  "solo_render",
+  "lyrics_generate",
+  "lyrics_fit",
+  "lyrics_remap",
 ])
 
 export const engineUsageStatusEnum = pgEnum("engine_usage_status", [
