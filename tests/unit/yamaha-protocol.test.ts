@@ -35,6 +35,12 @@ describe("Yamaha commands", () => {
   it("pairs Yamaha arranger Port 1 and Port 2 like desktop SmartBridge", () => {
     expect(isYamahaArrangerPort({ name: "Digital Keyboard Port 1", manufacturer: "Yamaha Corporation" }, 1)).toBe(true)
     expect(isYamahaArrangerPort({ name: "Digital Keyboard Port 2", manufacturer: "Yamaha Corporation" }, 2)).toBe(true)
+    // Tyros/PSR via Yamaha USB-MIDI driver (community-verified names)
+    expect(isYamahaArrangerPort({ name: "Digital Workstation Port 1", manufacturer: "Yamaha" }, 1)).toBe(true)
+    expect(isYamahaArrangerPort({ name: "Digital Workstation-1", manufacturer: "Yamaha" }, 1)).toBe(true)
+    expect(isYamahaArrangerPort({ name: "Digital Workstation 1", manufacturer: "Yamaha" }, 1)).toBe(true)
+    expect(isYamahaArrangerPort({ name: "Digital Workstation 2", manufacturer: "Yamaha" }, 2)).toBe(true)
+    expect(isYamahaArrangerPort({ name: "Digitalworkstation 1", manufacturer: "Yamaha" }, 1)).toBe(true)
     expect(isYamahaArrangerPort({ name: "Genos2 Port 1", manufacturer: "Yamaha" }, 1)).toBe(true)
     expect(isYamahaArrangerPort({ name: "Yamaha Genos2-2", manufacturer: "" }, 2)).toBe(true)
     expect(isYamahaArrangerPort({ name: "Digital Keyboard Port 10", manufacturer: "Yamaha" }, 1)).toBe(false)
@@ -59,6 +65,20 @@ describe("Yamaha commands", () => {
     )
     expect(pair?.input1.id).toBe("i1")
     expect(pair?.output2.id).toBe("o2")
+
+    // Tyros / PSR-SX: Digital Workstation 1/2 (no "Port" word)
+    const tyrosPair = findYamahaPortPair(
+      [
+        { id: "t1", name: "Digital Workstation 1", manufacturer: "Yamaha", state: "connected" },
+        { id: "t2", name: "Digital Workstation 2", manufacturer: "Yamaha", state: "connected" },
+      ],
+      [
+        { id: "to1", name: "Digital Workstation 1", manufacturer: "Yamaha", state: "connected" },
+        { id: "to2", name: "Digital Workstation 2", manufacturer: "Yamaha", state: "connected" },
+      ],
+    )
+    expect(tyrosPair?.input1.id).toBe("t1")
+    expect(tyrosPair?.output2.id).toBe("to2")
   })
 
   it("builds the desktop-compatible tempo and arranger messages", () => {

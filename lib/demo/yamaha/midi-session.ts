@@ -68,10 +68,11 @@ export function isYamahaArrangerPort(
   // Motif / MODX / Montage use a different connector path on desktop — never
   // treat them as the Genos/Tyros arranger USB pair (they also expose Port1/2).
   if (/motif|modx|montage|reface/i.test(identity)) return false
-  // Desktop LocalMidiConnector matches Digital Keyboard / Digital Workstation;
-  // also accept Genos/Tyros/PSR USB names seen in Chrome Web MIDI.
+  // Genos/Genos2 (class/driver): "Digital Keyboard Port 1/2"
+  // Tyros/PSR (Yamaha USB-MIDI): "Digital Workstation Port 1/2",
+  // "Digital Workstation-1/2", or "Digital Workstation 1/2" (no "Port").
   if (
-    !/yamaha|digital keyboard|digital workstation|genos|tyros|psr[- ]?s|psr[- ]?sx/i.test(
+    !/yamaha|digital\s*keyboard|digital\s*workstation|genos|tyros|psr[- ]?s|psr[- ]?sx/i.test(
       identity,
     )
   ) {
@@ -89,7 +90,7 @@ function arrangerPortPriority(
   port: Pick<MidiPortChoice, "name" | "manufacturer">,
 ): number {
   const identity = `${port.manufacturer} ${port.name}`.toLowerCase()
-  if (/digital keyboard|digital workstation/.test(identity)) return 0
+  if (/digital\s*keyboard|digital\s*workstation/.test(identity)) return 0
   if (/genos|tyros/.test(identity)) return 1
   if (/psr/.test(identity)) return 2
   return 3
