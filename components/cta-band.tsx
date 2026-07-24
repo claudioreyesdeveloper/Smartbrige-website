@@ -3,15 +3,17 @@ import { ArrowRight } from "lucide-react"
 import { SITE } from "@/lib/site"
 
 export function CtaBand({
-  title = "Ready to try SmartBridge?",
-  body = "Request beta access or download SmartBridge Setup to install the latest build.",
-  primaryHref = "/beta",
-  primaryLabel = "Request beta access",
+  title = "Start with Style Maker — or join the desktop beta",
+  body = "Style Maker is available now with a 14-day free trial. The full desktop SmartBridge suite remains invitation-only beta.",
+  primaryHref = "/style-maker",
+  primaryLabel = "Start Style Maker free trial",
+  showSetup = true,
 }: {
   title?: string
   body?: string
   primaryHref?: string
   primaryLabel?: string
+  showSetup?: boolean
 }) {
   return (
     <section className="section-block">
@@ -24,9 +26,14 @@ export function CtaBand({
               {primaryLabel}
               <ArrowRight size={16} />
             </Link>
-            <a href={SITE.setupUrl} className="btn-secondary" target="_blank" rel="noopener noreferrer">
-              Download Setup
-            </a>
+            {showSetup && (
+              <a href={SITE.setupUrl} className="btn-secondary" target="_blank" rel="noopener noreferrer">
+                Download Setup
+              </a>
+            )}
+            <Link href="/beta" className="btn-secondary">
+              Request beta access
+            </Link>
           </div>
         </div>
       </div>

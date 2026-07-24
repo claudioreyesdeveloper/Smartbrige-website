@@ -1,6 +1,6 @@
 import Image from "next/image"
 import Link from "next/link"
-import { ArrowRight, Play } from "lucide-react"
+import { ArrowRight } from "lucide-react"
 import { SITE } from "@/lib/site"
 
 export function Hero() {
@@ -9,26 +9,35 @@ export function Hero() {
       <div className="content-wrap">
         <div className="hero-grid">
           <div>
-            <p className="section-label" style={{ marginBottom: "1rem" }}>
+            <p className="ux-section-label" style={{ marginBottom: "1.15rem" }}>
               For Tyros · Genos · PSR-SX · Motif musicians
             </p>
             <h1 className="hero-title">From MIDI phrase to full arrangement</h1>
-            <p className="prose-muted mt-5" style={{ fontSize: "1.125rem", maxWidth: "32rem" }}>
-              SmartBridge connects your Yamaha keyboard to a complete songwriting workflow —
-              chord-aware phrases, arrangement layers, vocals, lyrics, and DAW production in one
-              environment.
+            <p className="prose-muted mt-6" style={{ fontSize: "1.2rem", maxWidth: "32rem", lineHeight: 1.6 }}>
+              Connect your Yamaha keyboard to a songwriting workflow — chord-aware phrases,
+              arrangement layers, vocals, and DAW production in one place.
             </p>
-            <div className="btn-row mt-8">
-              <Link href="/beta" className="btn-primary">
-                Request beta access
+            <div className="btn-row mt-9" style={{ gap: "0.9rem" }}>
+              <Link href="/style-maker" className="btn-primary" style={{ minHeight: "3rem", padding: "0.85rem 1.35rem" }}>
+                Start Style Maker free trial
                 <ArrowRight size={16} />
               </Link>
-              <a href={SITE.setupUrl} className="btn-secondary" target="_blank" rel="noopener noreferrer">
+              <a
+                href={SITE.setupUrl}
+                className="btn-secondary"
+                style={{ minHeight: "3rem", padding: "0.85rem 1.35rem" }}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
                 Download Setup
               </a>
+              <Link href="/beta" className="btn-secondary" style={{ minHeight: "3rem", padding: "0.85rem 1.35rem" }}>
+                Request beta access
+              </Link>
             </div>
             <p className="prose-muted mt-6" style={{ fontSize: "0.875rem" }}>
-              macOS (Apple Silicon) · Windows x64 · VST3 + Standalone · Invitation-only beta
+              Style Maker is available now (14-day free trial). Full desktop SmartBridge is
+              invitation-only beta · macOS Apple Silicon · Windows x64 · VST3 + Standalone
             </p>
           </div>
 

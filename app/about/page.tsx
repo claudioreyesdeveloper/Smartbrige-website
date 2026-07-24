@@ -6,7 +6,7 @@ import { SITE } from "@/lib/site"
 export const metadata: Metadata = {
   title: "About",
   description:
-    "SmartBridge is an independent, non-commercial project built from real musician workflow needs — connecting Yamaha keyboards to modern production.",
+    "SmartBridge is an independent project built from real musician workflow needs — connecting Yamaha keyboards to modern production. Style Maker is available now; the desktop suite is invitation-only beta.",
 }
 
 export default function AboutPage() {
@@ -15,7 +15,7 @@ export default function AboutPage() {
       <div className="content-wrap">
         <div className="grid gap-12 lg:grid-cols-2 lg:gap-16 items-start">
           <div>
-            <p className="section-label">About</p>
+            <p className="ux-section-label">About</p>
             <h1 className="section-title mt-3">Built from real workflow friction</h1>
             <div className="mt-6 space-y-4 prose-muted">
               <p>
@@ -78,7 +78,7 @@ export default function AboutPage() {
             },
             {
               title: "Independent",
-              body: "Built first for Claudio’s own personal use over about six months, then shared as a non-commercial passion project for other keyboard musicians.",
+              body: "Built first for Claudio’s own personal use over about six months, then shared with other keyboard musicians — Style Maker is available now; the full desktop suite remains invitation-only beta.",
             },
           ].map((item) => (
             <div key={item.title} className="card-surface p-6">

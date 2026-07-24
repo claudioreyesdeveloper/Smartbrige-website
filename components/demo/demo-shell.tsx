@@ -5,9 +5,13 @@ import { ChevronLeft, CircleHelp, Plug, ShieldCheck, Unplug } from "lucide-react
 import type { ReactNode } from "react"
 import { useState } from "react"
 import type { YamahaModelId } from "@/lib/demo/types"
-import { KEYBOARD_PROFILES } from "@/lib/demo/yamaha/profiles"
+import {
+  ALL_YAMAHA_MODEL_IDS,
+  KEYBOARD_PROFILES,
+} from "@/lib/demo/yamaha/profiles"
 import { useMidiSession } from "@/lib/demo/yamaha/use-midi-session"
 import { BrowserCompatibility } from "@/components/demo/browser-compatibility"
+import { StatusChip } from "@/components/ux"
 
 type DemoShellProps = {
   title: string
@@ -52,6 +56,11 @@ export function DemoShell({
 
         <div className="demo-topbar-actions">
           <span className="demo-step">{step}</span>
+          <StatusChip on={midi.connected}>
+            {midi.connected
+              ? midi.profile?.displayName || midi.modelName || "MIDI connected"
+              : "MIDI offline"}
+          </StatusChip>
           <button className="demo-icon-button" type="button" aria-label="Demo help">
             <CircleHelp size={18} />
           </button>
@@ -89,7 +98,7 @@ export function DemoShell({
             <p>Turn it on and connect it to this computer with a USB cable.</p>
           </div>
           <div className="keyboard-model-grid">
-            {(["genos", "genos2", "tyros4", "tyros5"] as YamahaModelId[]).map((id) => (
+            {ALL_YAMAHA_MODEL_IDS.map((id) => (
               <button
                 key={id}
                 type="button"

@@ -1,4 +1,9 @@
 import type { KeyboardProfile, YamahaModelId } from "@/lib/demo/types"
+import {
+  loadCachedKeyboardPair,
+  resolveCachedKeyboardPair,
+  saveCachedKeyboardPair,
+} from "@/lib/demo/yamaha/keyboard-cache"
 import { decodePayload7, startsWithBytes, text } from "@/lib/demo/yamaha/protocol-utils"
 import {
   detectProfile,
@@ -168,7 +173,22 @@ export class YamahaMidiSession extends EventTarget {
         }
       }
       this.refreshPorts()
-      const pair = findYamahaPortPair(this.snapshot.inputs, this.snapshot.outputs)
+      const cached = loadCachedKeyboardPair()
+      const cachedPair = cached
+        ? resolveCachedKeyboardPair(
+            cached,
+            this.snapshot.inputs,
+            this.snapshot.outputs,
+          )
+        : null
+      if (cached?.modelId && KEYBOARD_PROFILES[cached.modelId] && !chosenProfile) {
+        this.publish({
+          profile: KEYBOARD_PROFILES[cached.modelId],
+          modelName: cached.modelName || KEYBOARD_PROFILES[cached.modelId].displayName,
+        })
+      }
+      const pair =
+        cachedPair || findYamahaPortPair(this.snapshot.inputs, this.snapshot.outputs)
       if (pair) {
         await this.connectPair(pair)
       } else {
@@ -187,6 +207,29 @@ export class YamahaMidiSession extends EventTarget {
       })
     }
     return this.snapshot
+  }
+
+  /** Override catalog model (voices/styles) without reconnecting. */
+  setKeyboardModel(modelId: YamahaModelId): void {
+    const profile = KEYBOARD_PROFILES[modelId]
+    if (!profile) return
+    this.publish({
+      profile,
+      modelName: profile.displayName,
+      error: "",
+    })
+    const cached = loadCachedKeyboardPair()
+    if (cached) {
+      saveCachedKeyboardPair(
+        {
+          input1: { id: cached.input1Id, name: cached.input1Name, manufacturer: "", state: "connected" },
+          input2: { id: cached.input2Id, name: cached.input2Name, manufacturer: "", state: "connected" },
+          output1: { id: cached.output1Id, name: cached.output1Name, manufacturer: "", state: "connected" },
+          output2: { id: cached.output2Id, name: cached.output2Name, manufacturer: "", state: "connected" },
+        },
+        { modelId, modelName: profile.displayName },
+      )
+    }
   }
 
   private refreshPorts() {
@@ -233,6 +276,10 @@ export class YamahaMidiSession extends EventTarget {
         outputName: `${output1.name} + ${output2.name}`,
       })
       if (!this.snapshot.profile) await this.detectKeyboard()
+      saveCachedKeyboardPair(pair, {
+        modelId: this.snapshot.profile?.id ?? null,
+        modelName: this.snapshot.modelName || this.snapshot.profile?.displayName,
+      })
     } catch (error) {
       this.publish({
         connected: false,
@@ -309,8 +356,13 @@ export class YamahaMidiSession extends EventTarget {
     if (!this.snapshot.connected || (!this.output1 && !this.output2)) {
       throw new Error("Connect the keyboard before sending MIDI.")
     }
-    if (target === "port1" || target === "both") this.output1?.send(data, timestamp)
-    if (target === "port2" || target === "both") this.output2?.send(data, timestamp)
+    // Clone per port — some Web MIDI stacks share/queue the same buffer.
+    if (target === "port1" || target === "both") {
+      this.output1?.send(Uint8Array.from(data), timestamp)
+    }
+    if (target === "port2" || target === "both") {
+      this.output2?.send(Uint8Array.from(data), timestamp)
+    }
   }
 
   sendPort1(data: Uint8Array, timestamp?: number) {

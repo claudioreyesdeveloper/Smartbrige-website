@@ -17,10 +17,8 @@ import {
 import { useMidiSession } from "@/lib/demo/yamaha/use-midi-session"
 import { DemoShell } from "@/components/demo/demo-shell"
 import { FeedbackPrompt } from "@/components/demo/feedback-prompt"
-import {
-  styleMappingForEntry,
-  stylesForProfile,
-} from "@/lib/demo/yamaha/style-catalog"
+import { styleMappingForEntry } from "@/lib/demo/yamaha/style-catalog"
+import { StyleCatalogControls } from "@/components/demo/style-catalog-controls"
 
 function sectionOrder(label: string) {
   const normalized = label.toLowerCase()
@@ -191,13 +189,11 @@ export function JamPlayerDemo() {
   const [session, midi] = useMidiSession()
   const [category, setCategory] = useState<SongCategory>("Pop")
   const [songId, setSongId] = useState(songs[0].id)
-  const [styleCategory, setStyleCategory] = useState("All")
-  const [styleSearch, setStyleSearch] = useState("")
-  const [styleKey, setStyleKey] = useState("")
   const [reharmStyle, setReharmStyle] = useState("Original")
   const [playback, setPlayback] = useState(initialPlayback)
   const [notice, setNotice] = useState("")
   const [engagements, setEngagements] = useState(0)
+  const [selectedStyle, setSelectedStyle] = useState<StyleCatalogEntry | null>(null)
   const scheduler = useRef<JamScheduler | null>(null)
 
   const visibleSongs = useMemo(
@@ -213,34 +209,16 @@ export function JamPlayerDemo() {
     () => ["Original", ...Object.keys(reharmonizations[originalSong.id]?.styles || {})],
     [originalSong.id],
   )
-  const availableStyles = useMemo(
-    () => midi.profile ? stylesForProfile(midi.profile) : [],
-    [midi.profile],
-  )
-  const styleCategories = useMemo(
-    () => ["All", ...Array.from(new Set(availableStyles.map((style) => style.category))).sort()],
-    [availableStyles],
-  )
-  const filteredStyles = useMemo(() => {
-    const search = styleSearch.trim().toLowerCase()
-    return availableStyles.filter((style) =>
-      (styleCategory === "All" || style.category === styleCategory) &&
-      (!search || style.name.toLowerCase().includes(search)),
-    )
-  }, [availableStyles, styleCategory, styleSearch])
-  const entryKey = (style: StyleCatalogEntry) => `${style.styleNumber}:${style.name}`
-  const selectedStyle =
-    availableStyles.find((style) => entryKey(style) === styleKey) ||
-    availableStyles.find((style) => style.name === "EasyPop") ||
-    availableStyles[0]
-  const selectedStyleVisible = selectedStyle &&
-    filteredStyles.some((style) => entryKey(style) === entryKey(selectedStyle))
 
   useEffect(() => {
     const next = new JamScheduler(session, setPlayback)
     scheduler.current = next
     return () => next.dispose()
   }, [session])
+
+  useEffect(() => {
+    scheduler.current?.setModelId(midi.profile?.id ?? null)
+  }, [midi.profile?.id])
 
   useEffect(() => {
     if (!visibleSongs.some((candidate) => candidate.id === songId)) {
@@ -250,13 +228,6 @@ export function JamPlayerDemo() {
 
   useEffect(() => setReharmStyle("Original"), [songId])
 
-  useEffect(() => {
-    const first = availableStyles.find((style) => style.name === "EasyPop") || availableStyles[0]
-    setStyleKey(first ? entryKey(first) : "")
-    setStyleCategory("All")
-    setStyleSearch("")
-  }, [availableStyles])
-
   const stop = () => scheduler.current?.stop()
 
   const togglePlay = () => {
@@ -264,18 +235,27 @@ export function JamPlayerDemo() {
       stop()
       return
     }
-    if (!midi.connected || !midi.profile || !selectedStyle) {
+    if (!midi.connected || !midi.profile) {
       setNotice("Connect a supported Yamaha keyboard before starting the arrangement.")
       return
     }
+    if (!selectedStyle) {
+      setNotice("Choose a style before starting the arrangement.")
+      return
+    }
     setNotice("")
+    scheduler.current?.setModelId(midi.profile.id)
     scheduler.current?.start(song, styleMappingForEntry(midi.profile, selectedStyle))
     setEngagements((value) => value + 1)
   }
 
   const playSection = (sectionIndex: number) => {
-    if (!midi.connected || !midi.profile || !selectedStyle) {
+    if (!midi.connected || !midi.profile) {
       setNotice("Connect a supported Yamaha keyboard before playing a section.")
+      return
+    }
+    if (!selectedStyle) {
+      setNotice("Choose a style before playing a section.")
       return
     }
     const startBeat = song.timeSignature[0] + song.sections
@@ -284,6 +264,7 @@ export function JamPlayerDemo() {
         (total, section) => total + section.bars * song.timeSignature[0],
         0,
       )
+    scheduler.current?.setModelId(midi.profile.id)
     scheduler.current?.stop()
     scheduler.current?.start(
       song,
@@ -292,20 +273,6 @@ export function JamPlayerDemo() {
     )
     setNotice(`Playing ${song.sections[sectionIndex].label} from the beginning.`)
     setEngagements((value) => value + 1)
-  }
-
-  const changeStyle = (next: StyleCatalogEntry) => {
-    setStyleKey(entryKey(next))
-    setStyleSearch(next.name)
-    if (midi.profile) {
-      scheduler.current?.changeStyle(styleMappingForEntry(midi.profile, next))
-      setNotice(
-        playback.playing
-          ? `Same arrangement, now playing ${next.name} on ${midi.profile.displayName}.`
-          : `${next.name} selected on your ${midi.profile.displayName}.`,
-      )
-      setEngagements((value) => value + 1)
-    }
   }
 
   const changeReharmonization = (next: string) => {
@@ -434,54 +401,33 @@ export function JamPlayerDemo() {
                 </select>
               </label>
             </div>
-            <div className="style-catalog-controls">
-              <input
-                type="search"
-                list="yamaha-style-suggestions"
-                value={styleSearch}
-                placeholder={`Search ${availableStyles.length} styles`}
-                aria-label="Search styles"
-                autoComplete="off"
-                onChange={(event) => {
-                  const value = event.target.value
-                  setStyleSearch(value)
-                  const exact = availableStyles.find(
-                    (style) => style.name.toLowerCase() === value.trim().toLowerCase(),
+            <StyleCatalogControls
+              profile={midi.profile}
+              source="demo"
+              autoSelectFirst
+              disabled={!midi.connected}
+              datalistId="jam-player-style-suggestions"
+              onActiveStyleChange={setSelectedStyle}
+              onSelectStyle={(mapping, next) => {
+                if (!midi.connected || !midi.profile) return
+                try {
+                  scheduler.current?.setModelId(midi.profile.id)
+                  scheduler.current?.changeStyle(mapping)
+                  setNotice(
+                    playback.playing
+                      ? `Same arrangement, now playing ${next.name} on ${midi.profile.displayName}.`
+                      : `${next.name} selected on your ${midi.profile.displayName}.`,
                   )
-                  if (exact) changeStyle(exact)
-                }}
-              />
-              <datalist id="yamaha-style-suggestions">
-                {filteredStyles.map((style) => (
-                  <option key={entryKey(style)} value={style.name}>{style.category}</option>
-                ))}
-              </datalist>
-              <select
-                value={styleCategory}
-                aria-label="Style category"
-                onChange={(event) => setStyleCategory(event.target.value)}
-              >
-                {styleCategories.map((item) => <option key={item}>{item}</option>)}
-              </select>
-              <select
-                value={selectedStyleVisible && selectedStyle ? entryKey(selectedStyle) : ""}
-                aria-label="Yamaha style"
-                onChange={(event) => {
-                  const next = availableStyles.find((style) => entryKey(style) === event.target.value)
-                  if (next) changeStyle(next)
-                }}
-              >
-                <option value="" disabled>
-                  {filteredStyles.length ? "Choose a matching style" : "No matching styles"}
-                </option>
-                {filteredStyles.map((style) => (
-                  <option key={entryKey(style)} value={entryKey(style)}>
-                    {style.name}{style.bpm ? ` · ${style.bpm} BPM` : ""}
-                  </option>
-                ))}
-              </select>
-              <span>{selectedStyle?.name || "No style available"}</span>
-            </div>
+                  setEngagements((value) => value + 1)
+                } catch (error) {
+                  setNotice(
+                    error instanceof Error
+                      ? error.message
+                      : "Could not send the style to the keyboard.",
+                  )
+                }
+              }}
+            />
           </div>
 
           {notice && <div className="demo-status" role="status">{notice}</div>}

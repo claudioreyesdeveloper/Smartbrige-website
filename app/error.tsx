@@ -2,6 +2,8 @@
 
 import { useEffect } from "react"
 import Link from "next/link"
+import { AlertTriangle } from "lucide-react"
+import { EmptyState } from "@/components/ux"
 
 export default function Error({
   error,
@@ -16,18 +18,31 @@ export default function Error({
 
   return (
     <div className="page-shell">
-      <div className="content-wrap">
-        <p className="section-label">Error</p>
-        <h1 className="section-title">Something went wrong</h1>
-        <p className="prose-muted mt-4 max-w-lg">
-          The page failed to load. Try again, or return to the home page.
-        </p>
-        <div className="btn-row mt-8">
-          <button type="button" className="btn-primary" onClick={() => reset()}>
-            Try again
-          </button>
-          <Link href="/" className="btn-secondary">Home</Link>
-        </div>
+      <div className="content-wrap" style={{ paddingTop: "3rem", paddingBottom: "4rem" }}>
+        <EmptyState
+          icon={AlertTriangle}
+          title="Something went wrong"
+          description="The page failed to load. Try again, or return home."
+          action={
+            <div className="btn-row" style={{ justifyContent: "center" }}>
+              <button
+                type="button"
+                className="btn-primary"
+                style={{ minHeight: "2.75rem" }}
+                onClick={() => reset()}
+              >
+                Try again
+              </button>
+              <Link
+                href="/"
+                className="btn-secondary"
+                style={{ minHeight: "2.75rem" }}
+              >
+                Home
+              </Link>
+            </div>
+          }
+        />
       </div>
     </div>
   )

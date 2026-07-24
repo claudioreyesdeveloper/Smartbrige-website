@@ -1,4 +1,4 @@
-import type { DemoSong, SongSection, StyleWireMapping } from "@/lib/demo/types"
+import type { DemoSong, SongSection, StyleWireMapping, YamahaModelId } from "@/lib/demo/types"
 import {
   ARRANGER_COMMANDS,
   chordNotes,
@@ -6,11 +6,18 @@ import {
   chordOnMessages,
   fillCommand,
   mainCommand,
-  styleSelectCommand,
   tempoCommand,
 } from "@/lib/demo/yamaha/commands"
 import type { MidiMessageDetail, YamahaMidiSession } from "@/lib/demo/yamaha/midi-session"
+import { sendPresetStyleSelect } from "@/lib/demo/yamaha/style-select"
 import { TempoFollower } from "@/lib/demo/yamaha/tempo-follower"
+
+const sleep = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms))
+
+/** Desktop waits ~50ms after Style Start before Intro. */
+const INTRO_AFTER_START_MS = 50
+/** Let Genos2 settle after preset-select before tempo/start. */
+const STYLE_SETTLE_MS = 80
 
 /** Match desktop JamPlayerScreen chord lead (~50ms). */
 export const CHORD_ANTICIPATION_MS = 50
@@ -128,6 +135,8 @@ export class JamScheduler {
   private playing = false
   private transportArmed = false
   private playCommandMs = 0
+  private startGeneration = 0
+  private modelId: YamahaModelId | string | null = null
   private tempoFollower = new TempoFollower()
   private onMidi: ((event: Event) => void) | null = null
   private state: JamPlaybackState = {
@@ -168,8 +177,20 @@ export class JamScheduler {
     }
   }
 
+  setModelId(modelId: YamahaModelId | string | null) {
+    this.modelId = modelId
+  }
+
   start(song: DemoSong, style: StyleWireMapping, startBeat = 0) {
+    void this.startAsync(song, style, startBeat)
+  }
+
+  private async startAsync(song: DemoSong, style: StyleWireMapping, startBeat = 0) {
+    const generation = ++this.startGeneration
     this.stop(false)
+    // stop() bumps generation only via stop's playing clear — keep this run alive.
+    this.startGeneration = generation
+
     this.songTempo = song.tempo
     this.liveBpm = song.tempo
     this.anticipationBeats = (CHORD_ANTICIPATION_MS * song.tempo) / 60000
@@ -196,12 +217,21 @@ export class JamScheduler {
       currentSection: this.beatPosition < song.timeSignature[0] ? "Intro" : "",
       arrangerState: "Intro",
     }
+    this.onState(this.state)
 
-    // Match desktop LocalMidiConnector Slave mode:
-    // style/tempo/arranger SysEx → both ports; no FA/F8/FC outbound.
-    this.session.sendBoth(styleSelectCommand(style))
+    // Desktop Slave order: style (separate) → Main variation → tempo → start →
+    // short gap → intro. Genos2 also needs Style Stop before preset select.
+    sendPresetStyleSelect(this.session, style, this.modelId)
+    await sleep(STYLE_SETTLE_MS)
+    if (generation !== this.startGeneration || !this.playing) return
+
+    // Match desktop playSong: variation + tempo before Style Start.
+    this.session.sendBoth(mainCommand("A"))
     this.session.sendBoth(tempoCommand(song.tempo))
     this.session.sendBoth(ARRANGER_COMMANDS.start)
+
+    await sleep(INTRO_AFTER_START_MS)
+    if (generation !== this.startGeneration || !this.playing) return
 
     if (this.beatPosition > 0) {
       this.events.forEach((event) => {
@@ -221,6 +251,7 @@ export class JamScheduler {
       this.transportArmed = true
     }
     this.onState(this.state)
+    if (this.timer) clearInterval(this.timer)
     this.timer = setInterval(() => this.tick(song), 10)
   }
 
@@ -255,7 +286,12 @@ export class JamScheduler {
   }
 
   changeStyle(style: StyleWireMapping) {
-    this.session.sendBoth(styleSelectCommand(style))
+    const wasPlaying = this.playing
+    sendPresetStyleSelect(this.session, style, this.modelId)
+    // Genos2 stop-before-select halts accompaniment; resume if we were playing.
+    if (wasPlaying && String(this.modelId || "").toLowerCase() === "genos2") {
+      this.session.sendBoth(ARRANGER_COMMANDS.start)
+    }
   }
 
   changeHarmony(song: DemoSong) {
@@ -419,6 +455,7 @@ export class JamScheduler {
   }
 
   stop(sendStop = true) {
+    this.startGeneration += 1
     if (this.timer) clearInterval(this.timer)
     this.timer = null
     this.releaseChord()

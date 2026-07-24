@@ -37,17 +37,28 @@ export default function BetaPage() {
   return (
     <div className="page-shell">
       <div className="content-wrap">
-        <p className="section-label">Beta program</p>
+        <p className="ux-section-label">Beta program</p>
         <h1 className="section-title mt-3">Get SmartBridge on your machine</h1>
-        <p className="mt-4 max-w-2xl prose-muted">
-          SmartBridge is in invitation-only beta. Setup is the recommended install path — it
-          downloads the latest plugin, database, and integration scripts automatically.
+        <p className="mt-4 max-w-xl prose-muted" style={{ lineHeight: 1.55 }}>
+          Invitation-only beta for the full desktop SmartBridge suite. Setup downloads the
+          plugin, database, and integration scripts — then you activate and play.
         </p>
+
+        <div className="mt-8 rounded-xl border border-sky-500/30 bg-sky-500/10 p-6">
+          <p className="font-medium text-stone-100">Want something available today?</p>
+          <p className="mt-2 prose-muted text-sm" style={{ lineHeight: 1.55 }}>
+            Style Maker is live now with a 14-day free trial — rebuild Yamaha styles in the
+            browser, independent of the desktop beta.
+          </p>
+          <Link href="/style-maker" className="btn-primary mt-4">
+            Start Style Maker free trial
+          </Link>
+        </div>
 
         <div className="mt-12 grid gap-5 md:grid-cols-3">
           {STEPS.map((step) => {
             const Icon = step.icon
-            const className = "card-surface p-6 flex flex-col h-full"
+            const className = "card-surface p-7 flex flex-col h-full min-h-[14rem]"
             const inner = (
               <>
                 <Icon size={22} className="text-[var(--color-accent)]" />

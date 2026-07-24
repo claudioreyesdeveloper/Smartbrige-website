@@ -129,13 +129,28 @@ test("Jam Player exposes two complete 4/4 songs per category and mocked Web MIDI
   await expect(page.locator(".timeline-section header strong").nth(0)).toHaveText("Intro")
   await expect(page.locator(".timeline-section header strong").nth(1)).toHaveText("Verse")
   await expect(page.locator(".timeline-section header strong").nth(2)).toHaveText("Pre-Chorus")
+  await expect(page.locator(".style-catalog-controls > span")).toContainText("Genos2")
+
+  await page.evaluate(() => {
+    (window as unknown as { __midiSends: unknown[] }).__midiSends = []
+  })
+  // Index 0 = placeholder; index 1 is auto-selected — pick another style so onChange fires.
+  await page.getByRole("combobox", { name: "Yamaha style" }).selectOption({ index: 2 })
+  const styleSends = await page.evaluate(() =>
+    (window as unknown as { __midiSends: { data: number[] }[] }).__midiSends,
+  )
+  // Genos2: Style Stop, then preset-select SysEx (desktop Jam Player order).
+  expect(styleSends.some(({ data }) => data.join(",") === "240,67,96,125,247")).toBe(true)
+  expect(styleSends.some(({ data }) =>
+    data.slice(0, 11).join(",") === "240,67,115,1,81,5,0,3,4,0,0",
+  )).toBe(true)
 
   await page.evaluate(() => {
     (window as unknown as { __midiSends: unknown[] }).__midiSends = []
   })
   await page.locator(".timeline-section").nth(3).dblclick()
   await expect(page.getByText("Playing Chorus from the beginning.")).toBeVisible()
-  await page.waitForTimeout(30)
+  await page.waitForTimeout(200)
   const sectionSends = await page.evaluate(() =>
     (window as unknown as { __midiSends: { data: number[] }[] }).__midiSends,
   )
@@ -152,19 +167,8 @@ test("Jam Player exposes two complete 4/4 songs per category and mocked Web MIDI
   await page.evaluate(() => {
     (window as unknown as { __midiSends: unknown[] }).__midiSends = []
   })
-  await page.getByRole("combobox", { name: "Yamaha style" }).selectOption({ index: 1 })
-  const styleSends = await page.evaluate(() =>
-    (window as unknown as { __midiSends: { data: number[] }[] }).__midiSends,
-  )
-  expect(styleSends.some(({ data }) =>
-    data.slice(0, 11).join(",") === "240,67,115,1,81,5,0,3,4,0,0",
-  )).toBe(true)
-
-  await page.evaluate(() => {
-    (window as unknown as { __midiSends: unknown[] }).__midiSends = []
-  })
   await page.getByLabel("Search styles").fill("JazzFunk")
-  await expect(page.locator(".style-catalog-controls > span")).toHaveText("JazzFunk")
+  await expect(page.locator(".style-catalog-controls > span")).toContainText("JazzFunk")
   const autocompleteSends = await page.evaluate(() =>
     (window as unknown as { __midiSends: { data: number[] }[] }).__midiSends,
   )

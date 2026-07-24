@@ -1,16 +1,26 @@
 import Link from "next/link"
+import { FileQuestion } from "lucide-react"
+import { EmptyState } from "@/components/ux"
 
 export default function NotFound() {
   return (
     <div className="page-shell">
-      <div className="content-wrap">
-        <p className="section-label">404</p>
-        <h1 className="section-title">Page not found</h1>
-        <p className="prose-muted mt-4">That URL doesn&apos;t exist on this site.</p>
-        <div className="btn-row mt-8">
-          <Link href="/" className="btn-primary">Home</Link>
-          <Link href="/features" className="btn-secondary">Features</Link>
-        </div>
+      <div className="content-wrap" style={{ paddingTop: "3rem", paddingBottom: "4rem" }}>
+        <EmptyState
+          icon={FileQuestion}
+          title="Page not found"
+          description="That URL doesn’t exist on this site. Head home or browse features."
+          action={
+            <div className="btn-row" style={{ justifyContent: "center" }}>
+              <Link href="/" className="btn-primary" style={{ minHeight: "2.75rem" }}>
+                Home
+              </Link>
+              <Link href="/features" className="btn-secondary" style={{ minHeight: "2.75rem" }}>
+                Features
+              </Link>
+            </div>
+          }
+        />
       </div>
     </div>
   )

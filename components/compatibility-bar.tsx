@@ -1,4 +1,3 @@
-import Image from "next/image"
 import { COMPAT, KEYBOARDS } from "@/lib/site"
 
 export function CompatibilityBar() {

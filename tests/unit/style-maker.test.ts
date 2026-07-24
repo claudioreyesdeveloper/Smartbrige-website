@@ -112,6 +112,12 @@ describe("Yamaha style editing", () => {
     ]))
     const sections = extractStyleSections(donor)
     expect(sections.map((section) => section.label)).toEqual([
+      "Intro 1",
+      "Main A",
+      "Main B",
+      "Ending 1",
+    ])
+    expect(sections.map((section) => section.templateSection)).toEqual([
       "Intro A",
       "Main A",
       "Main B",

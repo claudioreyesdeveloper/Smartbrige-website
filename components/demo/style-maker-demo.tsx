@@ -15,6 +15,8 @@ import { useEffect, useMemo, useRef, useState } from "react"
 import partCatalog from "@/data/demo/style-parts.json"
 import { DemoShell } from "@/components/demo/demo-shell"
 import { FeedbackPrompt } from "@/components/demo/feedback-prompt"
+import { StyleCatalogControls } from "@/components/demo/style-catalog-controls"
+import { sendPresetStyleSelect } from "@/lib/demo/yamaha/style-select"
 import {
   extractMidiNotes,
   extractStyleSectionPreviewEvents,
@@ -369,6 +371,40 @@ export function StyleMakerDemo() {
                 Choose another
                 <input type="file" accept=".sty,.prs,.sst" onChange={(event) => event.target.files?.[0] && uploadDonor(event.target.files[0])} />
               </label>
+            </section>
+
+            <section className="genre-transform" style={{ marginBottom: "1.25rem" }}>
+              <div>
+                <span className="demo-eyebrow">Keyboard style</span>
+                <strong>
+                  Optional — load a factory style on your{" "}
+                  {midi.profile?.displayName || "Yamaha"} while you audition.
+                </strong>
+              </div>
+              <StyleCatalogControls
+                profile={midi.profile}
+                source="demo"
+                autoSelectFirst
+                disabled={!midi.connected}
+                datalistId="style-maker-demo-style-suggestions"
+                onSelectStyle={(mapping, entry) => {
+                  if (!midi.connected || !midi.profile) {
+                    setNotice("Connect a supported Yamaha keyboard to load a style.")
+                    return
+                  }
+                  try {
+                    sendPresetStyleSelect(session, mapping, midi.profile.id)
+                    setNotice(`${entry.name} selected on your ${midi.profile.displayName}.`)
+                    setEngagements((value) => value + 1)
+                  } catch (error) {
+                    setNotice(
+                      error instanceof Error
+                        ? error.message
+                        : "Could not send the style to the keyboard.",
+                    )
+                  }
+                }}
+              />
             </section>
 
             <div className="lane-editor-grid">

@@ -7,40 +7,57 @@ import { Menu, X } from "lucide-react"
 import { SITE } from "@/lib/site"
 
 const NAV = [
+  { href: "/style-maker", label: "Style Maker" },
   { href: "/demo", label: "Live demo" },
   { href: "/features", label: "Features" },
   { href: "/about", label: "About" },
   { href: "/beta", label: "Beta access" },
+  { href: SITE.setupUrl, label: "Download Setup", external: true },
 ]
 
 export function SiteHeader() {
   const pathname = usePathname()
   const [open, setOpen] = useState(false)
 
+  const isActive = (href: string) =>
+    pathname === href || (href !== "/" && pathname.startsWith(`${href}/`))
+
   return (
     <header className="site-header">
       <div className="site-header-inner">
-        <Link href="/" className="site-logo">SmartBridge</Link>
+        <Link href="/" className="site-logo">
+          SmartBridge
+        </Link>
 
         <nav className="site-nav" aria-label="Main">
-          {NAV.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={`site-nav-link${pathname === item.href ? " is-active" : ""}`}
-            >
-              {item.label}
-            </Link>
-          ))}
-          <a
-            href={SITE.setupUrl}
+          {NAV.map((item) =>
+            "external" in item && item.external ? (
+              <a
+                key={item.href}
+                href={item.href}
+                className="site-nav-link"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                {item.label}
+              </a>
+            ) : (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={`site-nav-link${isActive(item.href) ? " is-active" : ""}`}
+              >
+                {item.label}
+              </Link>
+            ),
+          )}
+          <Link
+            href="/style-maker"
             className="btn-primary"
-            style={{ padding: "0.5rem 1rem", fontSize: "0.85rem" }}
-            target="_blank"
-            rel="noopener noreferrer"
+            style={{ padding: "0.65rem 1.1rem", fontSize: "0.875rem", minHeight: "2.75rem" }}
           >
-            Download Setup
-          </a>
+            Try Style Maker
+          </Link>
         </nav>
 
         <button
@@ -56,24 +73,36 @@ export function SiteHeader() {
 
       {open && (
         <nav className="site-nav-mobile" aria-label="Mobile">
-          {NAV.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className="site-nav-link"
-              onClick={() => setOpen(false)}
-            >
-              {item.label}
-            </Link>
-          ))}
-          <a
-            href={SITE.setupUrl}
+          {NAV.map((item) =>
+            "external" in item && item.external ? (
+              <a
+                key={item.href}
+                href={item.href}
+                className="site-nav-link"
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() => setOpen(false)}
+              >
+                {item.label}
+              </a>
+            ) : (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={`site-nav-link${isActive(item.href) ? " is-active" : ""}`}
+                onClick={() => setOpen(false)}
+              >
+                {item.label}
+              </Link>
+            ),
+          )}
+          <Link
+            href="/style-maker"
             className="btn-primary"
-            target="_blank"
-            rel="noopener noreferrer"
+            onClick={() => setOpen(false)}
           >
-            Download Setup
-          </a>
+            Try Style Maker
+          </Link>
         </nav>
       )}
     </header>

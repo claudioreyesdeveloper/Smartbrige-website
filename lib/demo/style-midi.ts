@@ -1,3 +1,5 @@
+import { displaySectionNameFromMarker } from "@/lib/style-maker/section-names"
+
 export type MidiNote = {
   tick: number
   duration: number
@@ -11,14 +13,14 @@ export type MidiPreviewEvent = {
   data: number[]
 }
 
-type MidiEvent = {
+export type MidiEvent = {
   tick: number
   order: number
   status: number
   data: number[]
 }
 
-type ParsedTrack = {
+export type ParsedTrack = {
   events: MidiEvent[]
   endTick: number
 }
@@ -26,6 +28,8 @@ type ParsedTrack = {
 export type ParsedYamahaStyle = {
   format: number
   ticksPerQuarter: number
+  /** First Set Tempo meta (BPM), or 120 when the file has none. */
+  bpm: number
   tracks: ParsedTrack[]
   yamahaTail: Uint8Array
   originalBytes: Uint8Array
@@ -33,7 +37,13 @@ export type ParsedYamahaStyle = {
 
 export type StyleSectionRange = {
   id: string
+  /** Desktop Style Maker display name (Intro 1, Fill A, …). */
   label: string
+  /**
+   * Yamaha MIDI marker / CASM Sdec name (Intro A, Fill In AA, …).
+   * Defaults to label when the marker is already in Yamaha form.
+   */
+  templateSection?: string
   startTick: number
   endTick: number
 }
@@ -127,6 +137,45 @@ function parseTrack(data: Uint8Array): ParsedTrack {
   return { events, endTick: tick }
 }
 
+function tempoBpmFromMetaData(data: number[]): number | null {
+  // Meta payload layout from parseTrack: [type, ...VLQ(length), ...bytes]
+  if (data[0] !== 0x51 || data.length < 3) return null
+  let offset = 1
+  let length = 0
+  for (let count = 0; count < 4 && offset < data.length; count += 1) {
+    const byte = data[offset++]
+    length = (length << 7) | (byte & 0x7f)
+    if (!(byte & 0x80)) break
+  }
+  if (length < 3 || offset + 2 >= data.length) {
+    // length VLQ may be omitted in odd encodings; try last 3 bytes
+    if (data.length >= 4) {
+      const us =
+        (data[data.length - 3] << 16) |
+        (data[data.length - 2] << 8) |
+        data[data.length - 1]
+      if (us > 0) return Math.max(20, Math.min(300, Math.round(60_000_000 / us)))
+    }
+    return null
+  }
+  const microseconds =
+    (data[offset] << 16) | (data[offset + 1] << 8) | data[offset + 2]
+  if (microseconds <= 0) return null
+  return Math.max(20, Math.min(300, Math.round(60_000_000 / microseconds)))
+}
+
+/** First tempo meta in the MIDI (StyleTemplateService::inspectTemplate path). */
+export function extractStyleBpm(style: ParsedYamahaStyle): number {
+  for (const track of style.tracks) {
+    for (const event of track.events) {
+      if (event.status !== 0xff) continue
+      const bpm = tempoBpmFromMetaData(event.data)
+      if (bpm) return bpm
+    }
+  }
+  return style.bpm || 120
+}
+
 export function parseYamahaStyle(bytes: Uint8Array): ParsedYamahaStyle {
   if (
     bytes.length < 14 ||
@@ -155,16 +204,29 @@ export function parseYamahaStyle(bytes: Uint8Array): ParsedYamahaStyle {
     offset = end
   }
 
+  let bpm = 120
+  outer: for (const track of tracks) {
+    for (const event of track.events) {
+      if (event.status !== 0xff) continue
+      const found = tempoBpmFromMetaData(event.data)
+      if (found) {
+        bpm = found
+        break outer
+      }
+    }
+  }
+
   return {
     format,
     ticksPerQuarter: division,
+    bpm,
     tracks,
     yamahaTail: bytes.slice(offset),
     originalBytes: bytes,
   }
 }
 
-function serializeTrack(track: ParsedTrack): Uint8Array {
+export function serializeTrack(track: ParsedTrack): Uint8Array {
   const body: number[] = []
   let lastTick = 0
   const events = [...track.events].sort(
@@ -181,7 +243,7 @@ function serializeTrack(track: ParsedTrack): Uint8Array {
   return Uint8Array.from(body)
 }
 
-function notesToEvents(
+export function notesToEvents(
   notes: MidiNote[],
   channel: number,
   repeatTicks: number,
@@ -313,15 +375,32 @@ export function extractStyleSections(style: ParsedYamahaStyle): StyleSectionRang
     .sort((a, b) => a.tick - b.tick)
 
   if (!markers.length) {
-    return [{ id: "main-a", label: "Main A", startTick: 0, endTick }]
+    return [
+      {
+        id: "main-a",
+        label: "Main A",
+        templateSection: "Main A",
+        startTick: 0,
+        endTick,
+      },
+    ]
   }
 
-  return markers.map((marker, index) => ({
-    id: `${marker.label.toLowerCase().replace(/[^a-z0-9]+/g, "-")}-${marker.tick}`,
-    label: marker.label,
-    startTick: marker.tick,
-    endTick: markers[index + 1]?.tick || endTick,
-  })).filter((section) => section.endTick > section.startTick)
+  // Display names match desktop Style Maker (Intro 1, Fill A); keep Yamaha
+  // marker in templateSection for CASM / MIDI source lookup.
+  return markers
+    .map((marker, index) => {
+      const templateSection = marker.label.trim()
+      const label = displaySectionNameFromMarker(templateSection)
+      return {
+        id: `${templateSection.toLowerCase().replace(/[^a-z0-9]+/g, "-")}-${marker.tick}`,
+        label,
+        templateSection,
+        startTick: marker.tick,
+        endTick: markers[index + 1]?.tick || endTick,
+      }
+    })
+    .filter((section) => section.endTick > section.startTick)
 }
 
 export function patternToMidiNotes(
@@ -377,7 +456,14 @@ export function extractMidiNotes(bytes: Uint8Array): {
   }
 }
 
-export function extractStylePreviewEvents(style: ParsedYamahaStyle): MidiPreviewEvent[] {
+export function extractStylePreviewEvents(
+  style: ParsedYamahaStyle,
+  options?: { bumpChannelsBelow9?: boolean },
+): MidiPreviewEvent[] {
+  // Demo styles often store parts on ch 1–8; bumping maps them onto Genos style
+  // parts 9–16. Style Maker CASM audition must NOT bump — source channels are
+  // absolute and get remapped to destinations separately.
+  const bumpChannelsBelow9 = options?.bumpChannelsBelow9 !== false
   const eventPriority = (event: MidiPreviewEvent) => {
     const kind = event.status & 0xf0
     if (kind === 0xb0 && (event.data[0] === 0 || event.data[0] === 32)) return 0
@@ -395,7 +481,10 @@ export function extractStylePreviewEvents(style: ParsedYamahaStyle): MidiPreview
         })
         .map((event) => {
           const sourceChannel = event.status & 0x0f
-          const previewChannel = sourceChannel < 8 ? sourceChannel + 8 : sourceChannel
+          const previewChannel =
+            bumpChannelsBelow9 && sourceChannel < 8
+              ? sourceChannel + 8
+              : sourceChannel
           return {
             tick: event.tick,
             status: (event.status & 0xf0) | previewChannel,
@@ -410,8 +499,9 @@ export function extractStyleSectionPreviewEvents(
   style: ParsedYamahaStyle,
   range: StyleSectionRange,
   channels?: number[],
+  options?: { bumpChannelsBelow9?: boolean },
 ): MidiPreviewEvent[] {
-  const events = extractStylePreviewEvents(style)
+  const events = extractStylePreviewEvents(style, options)
   const onWantedChannel = (event: MidiPreviewEvent) =>
     !channels || channels.includes(event.status & 0x0f)
   const isVoiceSetup = (event: MidiPreviewEvent) => {

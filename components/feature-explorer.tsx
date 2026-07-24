@@ -75,8 +75,8 @@ export function FeatureExplorer() {
 
         <article id={module.id} className="card-surface" style={{ overflow: "hidden" }}>
           <div className="feature-detail-head">
-            <p className="section-label">{module.tag}</p>
-            <h3 className="section-title" style={{ fontSize: "1.5rem", marginTop: "0.5rem" }}>
+            <p className="ux-section-label">{module.tag}</p>
+            <h3 className="section-title" style={{ fontSize: "1.5rem", marginTop: "0.65rem" }}>
               {module.name}
             </h3>
           </div>
@@ -100,7 +100,7 @@ export function FeatureExplorer() {
                       overflow: "hidden",
                       padding: 0,
                       marginTop: "0.85rem",
-                      borderColor: "rgba(245, 158, 11, 0.22)",
+                      borderColor: "rgba(74, 158, 255, 0.22)",
                     }}
                   >
                     <div style={{ position: "relative", width: "100%", paddingTop: "56.25%" }}>

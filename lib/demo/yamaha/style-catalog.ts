@@ -5,26 +5,24 @@ import type {
   StyleWireMapping,
   YamahaModelId,
 } from "@/lib/demo/types"
+import { encodeStyleWireBytes } from "@/lib/demo/yamaha/keyboard-models"
 
-const catalog = rawCatalog as Record<YamahaModelId, StyleCatalogEntry[]>
+const catalog = rawCatalog as Partial<Record<YamahaModelId, StyleCatalogEntry[]>>
 
+/** Static JSON fallback (genos / genos2 / tyros4 / tyros5). Prefer DB via API. */
 export function stylesForProfile(profile: KeyboardProfile): StyleCatalogEntry[] {
-  return catalog[profile.id]
+  return catalog[profile.id] ?? []
 }
 
 export function styleMappingForEntry(
   profile: KeyboardProfile,
   style: StyleCatalogEntry,
 ): StyleWireMapping {
-  const numeric14Bit = profile.id === "genos" || profile.id === "genos2"
-  const first = numeric14Bit
-    ? (style.styleNumber >> 7) & 0x7f
-    : (style.styleNumber >> 8) & 0x7f
-  const second = style.styleNumber & 0x7f
+  const bytes = encodeStyleWireBytes(profile.id, style.styleNumber) ?? [0, 0]
   return {
     name: style.name,
     category: style.category,
-    bytes: [first, second],
+    bytes,
     sourceCatalogValue: style.styleNumber,
   }
 }

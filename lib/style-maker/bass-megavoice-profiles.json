@@ -1,0 +1,1646 @@
+{
+  "referenceProfileIndex": 1,
+  "profiles": [
+    {
+      "displayName": "AcousticBass",
+      "bankMsb": 8,
+      "bankLsb": 0,
+      "programYamaha": 17,
+      "zones": [
+        {
+          "velLo": 1,
+          "velHi": 60,
+          "articulation": "open soft"
+        },
+        {
+          "velLo": 61,
+          "velHi": 80,
+          "articulation": "open hard"
+        },
+        {
+          "velLo": 81,
+          "velHi": 120,
+          "articulation": "dead"
+        },
+        {
+          "velLo": 121,
+          "velHi": 127,
+          "articulation": "harmonics"
+        }
+      ]
+    },
+    {
+      "displayName": "ElectricBass",
+      "bankMsb": 8,
+      "bankLsb": 0,
+      "programYamaha": 18,
+      "zones": [
+        {
+          "velLo": 1,
+          "velHi": 60,
+          "articulation": "open soft"
+        },
+        {
+          "velLo": 61,
+          "velHi": 80,
+          "articulation": "open hard"
+        },
+        {
+          "velLo": 81,
+          "velHi": 120,
+          "articulation": "dead"
+        },
+        {
+          "velLo": 121,
+          "velHi": 127,
+          "articulation": "slap"
+        }
+      ]
+    },
+    {
+      "displayName": "VintageRoundBass",
+      "bankMsb": 8,
+      "bankLsb": 1,
+      "programYamaha": 18,
+      "zones": [
+        {
+          "velLo": 1,
+          "velHi": 60,
+          "articulation": "open soft"
+        },
+        {
+          "velLo": 61,
+          "velHi": 80,
+          "articulation": "open hard"
+        },
+        {
+          "velLo": 81,
+          "velHi": 120,
+          "articulation": "dead"
+        },
+        {
+          "velLo": 121,
+          "velHi": 127,
+          "articulation": "harmonics"
+        }
+      ]
+    },
+    {
+      "displayName": "VintageFlatBass",
+      "bankMsb": 8,
+      "bankLsb": 2,
+      "programYamaha": 18,
+      "zones": [
+        {
+          "velLo": 1,
+          "velHi": 60,
+          "articulation": "open soft"
+        },
+        {
+          "velLo": 61,
+          "velHi": 80,
+          "articulation": "open hard"
+        },
+        {
+          "velLo": 81,
+          "velHi": 120,
+          "articulation": "dead"
+        },
+        {
+          "velLo": 121,
+          "velHi": 127,
+          "articulation": "harmonics"
+        }
+      ]
+    },
+    {
+      "displayName": "PickBass",
+      "bankMsb": 8,
+      "bankLsb": 0,
+      "programYamaha": 19,
+      "zones": [
+        {
+          "velLo": 1,
+          "velHi": 40,
+          "articulation": "open"
+        },
+        {
+          "velLo": 41,
+          "velHi": 80,
+          "articulation": "mute"
+        },
+        {
+          "velLo": 81,
+          "velHi": 120,
+          "articulation": "dead"
+        },
+        {
+          "velLo": 121,
+          "velHi": 127,
+          "articulation": "harmonics"
+        }
+      ]
+    },
+    {
+      "displayName": "VintagePickBass",
+      "bankMsb": 8,
+      "bankLsb": 1,
+      "programYamaha": 19,
+      "zones": [
+        {
+          "velLo": 1,
+          "velHi": 40,
+          "articulation": "open"
+        },
+        {
+          "velLo": 41,
+          "velHi": 80,
+          "articulation": "mute"
+        },
+        {
+          "velLo": 81,
+          "velHi": 120,
+          "articulation": "dead"
+        },
+        {
+          "velLo": 121,
+          "velHi": 127,
+          "articulation": "harmonics"
+        }
+      ]
+    },
+    {
+      "displayName": "FretlessBass",
+      "bankMsb": 8,
+      "bankLsb": 0,
+      "programYamaha": 20,
+      "zones": [
+        {
+          "velLo": 1,
+          "velHi": 80,
+          "articulation": "open"
+        },
+        {
+          "velLo": 81,
+          "velHi": 120,
+          "articulation": "dead"
+        },
+        {
+          "velLo": 121,
+          "velHi": 127,
+          "articulation": "harmonics"
+        }
+      ]
+    },
+    {
+      "displayName": "ActiveBassFingHarm",
+      "bankMsb": 8,
+      "bankLsb": 4,
+      "programYamaha": 18,
+      "zones": [
+        {
+          "velLo": 1,
+          "velHi": 60,
+          "articulation": "open soft"
+        },
+        {
+          "velLo": 61,
+          "velHi": 80,
+          "articulation": "open hard"
+        },
+        {
+          "velLo": 81,
+          "velHi": 120,
+          "articulation": "dead"
+        },
+        {
+          "velLo": 121,
+          "velHi": 127,
+          "articulation": "harmonics"
+        }
+      ]
+    },
+    {
+      "displayName": "ActiveBassFingSlap",
+      "bankMsb": 8,
+      "bankLsb": 5,
+      "programYamaha": 18,
+      "zones": [
+        {
+          "velLo": 1,
+          "velHi": 60,
+          "articulation": "open soft"
+        },
+        {
+          "velLo": 61,
+          "velHi": 80,
+          "articulation": "open hard"
+        },
+        {
+          "velLo": 81,
+          "velHi": 120,
+          "articulation": "dead"
+        },
+        {
+          "velLo": 121,
+          "velHi": 127,
+          "articulation": "slap"
+        }
+      ]
+    },
+    {
+      "displayName": "ActiveBassPick",
+      "bankMsb": 8,
+      "bankLsb": 3,
+      "programYamaha": 19,
+      "zones": [
+        {
+          "velLo": 1,
+          "velHi": 20,
+          "articulation": "open soft"
+        },
+        {
+          "velLo": 21,
+          "velHi": 40,
+          "articulation": "open hard"
+        },
+        {
+          "velLo": 41,
+          "velHi": 60,
+          "articulation": "mute soft"
+        },
+        {
+          "velLo": 61,
+          "velHi": 80,
+          "articulation": "mute hard"
+        },
+        {
+          "velLo": 81,
+          "velHi": 120,
+          "articulation": "dead"
+        },
+        {
+          "velLo": 121,
+          "velHi": 127,
+          "articulation": "harmonics"
+        }
+      ]
+    },
+    {
+      "displayName": "ActiveBassPickOpen",
+      "bankMsb": 8,
+      "bankLsb": 4,
+      "programYamaha": 19,
+      "zones": [
+        {
+          "velLo": 1,
+          "velHi": 60,
+          "articulation": "open soft"
+        },
+        {
+          "velLo": 61,
+          "velHi": 80,
+          "articulation": "open hard"
+        },
+        {
+          "velLo": 81,
+          "velHi": 120,
+          "articulation": "dead"
+        },
+        {
+          "velLo": 121,
+          "velHi": 127,
+          "articulation": "harmonics"
+        }
+      ]
+    },
+    {
+      "displayName": "ActiveBassPickMute",
+      "bankMsb": 8,
+      "bankLsb": 5,
+      "programYamaha": 19,
+      "zones": [
+        {
+          "velLo": 1,
+          "velHi": 60,
+          "articulation": "mute soft"
+        },
+        {
+          "velLo": 61,
+          "velHi": 80,
+          "articulation": "mute hard"
+        },
+        {
+          "velLo": 81,
+          "velHi": 120,
+          "articulation": "dead"
+        },
+        {
+          "velLo": 121,
+          "velHi": 127,
+          "articulation": "harmonics"
+        }
+      ]
+    },
+    {
+      "displayName": "ActiveBassFingHmrOn",
+      "bankMsb": 8,
+      "bankLsb": 3,
+      "programYamaha": 18,
+      "zones": [
+        {
+          "velLo": 1,
+          "velHi": 20,
+          "articulation": "open soft"
+        },
+        {
+          "velLo": 21,
+          "velHi": 40,
+          "articulation": "open hard"
+        },
+        {
+          "velLo": 41,
+          "velHi": 80,
+          "articulation": "finger mute"
+        },
+        {
+          "velLo": 81,
+          "velHi": 90,
+          "articulation": "dead"
+        },
+        {
+          "velLo": 91,
+          "velHi": 105,
+          "articulation": "open hammer on"
+        },
+        {
+          "velLo": 106,
+          "velHi": 120,
+          "articulation": "mute hammer on"
+        },
+        {
+          "velLo": 121,
+          "velHi": 127,
+          "articulation": "harmonics"
+        }
+      ]
+    },
+    {
+      "displayName": "ActiveBassPickHmrOn",
+      "bankMsb": 8,
+      "bankLsb": 2,
+      "programYamaha": 19,
+      "zones": [
+        {
+          "velLo": 1,
+          "velHi": 20,
+          "articulation": "pick soft"
+        },
+        {
+          "velLo": 21,
+          "velHi": 40,
+          "articulation": "pick hard"
+        },
+        {
+          "velLo": 41,
+          "velHi": 60,
+          "articulation": "pick mute soft"
+        },
+        {
+          "velLo": 61,
+          "velHi": 80,
+          "articulation": "pick mute hard"
+        },
+        {
+          "velLo": 81,
+          "velHi": 90,
+          "articulation": "dead"
+        },
+        {
+          "velLo": 91,
+          "velHi": 105,
+          "articulation": "open hammer on"
+        },
+        {
+          "velLo": 106,
+          "velHi": 120,
+          "articulation": "mute hammer on"
+        },
+        {
+          "velLo": 121,
+          "velHi": 127,
+          "articulation": "harmonics"
+        }
+      ]
+    },
+    {
+      "displayName": "ActiveBassSlap",
+      "bankMsb": 8,
+      "bankLsb": 0,
+      "programYamaha": 21,
+      "zones": [
+        {
+          "velLo": 1,
+          "velHi": 20,
+          "articulation": "thumb -> B2 -> pop med"
+        },
+        {
+          "velLo": 21,
+          "velHi": 40,
+          "articulation": "thumb -> C#1 -> pop med"
+        },
+        {
+          "velLo": 41,
+          "velHi": 60,
+          "articulation": "thumb -> C#1 -> pop hard"
+        },
+        {
+          "velLo": 61,
+          "velHi": 75,
+          "articulation": "thumb dead"
+        },
+        {
+          "velLo": 76,
+          "velHi": 90,
+          "articulation": "pop dead"
+        },
+        {
+          "velLo": 91,
+          "velHi": 105,
+          "articulation": "\"thumb hammer on -> B2 -> pop hammer on\""
+        },
+        {
+          "velLo": 106,
+          "velHi": 120,
+          "articulation": "\"thumb hammer on -> C#1 -> pop hammer on\""
+        },
+        {
+          "velLo": 121,
+          "velHi": 127,
+          "articulation": "harmonics"
+        }
+      ]
+    },
+    {
+      "displayName": "OberkrainerBassTuba",
+      "bankMsb": 8,
+      "bankLsb": 2,
+      "programYamaha": 59,
+      "zones": [
+        {
+          "velLo": 1,
+          "velHi": 20,
+          "articulation": "straight p"
+        },
+        {
+          "velLo": 21,
+          "velHi": 40,
+          "articulation": "straight mf"
+        },
+        {
+          "velLo": 41,
+          "velHi": 60,
+          "articulation": "straight f"
+        },
+        {
+          "velLo": 61,
+          "velHi": 70,
+          "articulation": "staccato long p"
+        },
+        {
+          "velLo": 71,
+          "velHi": 80,
+          "articulation": "staccato long mf"
+        },
+        {
+          "velLo": 81,
+          "velHi": 90,
+          "articulation": "staccato long f"
+        },
+        {
+          "velLo": 91,
+          "velHi": 100,
+          "articulation": "staccato short p"
+        },
+        {
+          "velLo": 101,
+          "velHi": 110,
+          "articulation": "staccato short mf"
+        },
+        {
+          "velLo": 111,
+          "velHi": 120,
+          "articulation": "staccato short f"
+        },
+        {
+          "velLo": 121,
+          "velHi": 127,
+          "articulation": "staccato short ff"
+        }
+      ]
+    },
+    {
+      "displayName": "ElJazzFingerMute",
+      "bankMsb": 8,
+      "bankLsb": 6,
+      "programYamaha": 18,
+      "zones": [
+        {
+          "velLo": 1,
+          "velHi": 60,
+          "articulation": "open p"
+        },
+        {
+          "velLo": 61,
+          "velHi": 80,
+          "articulation": "open mf"
+        },
+        {
+          "velLo": 81,
+          "velHi": 120,
+          "articulation": "dead p"
+        },
+        {
+          "velLo": 121,
+          "velHi": 127,
+          "articulation": "harmonics"
+        }
+      ]
+    },
+    {
+      "displayName": "ElJazzPickMute",
+      "bankMsb": 8,
+      "bankLsb": 7,
+      "programYamaha": 18,
+      "zones": [
+        {
+          "velLo": 1,
+          "velHi": 60,
+          "articulation": "open p"
+        },
+        {
+          "velLo": 61,
+          "velHi": 80,
+          "articulation": "open mf"
+        },
+        {
+          "velLo": 81,
+          "velHi": 120,
+          "articulation": "dead p"
+        },
+        {
+          "velLo": 121,
+          "velHi": 127,
+          "articulation": "harmonics"
+        }
+      ]
+    },
+    {
+      "displayName": "ElJazzPickOpen",
+      "bankMsb": 8,
+      "bankLsb": 8,
+      "programYamaha": 18,
+      "zones": [
+        {
+          "velLo": 1,
+          "velHi": 60,
+          "articulation": "open p"
+        },
+        {
+          "velLo": 61,
+          "velHi": 80,
+          "articulation": "open mf"
+        },
+        {
+          "velLo": 81,
+          "velHi": 120,
+          "articulation": "dead p"
+        },
+        {
+          "velLo": 121,
+          "velHi": 127,
+          "articulation": "harmonics"
+        }
+      ]
+    },
+    {
+      "displayName": "ElJazzSlapCompatible",
+      "bankMsb": 8,
+      "bankLsb": 9,
+      "programYamaha": 18,
+      "zones": [
+        {
+          "velLo": 1,
+          "velHi": 40,
+          "articulation": "open Slap p < Key 44 / Key 45 > Pull p"
+        },
+        {
+          "velLo": 41,
+          "velHi": 60,
+          "articulation": "open Slap mf < Key 44 / Key 45 > Pull p"
+        },
+        {
+          "velLo": 61,
+          "velHi": 80,
+          "articulation": "open Slap f < Key 44 / Key 45 > Pull f"
+        },
+        {
+          "velLo": 81,
+          "velHi": 100,
+          "articulation": "dead Slap p < Key 44 / Key 45 > Pull p"
+        },
+        {
+          "velLo": 101,
+          "velHi": 120,
+          "articulation": "dead Slap f < Key 44 / Key 45 > Pull f"
+        },
+        {
+          "velLo": 121,
+          "velHi": 127,
+          "articulation": "harmonics"
+        }
+      ]
+    },
+    {
+      "displayName": "ElJazzFingerOpenMute",
+      "bankMsb": 8,
+      "bankLsb": 12,
+      "programYamaha": 18,
+      "zones": [
+        {
+          "velLo": 1,
+          "velHi": 10,
+          "articulation": "open p"
+        },
+        {
+          "velLo": 11,
+          "velHi": 20,
+          "articulation": "open mf"
+        },
+        {
+          "velLo": 21,
+          "velHi": 40,
+          "articulation": "open f"
+        },
+        {
+          "velLo": 41,
+          "velHi": 60,
+          "articulation": "hfmt p"
+        },
+        {
+          "velLo": 61,
+          "velHi": 80,
+          "articulation": "hfmt f"
+        },
+        {
+          "velLo": 81,
+          "velHi": 90,
+          "articulation": "dead"
+        },
+        {
+          "velLo": 91,
+          "velHi": 100,
+          "articulation": "op HOn p"
+        },
+        {
+          "velLo": 101,
+          "velHi": 105,
+          "articulation": "op HO f"
+        },
+        {
+          "velLo": 106,
+          "velHi": 115,
+          "articulation": "hfmt HO p"
+        },
+        {
+          "velLo": 116,
+          "velHi": 120,
+          "articulation": "hfmt HO mf"
+        },
+        {
+          "velLo": 121,
+          "velHi": 127,
+          "articulation": "harmonics"
+        }
+      ]
+    },
+    {
+      "displayName": "ElJazzFingerOpenHarm",
+      "bankMsb": 8,
+      "bankLsb": 13,
+      "programYamaha": 18,
+      "zones": [
+        {
+          "velLo": 1,
+          "velHi": 60,
+          "articulation": "open p"
+        },
+        {
+          "velLo": 61,
+          "velHi": 80,
+          "articulation": "open mf"
+        },
+        {
+          "velLo": 81,
+          "velHi": 120,
+          "articulation": "dead p"
+        },
+        {
+          "velLo": 121,
+          "velHi": 127,
+          "articulation": "harmonics"
+        }
+      ]
+    },
+    {
+      "displayName": "ElJazzFingerOpenSlap",
+      "bankMsb": 8,
+      "bankLsb": 14,
+      "programYamaha": 18,
+      "zones": [
+        {
+          "velLo": 1,
+          "velHi": 60,
+          "articulation": "open p"
+        },
+        {
+          "velLo": 61,
+          "velHi": 80,
+          "articulation": "open mf"
+        },
+        {
+          "velLo": 81,
+          "velHi": 120,
+          "articulation": "dead p"
+        },
+        {
+          "velLo": 121,
+          "velHi": 127,
+          "articulation": "Slap <39 / 40> Pull"
+        }
+      ]
+    },
+    {
+      "displayName": "ElJazzPickOpenMute",
+      "bankMsb": 8,
+      "bankLsb": 6,
+      "programYamaha": 19,
+      "zones": [
+        {
+          "velLo": 1,
+          "velHi": 20,
+          "articulation": "open p"
+        },
+        {
+          "velLo": 21,
+          "velHi": 40,
+          "articulation": "open mf"
+        },
+        {
+          "velLo": 41,
+          "velHi": 60,
+          "articulation": "hfmt p"
+        },
+        {
+          "velLo": 61,
+          "velHi": 80,
+          "articulation": "hfmt mf"
+        },
+        {
+          "velLo": 81,
+          "velHi": 100,
+          "articulation": "dead p"
+        },
+        {
+          "velLo": 101,
+          "velHi": 120,
+          "articulation": "dead mf"
+        },
+        {
+          "velLo": 121,
+          "velHi": 127,
+          "articulation": "harmonics"
+        }
+      ]
+    },
+    {
+      "displayName": "ElJazzFingerMuteHmr",
+      "bankMsb": 8,
+      "bankLsb": 0,
+      "programYamaha": 22,
+      "zones": [
+        {
+          "velLo": 1,
+          "velHi": 60,
+          "articulation": "open p"
+        },
+        {
+          "velLo": 61,
+          "velHi": 80,
+          "articulation": "open f"
+        },
+        {
+          "velLo": 81,
+          "velHi": 100,
+          "articulation": "hfmt HmrOn"
+        },
+        {
+          "velLo": 101,
+          "velHi": 120,
+          "articulation": "dead"
+        },
+        {
+          "velLo": 121,
+          "velHi": 127,
+          "articulation": "harmonics"
+        }
+      ]
+    },
+    {
+      "displayName": "ElJazzFingerOpenHmr",
+      "bankMsb": 8,
+      "bankLsb": 2,
+      "programYamaha": 22,
+      "zones": [
+        {
+          "velLo": 1,
+          "velHi": 40,
+          "articulation": "open p"
+        },
+        {
+          "velLo": 41,
+          "velHi": 60,
+          "articulation": "open mf"
+        },
+        {
+          "velLo": 61,
+          "velHi": 80,
+          "articulation": "open f"
+        },
+        {
+          "velLo": 81,
+          "velHi": 90,
+          "articulation": "op HmrOn p"
+        },
+        {
+          "velLo": 91,
+          "velHi": 100,
+          "articulation": "op HmrOn mf"
+        },
+        {
+          "velLo": 101,
+          "velHi": 120,
+          "articulation": "dead"
+        },
+        {
+          "velLo": 121,
+          "velHi": 127,
+          "articulation": "harmonics"
+        }
+      ]
+    },
+    {
+      "displayName": "ElJazzPickMuteHmr",
+      "bankMsb": 8,
+      "bankLsb": 4,
+      "programYamaha": 22,
+      "zones": [
+        {
+          "velLo": 1,
+          "velHi": 40,
+          "articulation": "open p"
+        },
+        {
+          "velLo": 41,
+          "velHi": 60,
+          "articulation": "open mf"
+        },
+        {
+          "velLo": 61,
+          "velHi": 80,
+          "articulation": "open f"
+        },
+        {
+          "velLo": 81,
+          "velHi": 100,
+          "articulation": "hfmt HmrOn"
+        },
+        {
+          "velLo": 101,
+          "velHi": 120,
+          "articulation": "dead"
+        },
+        {
+          "velLo": 121,
+          "velHi": 127,
+          "articulation": "harmonics"
+        }
+      ]
+    },
+    {
+      "displayName": "ElJazzPickOpenHmr",
+      "bankMsb": 8,
+      "bankLsb": 6,
+      "programYamaha": 22,
+      "zones": [
+        {
+          "velLo": 1,
+          "velHi": 40,
+          "articulation": "open p"
+        },
+        {
+          "velLo": 41,
+          "velHi": 60,
+          "articulation": "open mf"
+        },
+        {
+          "velLo": 61,
+          "velHi": 80,
+          "articulation": "open f"
+        },
+        {
+          "velLo": 81,
+          "velHi": 90,
+          "articulation": "op HmrOn p"
+        },
+        {
+          "velLo": 91,
+          "velHi": 100,
+          "articulation": "op HmrOn mf"
+        },
+        {
+          "velLo": 101,
+          "velHi": 120,
+          "articulation": "dead"
+        },
+        {
+          "velLo": 121,
+          "velHi": 127,
+          "articulation": "harmonics"
+        }
+      ]
+    },
+    {
+      "displayName": "ElJazzSlapFull",
+      "bankMsb": 8,
+      "bankLsb": 0,
+      "programYamaha": 23,
+      "zones": [
+        {
+          "velLo": 1,
+          "velHi": 20,
+          "articulation": "open Slap p"
+        },
+        {
+          "velLo": 21,
+          "velHi": 40,
+          "articulation": "open Slap mf"
+        },
+        {
+          "velLo": 41,
+          "velHi": 60,
+          "articulation": "open Slap f"
+        },
+        {
+          "velLo": 61,
+          "velHi": 70,
+          "articulation": "open Pull p"
+        },
+        {
+          "velLo": 71,
+          "velHi": 80,
+          "articulation": "open Pull f"
+        },
+        {
+          "velLo": 81,
+          "velHi": 90,
+          "articulation": "HmrOn Slap"
+        },
+        {
+          "velLo": 91,
+          "velHi": 100,
+          "articulation": "HmrOn Pull"
+        },
+        {
+          "velLo": 101,
+          "velHi": 105,
+          "articulation": "dead Slap p"
+        },
+        {
+          "velLo": 106,
+          "velHi": 110,
+          "articulation": "dead Slap f"
+        },
+        {
+          "velLo": 111,
+          "velHi": 115,
+          "articulation": "dead Pull p"
+        },
+        {
+          "velLo": 116,
+          "velHi": 120,
+          "articulation": "dead Pull f"
+        },
+        {
+          "velLo": 121,
+          "velHi": 127,
+          "articulation": "harmonics"
+        }
+      ]
+    },
+    {
+      "displayName": "VlBassPickMute",
+      "bankMsb": 8,
+      "bankLsb": 10,
+      "programYamaha": 18,
+      "zones": [
+        {
+          "velLo": 1,
+          "velHi": 60,
+          "articulation": "hfmt p"
+        },
+        {
+          "velLo": 61,
+          "velHi": 80,
+          "articulation": "open mf"
+        },
+        {
+          "velLo": 81,
+          "velHi": 100,
+          "articulation": "dead p"
+        },
+        {
+          "velLo": 101,
+          "velHi": 120,
+          "articulation": "dead mf"
+        },
+        {
+          "velLo": 121,
+          "velHi": 127,
+          "articulation": "harmonics"
+        }
+      ]
+    },
+    {
+      "displayName": "VlBassPickOpen",
+      "bankMsb": 8,
+      "bankLsb": 11,
+      "programYamaha": 18,
+      "zones": [
+        {
+          "velLo": 1,
+          "velHi": 60,
+          "articulation": "open p"
+        },
+        {
+          "velLo": 61,
+          "velHi": 80,
+          "articulation": "open mf"
+        },
+        {
+          "velLo": 81,
+          "velHi": 100,
+          "articulation": "dead p"
+        },
+        {
+          "velLo": 101,
+          "velHi": 120,
+          "articulation": "dead mf"
+        },
+        {
+          "velLo": 121,
+          "velHi": 127,
+          "articulation": "harmonics"
+        }
+      ]
+    },
+    {
+      "displayName": "VlBassPickOpenMute",
+      "bankMsb": 8,
+      "bankLsb": 7,
+      "programYamaha": 19,
+      "zones": [
+        {
+          "velLo": 1,
+          "velHi": 20,
+          "articulation": "open p"
+        },
+        {
+          "velLo": 21,
+          "velHi": 40,
+          "articulation": "open mf"
+        },
+        {
+          "velLo": 41,
+          "velHi": 60,
+          "articulation": "hfmt p"
+        },
+        {
+          "velLo": 61,
+          "velHi": 80,
+          "articulation": "hfmt mf"
+        },
+        {
+          "velLo": 81,
+          "velHi": 100,
+          "articulation": "dead p"
+        },
+        {
+          "velLo": 101,
+          "velHi": 120,
+          "articulation": "dead mf"
+        },
+        {
+          "velLo": 121,
+          "velHi": 127,
+          "articulation": "harmonics"
+        }
+      ]
+    },
+    {
+      "displayName": "VlBassPickMuteHmr",
+      "bankMsb": 8,
+      "bankLsb": 8,
+      "programYamaha": 22,
+      "zones": [
+        {
+          "velLo": 1,
+          "velHi": 60,
+          "articulation": "hfmt p"
+        },
+        {
+          "velLo": 61,
+          "velHi": 80,
+          "articulation": "open mf"
+        },
+        {
+          "velLo": 81,
+          "velHi": 100,
+          "articulation": "hfmt HmrOn"
+        },
+        {
+          "velLo": 101,
+          "velHi": 110,
+          "articulation": "dead p"
+        },
+        {
+          "velLo": 111,
+          "velHi": 120,
+          "articulation": "dead f"
+        },
+        {
+          "velLo": 121,
+          "velHi": 127,
+          "articulation": "harmonics"
+        }
+      ]
+    },
+    {
+      "displayName": "VlBassPickOpenHmr",
+      "bankMsb": 8,
+      "bankLsb": 10,
+      "programYamaha": 22,
+      "zones": [
+        {
+          "velLo": 1,
+          "velHi": 60,
+          "articulation": "open p"
+        },
+        {
+          "velLo": 61,
+          "velHi": 80,
+          "articulation": "open mf"
+        },
+        {
+          "velLo": 81,
+          "velHi": 100,
+          "articulation": "open HmrOn"
+        },
+        {
+          "velLo": 101,
+          "velHi": 110,
+          "articulation": "dead p"
+        },
+        {
+          "velLo": 111,
+          "velHi": 120,
+          "articulation": "dead f"
+        },
+        {
+          "velLo": 121,
+          "velHi": 127,
+          "articulation": "harmonics"
+        }
+      ]
+    },
+    {
+      "displayName": "AcJazzOpenExtended2",
+      "bankMsb": 8,
+      "bankLsb": 0,
+      "programYamaha": 15,
+      "zones": [
+        {
+          "velLo": 1,
+          "velHi": 20,
+          "articulation": "hfmt p"
+        },
+        {
+          "velLo": 21,
+          "velHi": 30,
+          "articulation": "hfmt mf"
+        },
+        {
+          "velLo": 31,
+          "velHi": 40,
+          "articulation": "hfmt f"
+        },
+        {
+          "velLo": 41,
+          "velHi": 50,
+          "articulation": "open p"
+        },
+        {
+          "velLo": 51,
+          "velHi": 60,
+          "articulation": "open mp"
+        },
+        {
+          "velLo": 61,
+          "velHi": 70,
+          "articulation": "open mf"
+        },
+        {
+          "velLo": 71,
+          "velHi": 80,
+          "articulation": "open f"
+        },
+        {
+          "velLo": 81,
+          "velHi": 85,
+          "articulation": "deads p-mp-mf-f"
+        },
+        {
+          "velLo": 86,
+          "velHi": 90,
+          "articulation": ""
+        },
+        {
+          "velLo": 91,
+          "velHi": 95,
+          "articulation": ""
+        },
+        {
+          "velLo": 96,
+          "velHi": 100,
+          "articulation": ""
+        },
+        {
+          "velLo": 101,
+          "velHi": 110,
+          "articulation": "2tone Slide up mp and mf continuous"
+        },
+        {
+          "velLo": 111,
+          "velHi": 120,
+          "articulation": ""
+        }
+      ]
+    },
+    {
+      "displayName": "AcJazzOpenExtended1",
+      "bankMsb": 8,
+      "bankLsb": 0,
+      "programYamaha": 16,
+      "zones": [
+        {
+          "velLo": 1,
+          "velHi": 20,
+          "articulation": "open p"
+        },
+        {
+          "velLo": 21,
+          "velHi": 40,
+          "articulation": "open mp"
+        },
+        {
+          "velLo": 41,
+          "velHi": 60,
+          "articulation": "open mf"
+        },
+        {
+          "velLo": 61,
+          "velHi": 80,
+          "articulation": "open f"
+        },
+        {
+          "velLo": 81,
+          "velHi": 85,
+          "articulation": "deads p-mp-mf-f"
+        },
+        {
+          "velLo": 86,
+          "velHi": 90,
+          "articulation": ""
+        },
+        {
+          "velLo": 91,
+          "velHi": 95,
+          "articulation": ""
+        },
+        {
+          "velLo": 96,
+          "velHi": 100,
+          "articulation": ""
+        },
+        {
+          "velLo": 101,
+          "velHi": 110,
+          "articulation": "2tone Slide up mp and mf continuous"
+        },
+        {
+          "velLo": 111,
+          "velHi": 120,
+          "articulation": ""
+        }
+      ]
+    },
+    {
+      "displayName": "AcJazzMuteCompatible",
+      "bankMsb": 8,
+      "bankLsb": 5,
+      "programYamaha": 17,
+      "zones": [
+        {
+          "velLo": 1,
+          "velHi": 40,
+          "articulation": "hfmt p"
+        },
+        {
+          "velLo": 41,
+          "velHi": 60,
+          "articulation": "hfmt mf"
+        },
+        {
+          "velLo": 61,
+          "velHi": 80,
+          "articulation": "hfmt f"
+        },
+        {
+          "velLo": 81,
+          "velHi": 90,
+          "articulation": "dead p"
+        },
+        {
+          "velLo": 91,
+          "velHi": 100,
+          "articulation": "dead mp"
+        },
+        {
+          "velLo": 101,
+          "velHi": 110,
+          "articulation": "dead mf"
+        },
+        {
+          "velLo": 111,
+          "velHi": 120,
+          "articulation": "dead f"
+        },
+        {
+          "velLo": 121,
+          "velHi": 127,
+          "articulation": "harmonics"
+        }
+      ]
+    },
+    {
+      "displayName": "AcJazzOpenCompatible",
+      "bankMsb": 8,
+      "bankLsb": 6,
+      "programYamaha": 17,
+      "zones": [
+        {
+          "velLo": 1,
+          "velHi": 20,
+          "articulation": "open p"
+        },
+        {
+          "velLo": 21,
+          "velHi": 40,
+          "articulation": "open mp"
+        },
+        {
+          "velLo": 41,
+          "velHi": 60,
+          "articulation": "open mf"
+        },
+        {
+          "velLo": 61,
+          "velHi": 80,
+          "articulation": "open f"
+        },
+        {
+          "velLo": 81,
+          "velHi": 90,
+          "articulation": "dead p"
+        },
+        {
+          "velLo": 91,
+          "velHi": 100,
+          "articulation": "dead mp"
+        },
+        {
+          "velLo": 101,
+          "velHi": 110,
+          "articulation": "dead mf"
+        },
+        {
+          "velLo": 111,
+          "velHi": 120,
+          "articulation": "dead f"
+        },
+        {
+          "velLo": 121,
+          "velHi": 127,
+          "articulation": "harmonics"
+        }
+      ]
+    },
+    {
+      "displayName": "RBillyBassFingerOpen",
+      "bankMsb": 8,
+      "bankLsb": 3,
+      "programYamaha": 17,
+      "zones": [
+        {
+          "velLo": 1,
+          "velHi": 40,
+          "articulation": "open mp"
+        },
+        {
+          "velLo": 41,
+          "velHi": 60,
+          "articulation": "open mf"
+        },
+        {
+          "velLo": 61,
+          "velHi": 70,
+          "articulation": "open f"
+        },
+        {
+          "velLo": 71,
+          "velHi": 80,
+          "articulation": "open ff"
+        },
+        {
+          "velLo": 81,
+          "velHi": 120,
+          "articulation": "dead"
+        },
+        {
+          "velLo": 121,
+          "velHi": 127,
+          "articulation": "harmonics"
+        }
+      ]
+    },
+    {
+      "displayName": "RBillyBassSlap",
+      "bankMsb": 8,
+      "bankLsb": 4,
+      "programYamaha": 17,
+      "zones": [
+        {
+          "velLo": 1,
+          "velHi": 40,
+          "articulation": "open mp"
+        },
+        {
+          "velLo": 41,
+          "velHi": 60,
+          "articulation": "open mf"
+        },
+        {
+          "velLo": 61,
+          "velHi": 70,
+          "articulation": "open f"
+        },
+        {
+          "velLo": 71,
+          "velHi": 80,
+          "articulation": "open ff"
+        },
+        {
+          "velLo": 81,
+          "velHi": 120,
+          "articulation": "mute slap"
+        },
+        {
+          "velLo": 121,
+          "velHi": 127,
+          "articulation": "harmonics"
+        }
+      ]
+    },
+    {
+      "displayName": "RBillyBassFingerSlap",
+      "bankMsb": 8,
+      "bankLsb": 0,
+      "programYamaha": 24,
+      "zones": [
+        {
+          "velLo": 1,
+          "velHi": 10,
+          "articulation": "open mp"
+        },
+        {
+          "velLo": 11,
+          "velHi": 20,
+          "articulation": "open mf"
+        },
+        {
+          "velLo": 21,
+          "velHi": 30,
+          "articulation": "open f"
+        },
+        {
+          "velLo": 31,
+          "velHi": 40,
+          "articulation": "open ff"
+        },
+        {
+          "velLo": 41,
+          "velHi": 50,
+          "articulation": "slap mp"
+        },
+        {
+          "velLo": 51,
+          "velHi": 60,
+          "articulation": "slap mf"
+        },
+        {
+          "velLo": 61,
+          "velHi": 70,
+          "articulation": "slap f"
+        },
+        {
+          "velLo": 71,
+          "velHi": 80,
+          "articulation": "slap ff"
+        },
+        {
+          "velLo": 81,
+          "velHi": 100,
+          "articulation": "dead"
+        },
+        {
+          "velLo": 101,
+          "velHi": 120,
+          "articulation": "mute slap"
+        },
+        {
+          "velLo": 121,
+          "velHi": 127,
+          "articulation": "harmonics"
+        }
+      ]
+    },
+    {
+      "displayName": "MonoUprightBass",
+      "bankMsb": 8,
+      "bankLsb": 2,
+      "programYamaha": 17,
+      "zones": [
+        {
+          "velLo": 1,
+          "velHi": 40,
+          "articulation": "open mp"
+        },
+        {
+          "velLo": 41,
+          "velHi": 60,
+          "articulation": "open mf"
+        },
+        {
+          "velLo": 61,
+          "velHi": 70,
+          "articulation": "open f"
+        },
+        {
+          "velLo": 71,
+          "velHi": 80,
+          "articulation": "open ff"
+        },
+        {
+          "velLo": 81,
+          "velHi": 120,
+          "articulation": "dead"
+        },
+        {
+          "velLo": 121,
+          "velHi": 127,
+          "articulation": "harmonics"
+        }
+      ]
+    }
+  ]
+}

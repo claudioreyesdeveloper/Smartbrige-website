@@ -1,4 +1,21 @@
-export type YamahaModelId = "genos" | "genos2" | "tyros4" | "tyros5"
+/** Website model ids — `genos` maps to DB `genos1`; others match keyboard_models.model_key. */
+export type YamahaModelId =
+  | "genos"
+  | "genos2"
+  | "tyros1"
+  | "tyros2"
+  | "tyros3"
+  | "tyros4"
+  | "tyros5"
+  | "psr_s750"
+  | "psr_s770"
+  | "psr_s775"
+  | "psr_s900"
+  | "psr_s950"
+  | "psr_s970"
+  | "psr_s975"
+  | "psr_sx700"
+  | "psr_sx900"
 
 export type StyleGenre = "Pop" | "Jazz" | "Gospel" | "Neo Soul" | "Funk"
 

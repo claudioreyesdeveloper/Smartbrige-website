@@ -18,6 +18,7 @@ import {
   styleMappingForEntry,
   stylesForProfile,
 } from "@/lib/demo/yamaha/style-catalog"
+import { sendPresetStyleSelect } from "@/lib/demo/yamaha/style-select"
 import { MusicsoftTransfer } from "@/lib/demo/yamaha/musicsoft-transfer"
 import {
   findYamahaPortPair,
@@ -64,6 +65,31 @@ describe("Yamaha commands", () => {
       .toEqual([0x2b, 0x62])
     expect([...styleSelectCommand(KEYBOARD_PROFILES.tyros5.styleMappings.Gospel)].slice(-3, -1))
       .toEqual([0x15, 0x62])
+  })
+
+  it("sends Genos2 style-stop before preset select like desktop Jam Player", () => {
+    const sent: number[][] = []
+    const session = {
+      sendBoth: (data: Uint8Array) => {
+        sent.push([...data])
+      },
+    }
+    sendPresetStyleSelect(
+      session as never,
+      KEYBOARD_PROFILES.genos2.styleMappings.Gospel,
+      "genos2",
+    )
+    expect(sent[0]).toEqual([0xf0, 0x43, 0x60, 0x7d, 0xf7])
+    expect(sent[1]?.slice(0, 11)).toEqual([0xf0, 0x43, 0x73, 0x01, 0x51, 0x05, 0x00, 0x03, 0x04, 0x00, 0x00])
+
+    sent.length = 0
+    sendPresetStyleSelect(
+      session as never,
+      KEYBOARD_PROFILES.tyros5.styleMappings.Gospel,
+      "tyros5",
+    )
+    expect(sent).toHaveLength(1)
+    expect(sent[0]?.slice(0, 11)).toEqual([0xf0, 0x43, 0x73, 0x01, 0x51, 0x05, 0x00, 0x03, 0x04, 0x00, 0x00])
   })
 
   it("exposes every supported model catalog with desktop-compatible encoding", () => {

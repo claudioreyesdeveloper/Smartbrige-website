@@ -9,6 +9,7 @@ import {
   Usb,
 } from "lucide-react"
 import { BrowserCompatibility } from "@/components/demo/browser-compatibility"
+import { SITE } from "@/lib/site"
 
 export const metadata = {
   title: "Demo Station",
@@ -28,11 +29,14 @@ export default function DemoStationPage() {
 
       <main className="demo-station-main">
         <div className="demo-station-copy">
+          <p className="ux-section-label" style={{ color: "inherit", opacity: 0.85 }}>
+            Demo Station
+          </p>
           <p className="demo-kicker">Your keyboard. Reimagined.</p>
-          <h1>Experience the future of Yamaha arranger keyboards.</h1>
+          <h1>Try SmartBridge on your arranger.</h1>
           <p>
-            Choose a demo, connect your Yamaha keyboard with a USB cable, and follow
-            the large step-by-step instructions. No technical setup is required.
+            Pick a demo, connect with USB, and follow the steps. No account and no
+            technical setup — just Chrome/Edge and your Yamaha keyboard.
           </p>
         </div>
 
@@ -40,7 +44,14 @@ export default function DemoStationPage() {
           <Chrome size={34} />
           <div>
             <strong>Use Google Chrome or Microsoft Edge on a computer</strong>
-            <span>This demo does not work in Safari, Firefox, on phones, or on tablets.</span>
+            <span>
+              This demo does not work in Safari, Firefox, on phones, or on tablets.
+              iOS and Android may be supported later — contact{" "}
+              <a href={`mailto:${SITE.email}?subject=${encodeURIComponent("SmartBridge iOS / Android")}`}>
+                {SITE.email}
+              </a>{" "}
+              for more information.
+            </span>
           </div>
         </section>
 

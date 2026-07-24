@@ -1,9 +1,15 @@
+import { ClerkProvider } from "@clerk/nextjs"
 import type { Metadata } from "next"
-import { DM_Sans, Instrument_Serif } from "next/font/google"
+import { DM_Sans, Instrument_Serif, Geist } from "next/font/google"
 import { SiteFooter } from "@/components/site-footer"
 import { SiteHeader } from "@/components/site-header"
+import { Toaster } from "@/components/ui/sonner"
+import { TooltipProvider } from "@/components/ui/tooltip"
 import { SITE } from "@/lib/site"
+import { cn } from "@/lib/utils"
 import "./globals.css"
+
+const geist = Geist({ subsets: ["latin"], variable: "--font-sans" })
 
 const dmSans = DM_Sans({
   subsets: ["latin"],
@@ -37,17 +43,39 @@ export const metadata: Metadata = {
   },
 }
 
+const clerkConfigured = Boolean(process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY)
+
+function Providers({ children }: { children: React.ReactNode }) {
+  const body = (
+    <TooltipProvider>
+      <SiteHeader />
+      <main>{children}</main>
+      <SiteFooter />
+      <Toaster />
+    </TooltipProvider>
+  )
+
+  if (!clerkConfigured) return body
+  return <ClerkProvider>{body}</ClerkProvider>
+}
+
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en" className={`${dmSans.variable} ${instrumentSerif.variable}`}>
+    <html
+      lang="en"
+      className={cn(
+        dmSans.variable,
+        instrumentSerif.variable,
+        "font-sans",
+        geist.variable,
+      )}
+    >
       <body className="antialiased">
-        <SiteHeader />
-        <main>{children}</main>
-        <SiteFooter />
+        <Providers>{children}</Providers>
       </body>
     </html>
   )
