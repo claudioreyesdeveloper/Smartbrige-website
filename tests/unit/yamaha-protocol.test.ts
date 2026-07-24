@@ -35,6 +35,9 @@ describe("Yamaha commands", () => {
   it("pairs Yamaha arranger Port 1 and Port 2 like desktop SmartBridge", () => {
     expect(isYamahaArrangerPort({ name: "Digital Keyboard Port 1", manufacturer: "Yamaha Corporation" }, 1)).toBe(true)
     expect(isYamahaArrangerPort({ name: "Digital Keyboard Port 2", manufacturer: "Yamaha Corporation" }, 2)).toBe(true)
+    expect(isYamahaArrangerPort({ name: "Genos2 Port 1", manufacturer: "Yamaha" }, 1)).toBe(true)
+    expect(isYamahaArrangerPort({ name: "Yamaha Genos2-2", manufacturer: "" }, 2)).toBe(true)
+    expect(isYamahaArrangerPort({ name: "Digital Keyboard Port 10", manufacturer: "Yamaha" }, 1)).toBe(false)
     expect(isYamahaMidiPort2({ name: "Digital Workstation-2", manufacturer: "Yamaha" })).toBe(true)
     expect(isYamahaMidiPort2({ name: "Digital Keyboard Port 1", manufacturer: "Yamaha Corporation" })).toBe(false)
     expect(isYamahaArrangerPort({ name: "SmartBridge MIDI 2", manufacturer: "" }, 2)).toBe(false)

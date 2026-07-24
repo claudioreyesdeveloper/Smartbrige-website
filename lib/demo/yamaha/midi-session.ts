@@ -64,11 +64,20 @@ export function isYamahaArrangerPort(
 ): boolean {
   const identity = `${port.manufacturer} ${port.name}`
   if (/smartbridge/i.test(identity)) return false
-  if (!/yamaha|digital keyboard|digital workstation|genos|tyros/i.test(identity)) {
+  // Desktop LocalMidiConnector matches Digital Keyboard / Digital Workstation;
+  // also accept Genos/Tyros/PSR USB names seen in Chrome Web MIDI.
+  if (
+    !/yamaha|digital keyboard|digital workstation|genos|tyros|psr[- ]?s|psr[- ]?sx/i.test(
+      identity,
+    )
+  ) {
     return false
   }
-  const tag = portNumber === 1 ? /(?:port\s*1|[- ]1)$/i : /(?:port\s*2|[- ]2)$/i
-  return tag.test(port.name)
+  const tag =
+    portNumber === 1
+      ? /(?:port\s*1(?!\d)|[-_]1|\b1)$/i
+      : /(?:port\s*2(?!\d)|[-_]2|\b2)$/i
+  return tag.test(port.name.trim())
 }
 
 /** @deprecated Prefer isYamahaArrangerPort(port, 2). Kept for older tests. */
@@ -131,6 +140,8 @@ export class YamahaMidiSession extends EventTarget {
   private output2: MidiOutputLike | null = null
   private pending = new Set<PendingResponse>()
   private snapshot: MidiSessionSnapshot = initialSnapshot()
+  /** Ignore port-state disconnect storms while a connect attempt is in flight. */
+  private ignoreDisconnectUntil = 0
 
   get state(): MidiSessionSnapshot {
     return this.snapshot
@@ -152,11 +163,19 @@ export class YamahaMidiSession extends EventTarget {
     }
 
     const chosenProfile = modelId ? KEYBOARD_PROFILES[modelId] : this.snapshot.profile
+    this.ignoreDisconnectUntil = Date.now() + 2500
+    // Fresh reconnect: close any half-open ports before requesting access again.
+    if (this.snapshot.connected || this.input1 || this.output1) {
+      await this.disconnect("", { preserveProfile: true })
+    }
     this.publish({
       connecting: true,
       error: "",
-      profile: chosenProfile,
-      modelName: chosenProfile?.displayName || this.snapshot.modelName,
+      profile: chosenProfile || this.snapshot.profile,
+      modelName:
+        chosenProfile?.displayName ||
+        this.snapshot.profile?.displayName ||
+        this.snapshot.modelName,
     })
     try {
       const request = (
@@ -167,9 +186,10 @@ export class YamahaMidiSession extends EventTarget {
       this.access = await request.call(navigator, { sysex: true })
       this.access.onstatechange = () => {
         this.refreshPorts()
+        if (Date.now() < this.ignoreDisconnectUntil || this.snapshot.connecting) return
         const ports = [this.input1, this.input2, this.output1, this.output2]
         if (ports.some((port) => port && port.state !== "connected")) {
-          void this.disconnect("Keyboard disconnected.")
+          void this.disconnect("Keyboard disconnected.", { preserveProfile: true })
         }
       }
       this.refreshPorts()
@@ -192,9 +212,16 @@ export class YamahaMidiSession extends EventTarget {
       if (pair) {
         await this.connectPair(pair)
       } else {
+        const portNames = [
+          ...this.snapshot.inputs.map((port) => `in:${port.name}`),
+          ...this.snapshot.outputs.map((port) => `out:${port.name}`),
+        ]
+        const seen = portNames.length ? ` Seen: ${portNames.join(", ")}.` : ""
         this.publish({
           connecting: false,
-          error: "Keyboard not found. Check the USB cable, turn the keyboard on, and try again.",
+          error:
+            "Keyboard not found. Plug in USB, power on the arranger, allow MIDI/SysEx in Chrome, then try again." +
+            seen,
         })
       }
     } catch (error) {
@@ -425,7 +452,10 @@ export class YamahaMidiSession extends EventTarget {
     }
   }
 
-  async disconnect(reason = "") {
+  async disconnect(
+    reason = "",
+    options?: { preserveProfile?: boolean },
+  ) {
     this.pending.forEach((pending) => {
       clearTimeout(pending.timer)
       pending.reject(new Error(reason || "MIDI session closed."))
@@ -448,8 +478,9 @@ export class YamahaMidiSession extends EventTarget {
       connecting: false,
       inputName: "",
       outputName: "",
-      modelName: "",
-      profile: null,
+      ...(options?.preserveProfile
+        ? {}
+        : { modelName: "", profile: null }),
       error: reason,
     })
   }

@@ -564,10 +564,26 @@ export function StyleMakerApp() {
   // Reconnect the last keyboard pair (cached port ids / names).
   useEffect(() => {
     if (midi.connected || midi.connecting) return
-    void session.requestAccess()
+    void session.requestAccess(midi.profile?.id || ("genos2" as YamahaModelId)).then(
+      (snap) => {
+        if (snap.connected) {
+          setStatus(`Keyboard connected: ${snap.profile?.displayName || "Yamaha"}`)
+          return
+        }
+        if (snap.error) {
+          setStatus(snap.error)
+          toast.error(snap.error)
+        }
+      },
+    )
     // Only on mount — avoid reconnect loops when snapshot updates.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [session])
+
+  useEffect(() => {
+    if (!midi.error || midi.connecting) return
+    setStatus(midi.error)
+  }, [midi.error, midi.connecting])
 
   // Load MegaVoice / DrumKit audition lists for the selected keyboard model.
   useEffect(() => {
@@ -2693,20 +2709,39 @@ export function StyleMakerApp() {
             ))}
           </select>
           <StatusChip on={midi.connected}>
-            {midi.connected
-              ? midi.profile?.displayName || "MIDI connected"
-              : "MIDI offline"}
+            {midi.connecting
+              ? "Connecting…"
+              : midi.connected
+                ? midi.profile?.displayName || "MIDI connected"
+                : "MIDI offline"}
           </StatusChip>
           <button
             type="button"
             className="sm-btn"
-            onClick={() =>
-              void session.requestAccess(
-                midi.profile?.id || ("genos2" as YamahaModelId),
-              )
-            }
+            disabled={midi.connecting}
+            onClick={() => {
+              const modelId = midi.profile?.id || ("genos2" as YamahaModelId)
+              setStatus("Connecting to keyboard…")
+              void session.requestAccess(modelId).then((snap) => {
+                if (snap.connected) {
+                  const label = snap.profile?.displayName || "Yamaha"
+                  setStatus(`Keyboard connected: ${label}`)
+                  toast.success(`Connected to ${label}`)
+                  return
+                }
+                const message =
+                  snap.error ||
+                  "Could not open the keyboard. Allow MIDI/SysEx in Chrome, then try again."
+                setStatus(message)
+                toast.error(message)
+              })
+            }}
           >
-            {midi.connected ? "Reconnect" : "Connect keyboard"}
+            {midi.connecting
+              ? "Connecting…"
+              : midi.connected
+                ? "Reconnect"
+                : "Connect keyboard"}
           </button>
         </div>
       </header>
