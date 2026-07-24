@@ -1,5 +1,6 @@
 import type { KeyboardProfile, YamahaModelId } from "@/lib/demo/types"
 import {
+  clearCachedKeyboardPair,
   loadCachedKeyboardPair,
   resolveCachedKeyboardPair,
   saveCachedKeyboardPair,
@@ -64,6 +65,9 @@ export function isYamahaArrangerPort(
 ): boolean {
   const identity = `${port.manufacturer} ${port.name}`
   if (/smartbridge/i.test(identity)) return false
+  // Motif / MODX / Montage use a different connector path on desktop — never
+  // treat them as the Genos/Tyros arranger USB pair (they also expose Port1/2).
+  if (/motif|modx|montage|reface/i.test(identity)) return false
   // Desktop LocalMidiConnector matches Digital Keyboard / Digital Workstation;
   // also accept Genos/Tyros/PSR USB names seen in Chrome Web MIDI.
   if (
@@ -80,6 +84,30 @@ export function isYamahaArrangerPort(
   return tag.test(port.name.trim())
 }
 
+/** Prefer true arranger USB names when Motif + Genos are both plugged in. */
+function arrangerPortPriority(
+  port: Pick<MidiPortChoice, "name" | "manufacturer">,
+): number {
+  const identity = `${port.manufacturer} ${port.name}`.toLowerCase()
+  if (/digital keyboard|digital workstation/.test(identity)) return 0
+  if (/genos|tyros/.test(identity)) return 1
+  if (/psr/.test(identity)) return 2
+  return 3
+}
+
+function pickArrangerPort(
+  ports: MidiPortChoice[],
+  portNumber: 1 | 2,
+): MidiPortChoice | undefined {
+  return ports
+    .filter((port) => isYamahaArrangerPort(port, portNumber))
+    .sort(
+      (a, b) =>
+        arrangerPortPriority(a) - arrangerPortPriority(b) ||
+        a.name.localeCompare(b.name),
+    )[0]
+}
+
 /** @deprecated Prefer isYamahaArrangerPort(port, 2). Kept for older tests. */
 export function isYamahaMidiPort2(port: Pick<MidiPortChoice, "name" | "manufacturer">): boolean {
   return isYamahaArrangerPort(port, 2)
@@ -89,10 +117,10 @@ export function findYamahaPortPair(
   inputs: MidiPortChoice[],
   outputs: MidiPortChoice[],
 ): YamahaPortPair | null {
-  const input1 = inputs.find((port) => isYamahaArrangerPort(port, 1))
-  const input2 = inputs.find((port) => isYamahaArrangerPort(port, 2))
-  const output1 = outputs.find((port) => isYamahaArrangerPort(port, 1))
-  const output2 = outputs.find((port) => isYamahaArrangerPort(port, 2))
+  const input1 = pickArrangerPort(inputs, 1)
+  const input2 = pickArrangerPort(inputs, 2)
+  const output1 = pickArrangerPort(outputs, 1)
+  const output2 = pickArrangerPort(outputs, 2)
   if (!input1 || !input2 || !output1 || !output2) return null
   return { input1, input2, output1, output2 }
 }
@@ -201,6 +229,16 @@ export class YamahaMidiSession extends EventTarget {
             this.snapshot.outputs,
           )
         : null
+      // Drop stale Motif / non-arranger cache so Genos wins when both are present.
+      const cachedIsArranger =
+        !!cachedPair &&
+        isYamahaArrangerPort(cachedPair.input1, 1) &&
+        isYamahaArrangerPort(cachedPair.input2, 2) &&
+        isYamahaArrangerPort(cachedPair.output1, 1) &&
+        isYamahaArrangerPort(cachedPair.output2, 2)
+      if (cached && !cachedIsArranger) {
+        clearCachedKeyboardPair()
+      }
       if (cached?.modelId && KEYBOARD_PROFILES[cached.modelId] && !chosenProfile) {
         this.publish({
           profile: KEYBOARD_PROFILES[cached.modelId],
@@ -208,7 +246,8 @@ export class YamahaMidiSession extends EventTarget {
         })
       }
       const pair =
-        cachedPair || findYamahaPortPair(this.snapshot.inputs, this.snapshot.outputs)
+        (cachedIsArranger ? cachedPair : null) ||
+        findYamahaPortPair(this.snapshot.inputs, this.snapshot.outputs)
       if (pair) {
         await this.connectPair(pair)
       } else {

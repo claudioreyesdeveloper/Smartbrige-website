@@ -38,17 +38,23 @@ describe("Yamaha commands", () => {
     expect(isYamahaArrangerPort({ name: "Genos2 Port 1", manufacturer: "Yamaha" }, 1)).toBe(true)
     expect(isYamahaArrangerPort({ name: "Yamaha Genos2-2", manufacturer: "" }, 2)).toBe(true)
     expect(isYamahaArrangerPort({ name: "Digital Keyboard Port 10", manufacturer: "Yamaha" }, 1)).toBe(false)
+    expect(isYamahaArrangerPort({ name: "YAMAHA MOTIF-R XS Port1", manufacturer: "YAMAHA" }, 1)).toBe(false)
     expect(isYamahaMidiPort2({ name: "Digital Workstation-2", manufacturer: "Yamaha" })).toBe(true)
     expect(isYamahaMidiPort2({ name: "Digital Keyboard Port 1", manufacturer: "Yamaha Corporation" })).toBe(false)
     expect(isYamahaArrangerPort({ name: "SmartBridge MIDI 2", manufacturer: "" }, 2)).toBe(false)
+    // When Motif + Genos are both present, prefer Digital Keyboard (Genos USB).
     const pair = findYamahaPortPair(
       [
-        { id: "i1", name: "Digital Keyboard Port 1", manufacturer: "Yamaha", state: "connected" },
-        { id: "i2", name: "Digital Keyboard Port 2", manufacturer: "Yamaha", state: "connected" },
+        { id: "m1", name: "YAMAHA MOTIF-R XS Port1", manufacturer: "YAMAHA", state: "connected" },
+        { id: "m2", name: "YAMAHA MOTIF-R XS Port2", manufacturer: "YAMAHA", state: "connected" },
+        { id: "i1", name: "Digital Keyboard Port 1", manufacturer: "Yamaha Corporation", state: "connected" },
+        { id: "i2", name: "Digital Keyboard Port 2", manufacturer: "Yamaha Corporation", state: "connected" },
       ],
       [
-        { id: "o1", name: "Digital Keyboard Port 1", manufacturer: "Yamaha", state: "connected" },
-        { id: "o2", name: "Digital Keyboard Port 2", manufacturer: "Yamaha", state: "connected" },
+        { id: "mo1", name: "YAMAHA MOTIF-R XS Port1", manufacturer: "YAMAHA", state: "connected" },
+        { id: "mo2", name: "YAMAHA MOTIF-R XS Port2", manufacturer: "YAMAHA", state: "connected" },
+        { id: "o1", name: "Digital Keyboard Port 1", manufacturer: "Yamaha Corporation", state: "connected" },
+        { id: "o2", name: "Digital Keyboard Port 2", manufacturer: "Yamaha Corporation", state: "connected" },
       ],
     )
     expect(pair?.input1.id).toBe("i1")
