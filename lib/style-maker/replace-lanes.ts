@@ -30,6 +30,7 @@ import {
   partMixerSetupEvents,
   type PartMixerMap,
 } from "./part-mixer"
+import { sectionTargetTicks } from "./section-bars"
 import {
   majorSourceChannelsForLane,
   minorSourceChannelsForLane,
@@ -61,6 +62,11 @@ export type LaneReplacement = {
 export type StyleSectionLaneReplacements = {
   range: StyleSectionRange
   sectionLabel: string
+  /**
+   * StyleSectionRecipe::bars — when set, the donor marker span is resized and
+   * takes are looped/truncated to this length (desktop appendClipSmfLoopedAsBeats).
+   */
+  bars?: number
   lanes?: Partial<Record<StyleMakerLane, LaneReplacement>>
   minorLanes?: Partial<Record<StyleMakerLane, LaneReplacement>>
   partMixer?: PartMixerMap
@@ -68,6 +74,36 @@ export type StyleSectionLaneReplacements = {
   drums?: LaneReplacement
   bass?: LaneReplacement
   guitar?: LaneReplacement
+}
+
+/**
+ * Grow or shrink a section's MIDI window by shifting later events (markers +
+ * notes) so Style Maker Bars can diverge from the donor marker length.
+ */
+export function resizeSectionSpan(
+  tracks: { endTick: number; events: MidiEvent[] }[],
+  rangeStart: number,
+  oldRangeEnd: number,
+  newRangeEnd: number,
+): void {
+  const delta = newRangeEnd - oldRangeEnd
+  if (delta === 0) return
+
+  if (delta < 0) {
+    // Truncate: drop events that lived in the removed tail of this section.
+    for (const track of tracks) {
+      track.events = track.events.filter(
+        (event) => event.tick < newRangeEnd || event.tick >= oldRangeEnd,
+      )
+    }
+  }
+
+  for (const track of tracks) {
+    for (const event of track.events) {
+      if (event.tick >= oldRangeEnd) event.tick += delta
+    }
+    track.endTick = Math.max(0, track.endTick + delta)
+  }
 }
 
 /** @deprecated Use StyleSectionLaneReplacements[] via replaceStyleProjectProduct. */
@@ -205,9 +241,25 @@ export function replaceStyleProjectProduct(
 
   let tail: Uint8Array = style.yamahaTail.slice()
 
-  for (const section of work) {
+  // Process later sections first so shifting ticks for an early expand does not
+  // invalidate already-computed later ranges (desktop rebuilds sequentially).
+  const ordered = [...work].sort(
+    (a, b) => (b.range.startTick || 0) - (a.range.startTick || 0),
+  )
+
+  for (const section of ordered) {
     const rangeStart = Math.max(0, section.range.startTick || 0)
-    const rangeEnd = Math.min(endTick, section.range.endTick || endTick)
+    let rangeEnd = Math.min(
+      Math.max(...tracks.map((track) => track.endTick), endTick),
+      section.range.endTick || endTick,
+    )
+    if (section.bars != null && section.bars > 0) {
+      const targetEnd = rangeStart + sectionTargetTicks(section.bars, style.ticksPerQuarter)
+      if (targetEnd !== rangeEnd) {
+        resizeSectionSpan(tracks, rangeStart, rangeEnd, targetEnd)
+        rangeEnd = targetEnd
+      }
+    }
     const sectionLabel =
       section.sectionLabel ||
       section.range.templateSection ||

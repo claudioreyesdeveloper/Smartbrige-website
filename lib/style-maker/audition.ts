@@ -29,6 +29,10 @@ import {
   styleChannel,
 } from "@/lib/style-maker/lanes"
 import {
+  loopNotesToTargetTicks,
+  sectionTargetTicks,
+} from "@/lib/style-maker/section-bars"
+import {
   donorMinorSourceChannelsForLane,
   minorSourceChannelsForLane,
   replacementSourceChannelsForLane,
@@ -512,8 +516,20 @@ export function extractSectionAuditionEventsWithTakes(
   minor: boolean,
   majorTakes: Partial<Record<StyleMakerLane, MidiNote[]>>,
   minorTakes: Partial<Record<StyleMakerLane, MidiNote[]>>,
+  /**
+   * StyleSectionRecipe::bars — when set, loop/truncate takes to this length
+   * (desktop appendClipSmfLoopedAsBeats). Cycle length comes from takeCycleTicks.
+   */
+  options?: {
+    bars?: number
+    takeCycleTicks?: Partial<Record<StyleMakerLane, number>>
+  },
 ): MidiPreviewEvent[] {
   const byDest = new Map<number, MidiPreviewEvent[]>()
+  const targetTicks =
+    options?.bars != null && options.bars > 0
+      ? sectionTargetTicks(options.bars, style.ticksPerQuarter)
+      : 0
 
   for (const lane of ALL_LANES) {
     const supportsMinor = laneSupportsMinorTake(
@@ -531,9 +547,19 @@ export function extractSectionAuditionEventsWithTakes(
       takeNotes = majorTakes[lane]
     }
 
-    const laneEvents = takeNotes?.length
-      ? notesToAuditionEvents(takeNotes, styleChannel(lane))
-      : extractSectionDonorLaneEvents(style, range, lane, minor)
+    let laneEvents: MidiPreviewEvent[]
+    if (takeNotes?.length) {
+      const cycle =
+        options?.takeCycleTicks?.[lane] ||
+        Math.max(1, ...takeNotes.map((note) => note.tick + note.duration), 1)
+      const fitted =
+        targetTicks > 0
+          ? loopNotesToTargetTicks(takeNotes, cycle, targetTicks)
+          : takeNotes
+      laneEvents = notesToAuditionEvents(fitted, styleChannel(lane))
+    } else {
+      laneEvents = extractSectionDonorLaneEvents(style, range, lane, minor)
+    }
     if (!laneEvents.length) continue
     const dest0 = styleChannel(lane) - 1
     const bucket = byDest.get(dest0) || []

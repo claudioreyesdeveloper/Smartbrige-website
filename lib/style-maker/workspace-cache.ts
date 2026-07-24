@@ -45,6 +45,8 @@ export type StyleMakerWorkspaceSnapshot = {
   donorBytes: Uint8Array
   sectionName: string
   bars: number
+  /** StyleSectionRecipe::bars keyed by section display label. */
+  sectionBars?: Record<string, number>
   includeCC: boolean
   selectedLane: StyleMakerLane
   libTab: "bass" | "drums" | "guitar" | "brass"

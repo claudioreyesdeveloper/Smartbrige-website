@@ -60,6 +60,11 @@ import {
 } from "@/lib/style-maker/audition"
 import { yamahaTemplateSectionName } from "@/lib/style-maker/section-names"
 import {
+  donorSectionBars,
+  loopNotesToTargetTicks,
+  sectionTargetTicks,
+} from "@/lib/style-maker/section-bars"
+import {
   acceptedHint,
   ALL_STYLE_MAKER_LANES,
   applyPartTypeChoice,
@@ -463,6 +468,10 @@ export function StyleMakerApp() {
   const [libFiltersOpen, setLibFiltersOpen] = useState(false)
   const [sectionName, setSectionName] = useState("Main A")
   const [bars, setBars] = useState(2)
+  /** StyleSectionRecipe::bars per section display label. */
+  const [sectionBarsMap, setSectionBarsMap] = useState<Record<string, number>>(
+    {},
+  )
   const [includeCC, setIncludeCC] = useState(true)
   const [selectedLane, setSelectedLane] = useState<StyleMakerLane>(StyleMakerLane.Rhythm1)
   /** StyleSectionRecipe::lanes / minorLanes keyed by section display label. */
@@ -770,6 +779,13 @@ export function StyleMakerApp() {
       setDonor(parsed)
       setSectionName(cached.sectionName)
       setBars(cached.bars)
+      {
+        const barsMap = { ...(cached.sectionBars || {}) }
+        if (!Object.keys(barsMap).length && cached.sectionName) {
+          barsMap[cached.sectionName.trim()] = cached.bars
+        }
+        setSectionBarsMap(barsMap)
+      }
       setIncludeCC(cached.includeCC)
       setSelectedLane(cached.selectedLane)
       setLibTab(
@@ -1241,10 +1257,14 @@ export function StyleMakerApp() {
       ) {
         continue
       }
+      const recipeBars =
+        sectionBarsMap[key] ??
+        donorSectionBars(range, donor.ticksPerQuarter)
       sections.push({
         range,
         sectionLabel:
           range.templateSection || yamahaTemplateSectionName(range.label),
+        bars: recipeBars,
         lanes,
         minorLanes,
         partMixer,
@@ -1257,6 +1277,7 @@ export function StyleMakerApp() {
     donor,
     savedPartMixers,
     sectionAssignments,
+    sectionBarsMap,
     sectionGuitarCasmModes,
     sectionMinorAssignments,
     styleSections,
@@ -1312,6 +1333,7 @@ export function StyleMakerApp() {
         donorBytes: donor.originalBytes,
         sectionName,
         bars,
+        sectionBars: sectionBarsMap,
         includeCC,
         selectedLane,
         libTab,
@@ -1348,6 +1370,7 @@ export function StyleMakerApp() {
       modified,
       savedPartMixers,
       sectionAssignments,
+      sectionBarsMap,
       sectionGuitarCasmModes,
       sectionMinorAssignments,
       sectionName,
@@ -1394,6 +1417,7 @@ export function StyleMakerApp() {
     donor,
     sectionAssignments,
     sectionMinorAssignments,
+    sectionBarsMap,
     savedPartMixers,
     workingPartMixers,
     dirtyMixerSections,
@@ -1469,6 +1493,7 @@ export function StyleMakerApp() {
       setSectionAssignments({})
       setSectionMinorAssignments({})
       setSectionGuitarCasmModes({})
+      setSectionBarsMap({})
       setStyleLibraryVoices({})
       setSavedPartMixers({})
       setWorkingPartMixers({})
@@ -2226,30 +2251,34 @@ export function StyleMakerApp() {
       const minor = variant === "minor"
       const assignment = minor ? minorAssignments[lane] : assignments[lane]
       const chord = auditionChordForPreview(minor)
+      const recipeBars =
+        sectionBarsMap[activeSectionKey] ??
+        donorSectionBars(selectedSection, donor.ticksPerQuarter)
+      const targetTicks = sectionTargetTicks(recipeBars, donor.ticksPerQuarter)
       // Only a take with notes overrides the donor; empty/stale rows use template.
-      const events =
-        assignment?.notes?.length
-          ? notesToAuditionEvents(assignment.notes, styleChannel(lane))
-          : extractLaneAuditionEvents(donor, selectedSection, lane, minor)
+      // Desktop loops takes to section.bars (appendClipSmfLoopedAsBeats).
+      const events = assignment?.notes?.length
+        ? notesToAuditionEvents(
+            loopNotesToTargetTicks(
+              assignment.notes,
+              assignment.cycleTicks || targetTicks,
+              targetTicks,
+            ),
+            styleChannel(lane),
+          )
+        : extractLaneAuditionEvents(donor, selectedSection, lane, minor)
       if (!events.length) {
         toast.error(
           `No ${minor ? "minor" : "major"} MIDI for ${displayName(lane)} in ${selectedSection.label}.`,
         )
         return
       }
-      const sectionBars = Math.max(
-        1,
-        Math.ceil(
-          (selectedSection.endTick - selectedSection.startTick) /
-            (donor.ticksPerQuarter * 4),
-        ),
-      )
       pushAuditionTempo(styleBpm)
       preview.current?.play(
         events,
         donor.ticksPerQuarter,
         styleBpm,
-        Math.max(bars, sectionBars),
+        recipeBars,
         { holdChord: chord },
       )
       setPreviewing(true)
@@ -2302,28 +2331,32 @@ export function StyleMakerApp() {
         Object.keys(minorTakes).length === 0
           ? parseYamahaStyle(modified)
           : donor
+      const recipeBars =
+        sectionBarsMap[activeSectionKey] ??
+        donorSectionBars(selectedSection, parsed.ticksPerQuarter)
+      const takeCycleTicks: Partial<Record<StyleMakerLane, number>> = {}
+      for (const lane of ALL_LANES) {
+        const take = minor
+          ? minorAssignments[lane] || assignments[lane]
+          : assignments[lane]
+        if (take?.cycleTicks) takeCycleTicks[lane] = take.cycleTicks
+      }
       const events = extractSectionAuditionEventsWithTakes(
         parsed,
         selectedSection,
         minor,
         majorTakes,
         minorTakes,
+        { bars: recipeBars, takeCycleTicks },
       )
       const bpm = Math.max(40, Math.round(parsed.bpm || donor.bpm || 120))
-      const sectionBars = Math.max(
-        1,
-        Math.ceil(
-          (selectedSection.endTick - selectedSection.startTick) /
-            (parsed.ticksPerQuarter * 4),
-        ),
-      )
       applyCurrentSectionMixerToHardware(workingMixerForSection)
       pushAuditionTempo(bpm)
       preview.current?.play(
         events,
         parsed.ticksPerQuarter,
         bpm,
-        Math.max(bars, sectionBars),
+        recipeBars,
         { holdChord: chord },
       )
       setPreviewing(true)
@@ -3384,8 +3417,21 @@ export function StyleMakerApp() {
                     value={sectionName}
                     onChange={(event) => {
                       stopPreview()
-                      setSectionName(event.target.value)
-                      setStatus(`Editing ${event.target.value}`)
+                      const nextName = event.target.value
+                      setSectionName(nextName)
+                      const range = styleSections.find(
+                        (section) =>
+                          section.label.trim().toLowerCase() ===
+                          nextName.trim().toLowerCase(),
+                      )
+                      if (range && donor) {
+                        const key = range.label.trim()
+                        setBars(
+                          sectionBarsMap[key] ??
+                            donorSectionBars(range, donor.ticksPerQuarter),
+                        )
+                      }
+                      setStatus(`Editing ${nextName}`)
                     }}
                   >
                     {(styleSections.length
@@ -3403,7 +3449,23 @@ export function StyleMakerApp() {
                   Bars
                   <select
                     value={String(bars)}
-                    onChange={(event) => setBars(Number(event.target.value))}
+                    onChange={(event) => {
+                      const nextBars = Math.max(
+                        1,
+                        Math.min(16, Number(event.target.value) || 1),
+                      )
+                      setBars(nextBars)
+                      const key = activeSectionKey || sectionName.trim()
+                      if (key) {
+                        setSectionBarsMap((prev) => ({
+                          ...prev,
+                          [key]: nextBars,
+                        }))
+                      }
+                      setStatus(
+                        `${key || "Section"} length → ${nextBars} bars (clips loop to fit)`,
+                      )
+                    }}
                   >
                     {Array.from({ length: 16 }, (_, i) => i + 1).map((n) => (
                       <option key={n} value={n}>

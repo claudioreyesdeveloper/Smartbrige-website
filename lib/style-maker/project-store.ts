@@ -23,6 +23,7 @@ export type StyleMakerProjectPayload = {
   version: 2
   sectionName: string
   bars: number
+  sectionBars?: Record<string, number>
   includeCC: boolean
   selectedLane: StyleMakerLane
   libTab: "bass" | "drums" | "guitar" | "brass"
@@ -128,6 +129,7 @@ export function payloadFromSnapshot(
     version: 2,
     sectionName: normalized.sectionName,
     bars: normalized.bars,
+    sectionBars: normalized.sectionBars || {},
     includeCC: normalized.includeCC,
     selectedLane: normalized.selectedLane,
     libTab: normalized.libTab,
@@ -158,6 +160,7 @@ export function snapshotFromProjectWire(
       donorBytes,
       sectionName: payload.sectionName,
       bars: payload.bars,
+      sectionBars: payload.sectionBars || {},
       includeCC: payload.includeCC,
       selectedLane: payload.selectedLane,
       libTab: payload.libTab,
@@ -177,6 +180,7 @@ export function snapshotFromProjectWire(
       donorBytes,
       sectionName: payload.sectionName || "Main A",
       bars: payload.bars || 2,
+      sectionBars: payload.sectionBars || {},
       includeCC: !!payload.includeCC,
       selectedLane: payload.selectedLane ?? StyleMakerLane.Rhythm1,
       libTab: payload.libTab || "bass",
