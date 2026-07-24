@@ -1763,3 +1763,354 @@ body.sm-dragging-clip .sm-lane {
   color: var(--sm-muted);
 }
 
+/* —— Compact density pass (tighter chrome, buttons, labels) —— */
+.sm-desktop {
+  font-size: 13px;
+}
+
+.sm-topbar {
+  height: 42px;
+  flex-basis: 42px;
+  padding: 0 12px;
+}
+
+.sm-topbar-brand {
+  gap: 6px;
+  font-size: 13px;
+}
+
+.sm-topbar-brand span,
+.sm-topbar-right {
+  font-size: 11px;
+  gap: 8px;
+}
+
+.sm-model-select {
+  height: 28px;
+  min-width: 120px;
+  padding: 0 8px;
+  border-radius: 6px;
+  font-size: 11px;
+}
+
+.sm-mode-tabs {
+  padding: 0 10px;
+}
+
+.sm-mode-tabs .ux-tab-nav {
+  gap: 0.25rem;
+}
+
+.sm-mode-tabs .ux-tab {
+  min-height: 34px;
+  padding: 0.35rem 0.9rem;
+  font-size: 0.8rem;
+  gap: 0.4rem;
+}
+
+.sm-setup {
+  padding: 6px 12px;
+}
+
+.sm-setup-style-load {
+  margin-top: 8px;
+  padding-top: 8px;
+  gap: 6px;
+}
+
+.sm-setup-style-load .style-catalog-controls input,
+.sm-setup-style-load .style-catalog-controls select {
+  min-height: 30px;
+  border-radius: 6px;
+  font-size: 12px;
+}
+
+.sm-toolbar {
+  gap: 8px;
+}
+
+.sm-toolbar label {
+  gap: 3px;
+  font-size: 10px;
+}
+
+.sm-toolbar select,
+.sm-toolbar input[type="text"],
+.sm-field,
+.sm-lib-stage select,
+.sm-lib-stage input,
+.sm-lib-filters select,
+.sm-lib-filters input {
+  height: 30px;
+  min-width: 120px;
+  border-radius: 6px;
+  padding: 0 8px;
+  font-size: 12px;
+}
+
+.sm-btn {
+  height: 30px;
+  border-radius: 6px;
+  padding: 0 10px;
+  font-size: 12px;
+  box-shadow: 0 0 8px rgba(74, 158, 255, 0.08);
+}
+
+.sm-btn.is-play,
+.sm-btn.is-stop {
+  min-width: 64px;
+}
+
+.sm-toolbar label.sm-check {
+  height: 30px;
+  font-size: 12px;
+  gap: 6px;
+}
+
+.sm-lanes {
+  padding: 10px 10px 12px;
+  gap: 8px;
+}
+
+.sm-lanes > .sm-lane {
+  min-height: 64px;
+}
+
+.sm-lanes > .sm-lane.is-twin {
+  min-height: 120px;
+}
+
+.sm-lane {
+  border-radius: 8px;
+  padding: 8px 10px;
+  gap: 6px 10px;
+  min-height: 64px;
+}
+
+.sm-lane-name {
+  font-size: 13px;
+}
+
+.sm-lane-sub {
+  font-size: 11px;
+  line-height: 1.35;
+}
+
+.sm-lane-actions {
+  gap: 6px;
+}
+
+.sm-lane-actions button {
+  height: 28px;
+  min-width: 28px;
+  border-radius: 6px;
+  font-size: 12px;
+  padding: 0 8px;
+}
+
+.sm-dropbox {
+  padding: 6px 6px 24px;
+  min-height: 56px;
+}
+
+.sm-dropbox-actions button {
+  height: 26px;
+  min-width: 26px;
+  border-radius: 6px;
+  font-size: 12px;
+  padding: 0 8px;
+}
+
+.sm-lib-tabs button {
+  padding: 5px 10px;
+  min-height: 28px;
+  font-size: 12px;
+}
+
+.sm-lib-head {
+  gap: 8px;
+  padding: 4px 10px;
+}
+
+.sm-lib-head h2 {
+  font-size: 13px;
+}
+
+.sm-lib-meta {
+  font-size: 11px;
+  gap: 4px 8px;
+}
+
+.sm-lib-meta .ux-status-chip,
+.sm-lib-count {
+  font-size: 10px;
+  padding: 0.1rem 0.4rem;
+}
+
+.sm-lib-filters-wrap {
+  padding: 4px 8px;
+}
+
+.sm-lib-filters-wrap .ux-collapse-head {
+  min-height: 28px;
+  padding: 0.3rem 0.65rem;
+}
+
+.sm-lib-filters {
+  gap: 8px 12px;
+}
+
+.sm-lib-filters label,
+.sm-lib-stage-grid label {
+  gap: 4px;
+  font-size: 10px;
+  min-width: 120px;
+}
+
+.sm-lib-search {
+  min-width: 200px;
+}
+
+.sm-desktop .ux-empty {
+  padding: 1.25rem 1rem;
+}
+
+.sm-desktop .ux-collapse-head {
+  min-height: 32px;
+  padding: 0.4rem 0.75rem;
+}
+
+.sm-lib-stage {
+  padding: 8px 12px 10px;
+  gap: 8px;
+}
+
+.sm-lib-stage-head {
+  gap: 12px;
+}
+
+.sm-lib-stage-head strong,
+.sm-lib-stage-target strong {
+  font-size: 12px;
+}
+
+.sm-transport {
+  gap: 6px;
+}
+
+.sm-lib-stage-grid {
+  gap: 8px 12px;
+}
+
+.sm-lib-stage-grid > label {
+  flex-basis: 140px;
+  max-width: 200px;
+}
+
+.sm-clip-head,
+.sm-clip {
+  gap: 6px;
+  padding: 0 8px;
+}
+
+.sm-clip-head {
+  height: 24px;
+  font-size: 10px;
+}
+
+.sm-clip-list {
+  padding: 4px 8px 8px;
+}
+
+.sm-clip {
+  min-height: 28px;
+  margin-bottom: 2px;
+  border-radius: 6px;
+  font-size: 12px;
+  padding-top: 3px;
+  padding-bottom: 3px;
+}
+
+.sm-status-box {
+  border-radius: 6px;
+  padding: 6px 8px;
+  font-size: 11px;
+}
+
+.sm-status-box strong {
+  font-size: 12px;
+}
+
+.sm-bottom {
+  flex-basis: 48px;
+  gap: 8px;
+  padding: 0 12px;
+}
+
+.sm-bottom .sm-status {
+  font-size: 11px;
+}
+
+.sm-part-mixer {
+  padding: 12px 14px 20px;
+  gap: 10px;
+}
+
+.sm-part-mixer-title {
+  font-size: 15px;
+}
+
+.sm-part-mixer-controls {
+  gap: 8px 12px;
+  padding: 8px 10px;
+  border-radius: 8px;
+}
+
+.sm-part-mixer-controls select {
+  height: 30px;
+  border-radius: 6px;
+  padding: 0 8px;
+  min-width: 140px;
+  font-size: 12px;
+}
+
+.sm-part-mixer-rows {
+  gap: 8px;
+}
+
+.sm-mix-row {
+  grid-template-columns: 44px minmax(200px, 1.6fr) minmax(140px, 1fr) repeat(3, 84px) 44px;
+  gap: 10px 14px;
+  min-height: 72px;
+  padding: 10px 12px;
+  border-radius: 8px;
+}
+
+.sm-mix-ch {
+  font-size: 13px;
+}
+
+.sm-mix-voice-btn {
+  font-size: 12px;
+  gap: 6px;
+}
+
+.sm-mix-action {
+  width: 30px;
+  height: 30px;
+  border-radius: 6px;
+}
+
+.sm-modal {
+  padding: 12px 12px 10px;
+}
+
+.sm-modal h3 {
+  font-size: 14px;
+}
+
+.sm-modal-actions {
+  margin-top: 10px;
+  gap: 6px;
+}
+
