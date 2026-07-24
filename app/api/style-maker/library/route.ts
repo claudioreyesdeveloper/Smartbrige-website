@@ -117,6 +117,7 @@ export async function GET(request: NextRequest) {
           sectionType: libraryClips.sectionType,
           styleTags: libraryClips.styleTags,
           noteCount: libraryClips.noteCount,
+          bars: libraryClips.bars,
           variation: libraryClips.variation,
         })
         .from(libraryClips)
@@ -131,7 +132,13 @@ export async function GET(request: NextRequest) {
     ])
 
     return NextResponse.json({
-      clips: rows,
+      clips: rows.map((row) => ({
+        ...row,
+        bars:
+          row.bars != null && Number.isFinite(Number(row.bars))
+            ? Math.max(1, Math.round(Number(row.bars)))
+            : null,
+      })),
       total: countRows[0]?.count || 0,
       limit,
       offset,

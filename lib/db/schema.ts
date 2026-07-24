@@ -40,6 +40,8 @@ export const libraryClips = pgTable(
     noteCount: integer("note_count").notNull().default(0),
     noteLo: integer("note_lo"),
     noteHi: integer("note_hi"),
+    /** Clip length in bars (from desktop midi_clip_analysis.bars). */
+    bars: real("bars"),
     midiData: bytea("midi_data").notNull(),
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),

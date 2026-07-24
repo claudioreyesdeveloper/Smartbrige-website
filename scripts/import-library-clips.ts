@@ -36,6 +36,7 @@ type SourceRow = {
   note_count: number | null
   note_lo: number | null
   note_hi: number | null
+  bars: number | null
   midi_data: Buffer
 }
 
@@ -51,13 +52,15 @@ async function main() {
   const sqlite = new Database(dbPath, { readonly: true })
   const rows = sqlite
     .prepare(
-      `SELECT id, source_kind, source_library, category_name, subcategory_name,
-              song_name, clip_name, library_name, feel_name, feel_mode,
-              time_signature, bpm, bpm_bucket, section_type, style_tags,
-              variation, midi_path, note_count, note_lo, note_hi, midi_data
-         FROM midi_clips
-        WHERE source_kind IN ('bass', 'drums', 'guitar')
-          AND midi_data IS NOT NULL`,
+      `SELECT c.id, c.source_kind, c.source_library, c.category_name, c.subcategory_name,
+              c.song_name, c.clip_name, c.library_name, c.feel_name, c.feel_mode,
+              c.time_signature, c.bpm, c.bpm_bucket, c.section_type, c.style_tags,
+              c.variation, c.midi_path, c.note_count, c.note_lo, c.note_hi, c.midi_data,
+              a.bars AS bars
+         FROM midi_clips c
+         LEFT JOIN midi_clip_analysis a ON a.clip_id = c.id
+        WHERE c.source_kind IN ('bass', 'drums', 'guitar')
+          AND c.midi_data IS NOT NULL`,
     )
     .all() as SourceRow[]
 
@@ -89,6 +92,10 @@ async function main() {
       noteCount: row.note_count || 0,
       noteLo: row.note_lo,
       noteHi: row.note_hi,
+      bars:
+        row.bars != null && Number.isFinite(Number(row.bars))
+          ? Math.max(1, Math.round(Number(row.bars)))
+          : null,
       midiData: row.midi_data,
       updatedAt: new Date(),
     }))
@@ -118,6 +125,7 @@ async function main() {
           noteCount: sql`excluded.note_count`,
           noteLo: sql`excluded.note_lo`,
           noteHi: sql`excluded.note_hi`,
+          bars: sql`excluded.bars`,
           midiData: sql`excluded.midi_data`,
           updatedAt: sql`excluded.updated_at`,
         },
