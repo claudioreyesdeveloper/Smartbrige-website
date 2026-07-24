@@ -164,7 +164,7 @@ function auditionPreferredSql(family: AuditionVoiceFamily) {
   const sub = sql`lower(coalesce(${keyboardVoices.subCategory}, ''))`
   switch (family) {
     case "drums":
-      return or(sql`${cat} = 'drumkit'`, sql`${sub} = 'drumkit`)
+      return or(sql`${cat} = 'drumkit'`, sql`${sub} = 'drumkit'`)
     case "bass":
       return or(
         and(

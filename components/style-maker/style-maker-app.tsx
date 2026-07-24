@@ -424,7 +424,7 @@ export function StyleMakerApp() {
   const [authLoaded, setAuthLoaded] = useState(false)
   const [session, midi] = useMidiSession()
   const [modeTab, setModeTab] = useState<"build" | "mixer" | "export">("build")
-  const [setupOpen, setSetupOpen] = useState(false)
+  const [setupOpen, setSetupOpen] = useState(true)
   const [libFiltersOpen, setLibFiltersOpen] = useState(false)
   const [sectionName, setSectionName] = useState("Main A")
   const [bars, setBars] = useState(2)
@@ -2652,6 +2652,19 @@ export function StyleMakerApp() {
 
   return (
     <div className="sm-desktop">
+      {/* Always mounted — Section setup CollapsibleCard unmounts children when
+          collapsed, which previously left Import buttons with a null file input. */}
+      <input
+        ref={templateInput}
+        className="sm-hidden-input"
+        type="file"
+        accept=".sty,.prs,.sst,.fps"
+        onChange={(event) => {
+          const file = event.target.files?.[0]
+          if (file) requestImportTemplate(file)
+          event.target.value = ""
+        }}
+      />
       <header className="sm-topbar">
         <div className="sm-topbar-brand">
           SmartBridge
@@ -3278,17 +3291,6 @@ export function StyleMakerApp() {
                 >
                   Import style-template…
                 </button>
-                <input
-                  ref={templateInput}
-                  className="sm-hidden-input"
-                  type="file"
-                  accept=".sty,.prs,.sst,.fps"
-                  onChange={(event) => {
-                    const file = event.target.files?.[0]
-                    if (file) requestImportTemplate(file)
-                    event.target.value = ""
-                  }}
-                />
 
                 <label className="sm-check">
                   <input
