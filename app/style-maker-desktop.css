@@ -3,15 +3,29 @@
    Matches SmartBridge desktop StyleMakerScreen Build Section.
    ========================================================================== */
 
+body:has(.sm-desktop-shell) .site-header,
+body:has(.sm-desktop-shell) .site-footer,
 body:has(.sm-desktop) .site-header,
 body:has(.sm-desktop) .site-footer {
   display: none;
 }
 
+html:has(.sm-desktop-shell),
+body:has(.sm-desktop-shell),
 html:has(.sm-desktop),
 body:has(.sm-desktop) {
   height: 100%;
   overflow: hidden;
+}
+
+.sm-desktop-shell {
+  width: 100vw;
+  height: 100vh;
+  overflow: auto;
+  background: #03050a;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
 }
 
 .sm-desktop {
@@ -30,7 +44,7 @@ body:has(.sm-desktop) {
     0 0 26px rgba(74, 158, 255, 0.28);
   --sm-glow-hot: 0 6px 24px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(124, 184, 255, 0.3) inset,
     0 0 40px rgba(74, 158, 255, 0.42);
-  min-width: 1280px;
+  min-width: 0;
   width: 100%;
   height: 100vh;
   max-height: 100vh;
@@ -108,6 +122,23 @@ body:has(.sm-desktop) {
   background: #111a2b;
   color: var(--sm-text, #e8eef8);
   font-size: 12px;
+}
+
+.sm-layout-select {
+  min-width: 168px;
+  max-width: 220px;
+}
+
+/* Fixed layout presets from the top-bar size combobox */
+.sm-desktop:not([data-layout="fit"]) {
+  width: var(--sm-layout-w, 1920px);
+  height: var(--sm-layout-h, 1080px);
+  max-height: none;
+  min-width: var(--sm-layout-w, 1920px);
+  flex: 0 0 auto;
+  zoom: var(--sm-layout-zoom, 1);
+  transform-origin: top center;
+  box-shadow: 0 0 0 1px rgba(74, 158, 255, 0.25), 0 24px 64px rgba(0, 0, 0, 0.55);
 }
 
 .sm-dot {

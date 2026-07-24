@@ -1,6 +1,13 @@
 "use client"
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type CSSProperties,
+} from "react"
 import {
   Check,
   Hammer,
@@ -234,6 +241,33 @@ const ALL_LIB_TABS: { id: LibraryTab; label: string }[] = [
 
 const LIB_TABS = ALL_LIB_TABS.filter((tab) => !LIB_TABS_HIDDEN.has(tab.id))
 
+/** Typical desktop window sizes (Statcounter / common laptop & monitor). */
+const LAYOUT_SIZE_STORAGE_KEY = "smartbridge.styleMaker.layoutSize"
+const LAYOUT_SIZE_OPTIONS = [
+  { id: "fit", label: "Fit window", width: 0, height: 0 },
+  { id: "1280x720", label: "1280 × 720", width: 1280, height: 720 },
+  { id: "1366x768", label: "1366 × 768 (laptop)", width: 1366, height: 768 },
+  { id: "1440x900", label: "1440 × 900", width: 1440, height: 900 },
+  { id: "1536x864", label: "1536 × 864", width: 1536, height: 864 },
+  { id: "1600x900", label: "1600 × 900", width: 1600, height: 900 },
+  { id: "1920x1080", label: "1920 × 1080 (Full HD)", width: 1920, height: 1080 },
+  { id: "2560x1440", label: "2560 × 1440 (QHD)", width: 2560, height: 1440 },
+] as const
+type LayoutSizeId = (typeof LAYOUT_SIZE_OPTIONS)[number]["id"]
+
+function readStoredLayoutSize(): LayoutSizeId {
+  if (typeof window === "undefined") return "fit"
+  try {
+    const raw = window.localStorage.getItem(LAYOUT_SIZE_STORAGE_KEY)
+    if (LAYOUT_SIZE_OPTIONS.some((option) => option.id === raw)) {
+      return raw as LayoutSizeId
+    }
+  } catch {
+    /* private mode */
+  }
+  return "fit"
+}
+
 function sourceKindForLibraryTab(tab: LibraryTab): string {
   return tab
 }
@@ -423,6 +457,8 @@ export function StyleMakerApp() {
   const [authLoaded, setAuthLoaded] = useState(false)
   const [session, midi] = useMidiSession()
   const [modeTab, setModeTab] = useState<"build" | "mixer">("build")
+  const [layoutSizeId, setLayoutSizeId] = useState<LayoutSizeId>("fit")
+  const [layoutZoom, setLayoutZoom] = useState(1)
   const [setupOpen, setSetupOpen] = useState(true)
   const [libFiltersOpen, setLibFiltersOpen] = useState(false)
   const [sectionName, setSectionName] = useState("Main A")
@@ -540,6 +576,45 @@ export function StyleMakerApp() {
     preview.current = new StylePreviewPlayer(session, () => setPreviewing(false))
     return () => preview.current?.stop()
   }, [session])
+
+  useEffect(() => {
+    setLayoutSizeId(readStoredLayoutSize())
+  }, [])
+
+  useEffect(() => {
+    const option = LAYOUT_SIZE_OPTIONS.find((item) => item.id === layoutSizeId)
+    if (!option || option.id === "fit" || !option.width || !option.height) {
+      setLayoutZoom(1)
+      return
+    }
+    const updateZoom = () => {
+      const zoom = Math.min(
+        window.innerWidth / option.width,
+        window.innerHeight / option.height,
+        1,
+      )
+      setLayoutZoom(Number.isFinite(zoom) && zoom > 0 ? zoom : 1)
+    }
+    updateZoom()
+    window.addEventListener("resize", updateZoom)
+    return () => window.removeEventListener("resize", updateZoom)
+  }, [layoutSizeId])
+
+  const selectedLayoutSize = useMemo(
+    () =>
+      LAYOUT_SIZE_OPTIONS.find((item) => item.id === layoutSizeId) ||
+      LAYOUT_SIZE_OPTIONS[0],
+    [layoutSizeId],
+  )
+
+  const onLayoutSizeChange = (id: LayoutSizeId) => {
+    setLayoutSizeId(id)
+    try {
+      window.localStorage.setItem(LAYOUT_SIZE_STORAGE_KEY, id)
+    } catch {
+      /* private mode */
+    }
+  }
 
   // Resolve Clerk / local-dev user id without useAuth (ClerkProvider is optional).
   useEffect(() => {
@@ -2732,7 +2807,20 @@ export function StyleMakerApp() {
   }
 
   return (
-    <div className="sm-desktop">
+    <div className="sm-desktop-shell">
+    <div
+      className="sm-desktop"
+      data-layout={layoutSizeId}
+      style={
+        layoutSizeId === "fit"
+          ? undefined
+          : ({
+              "--sm-layout-w": `${selectedLayoutSize.width}px`,
+              "--sm-layout-h": `${selectedLayoutSize.height}px`,
+              "--sm-layout-zoom": String(layoutZoom),
+            } as CSSProperties)
+      }
+    >
       {/* Always mounted — Section setup CollapsibleCard unmounts children when
           collapsed, which previously left Import buttons with a null file input. */}
       <input
@@ -2752,6 +2840,22 @@ export function StyleMakerApp() {
           <span>Style Maker · web desktop</span>
         </div>
         <div className="sm-topbar-right">
+          <select
+            id="sm-layout-size"
+            className="sm-model-select sm-layout-select"
+            aria-label="Window size"
+            value={layoutSizeId}
+            title="Typical desktop sizes — scales Style Maker to fit"
+            onChange={(event) =>
+              onLayoutSizeChange(event.target.value as LayoutSizeId)
+            }
+          >
+            {LAYOUT_SIZE_OPTIONS.map((option) => (
+              <option key={option.id} value={option.id}>
+                {option.label}
+              </option>
+            ))}
+          </select>
           <select
             id="sm-keyboard-model"
             className="sm-model-select"
@@ -4309,6 +4413,7 @@ export function StyleMakerApp() {
           </footer>
         </div>
       )}
+    </div>
     </div>
   )
 }
