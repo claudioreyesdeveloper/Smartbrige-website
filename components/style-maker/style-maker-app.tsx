@@ -6,7 +6,6 @@ import {
   Hammer,
   LoaderCircle,
   Music2,
-  Package,
   SlidersHorizontal,
   Upload,
 } from "lucide-react"
@@ -423,7 +422,7 @@ export function StyleMakerApp() {
   const [accountUserId, setAccountUserId] = useState("local-dev-user")
   const [authLoaded, setAuthLoaded] = useState(false)
   const [session, midi] = useMidiSession()
-  const [modeTab, setModeTab] = useState<"build" | "mixer" | "export">("build")
+  const [modeTab, setModeTab] = useState<"build" | "mixer">("build")
   const [setupOpen, setSetupOpen] = useState(true)
   const [libFiltersOpen, setLibFiltersOpen] = useState(false)
   const [sectionName, setSectionName] = useState("Main A")
@@ -2817,7 +2816,7 @@ export function StyleMakerApp() {
           aria-label="Style Maker modes"
           activeId={modeTab}
           onChange={(id) => {
-            const next = id as "build" | "mixer" | "export"
+            const next = id as "build" | "mixer"
             setModeTab(next)
             if (next === "mixer" && sectionMixerKey) {
               setWorkingPartMixers((prev) => {
@@ -2837,7 +2836,6 @@ export function StyleMakerApp() {
           tabs={[
             { id: "build", label: "Build", icon: Hammer },
             { id: "mixer", label: "Mixer", icon: SlidersHorizontal },
-            { id: "export", label: "Export", icon: Package },
           ]}
         />
       </div>
@@ -3261,80 +3259,6 @@ export function StyleMakerApp() {
             }
           />
         )
-      ) : modeTab === "export" ? (
-        <div className="sm-export">
-          <div className="sm-export-card">
-            <p className="ux-section-label">Export</p>
-            <h2>Save or send your style</h2>
-            <p>
-              Save named projects to your account, download a native .sty/.prs,
-              or transfer straight to USER:\STYLE on the keyboard.
-            </p>
-            <div className="sm-export-actions">
-              <button
-                type="button"
-                className="sm-btn"
-                onClick={() => void beginOpenProjects()}
-                disabled={projectBusy}
-              >
-                Open…
-              </button>
-              <button
-                type="button"
-                className="sm-btn"
-                onClick={() => void saveWorkspaceNow()}
-                disabled={!donorFile || projectBusy}
-              >
-                Save
-              </button>
-              <button
-                type="button"
-                className="sm-btn"
-                onClick={beginSaveAs}
-                disabled={!donorFile || projectBusy}
-              >
-                Save As…
-              </button>
-              <button
-                type="button"
-                className="sm-btn"
-                onClick={() => setDeleteProjectPrompt(true)}
-                disabled={!cloudProjectId || projectBusy}
-              >
-                Delete…
-              </button>
-              <button
-                type="button"
-                className="sm-btn is-primary"
-                onClick={exportFile}
-                disabled={!donorFile}
-              >
-                Export style…
-              </button>
-              <button
-                type="button"
-                className="sm-btn"
-                onClick={beginTransferToKeyboard}
-                disabled={!donorFile || !midi.connected}
-              >
-                Transfer to keyboard…
-              </button>
-            </div>
-            {!donorFile ? (
-              <p>Import a template and assign clips in Build first.</p>
-            ) : (
-              <p>
-                {cloudProjectName
-                  ? `Account project: ${cloudProjectName}`
-                  : "Unsaved project (not yet on your account)"}
-                {" · "}
-                Template: {donorFile.name}
-                {modified ? " · ready to export" : " · assign a clip or save a mix"}
-                {projectDirty ? " · local changes" : ""}
-              </p>
-            )}
-          </div>
-        </div>
       ) : (
         <div className="sm-build">
           <div className="sm-setup">
@@ -4348,6 +4272,15 @@ export function StyleMakerApp() {
               title="Save a new named project to your account"
             >
               Save As…
+            </button>
+            <button
+              type="button"
+              className="sm-btn"
+              onClick={() => setDeleteProjectPrompt(true)}
+              disabled={!cloudProjectId || projectBusy}
+              title="Delete the open account project"
+            >
+              Delete…
             </button>
             <button type="button" className="sm-btn" onClick={exportFile} disabled={!modified}>
               Export style…
