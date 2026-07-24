@@ -114,12 +114,12 @@ describe("library panel helpers", () => {
     ).toBe("gm")
   })
 
-  it("resolves drum Auto channel overrides like lookupDrumKitForCategory", () => {
-    expect(drumKitChannelOverrideForCategory("Funk Percussion")).toBe(9)
-    expect(drumKitChannelOverrideForCategory("action_drums")).toBe(9)
-    expect(drumKitChannelOverrideForCategory("Latin Tumbao")).toBe(9)
+  it("resolves drum Auto channel to Rhythm 2 (ch 10) for all categories", () => {
+    expect(drumKitChannelOverrideForCategory("Funk Percussion")).toBe(null)
+    expect(drumKitChannelOverrideForCategory("action_drums")).toBe(null)
+    expect(drumKitChannelOverrideForCategory("Latin Tumbao")).toBe(null)
     expect(drumKitChannelOverrideForCategory("Pop")).toBe(null)
-    expect(resolveDrumAuditionChannel(DRUM_AUTO_CHANNEL, "funk_percussion")).toBe(9)
+    expect(resolveDrumAuditionChannel(DRUM_AUTO_CHANNEL, "funk_percussion")).toBe(10)
     expect(resolveDrumAuditionChannel(DRUM_AUTO_CHANNEL, "Pop")).toBe(10)
     expect(resolveDrumAuditionChannel(11, "funk_percussion")).toBe(11)
   })

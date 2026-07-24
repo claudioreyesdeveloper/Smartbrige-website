@@ -56,7 +56,9 @@ describe("libraryDefaultsFromStyle", () => {
     expect(defaults.bassVoice?.id).toBe("ElectricBass")
     expect(defaults.drumVoice?.id).toBe("StandardKit")
     expect(defaults.bassChannel).toBe(11)
-    expect(defaults.drumChannel).toBe(9)
+    // Library drums always audition on Rhythm 2 (ch 10), even when the
+    // donor kit voice was found on Rhythm 1.
+    expect(defaults.drumChannel).toBe(10)
   })
 
   it("prefers section mixer overrides over snapshots", () => {

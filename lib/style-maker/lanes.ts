@@ -332,6 +332,37 @@ export function defaultPartTypeIndex(
   return 0
 }
 
+/**
+ * Resolve the Part Type combo index from a lane's stored sourceKind + guitar
+ * mode (inverse of applyPartTypeChoice). Used by the per-lane Part Type UI.
+ */
+export function partTypeIndexFromState(
+  lane: StyleMakerLane,
+  sourceKind: string,
+  guitarMode: StyleMakerGuitarCasmMode,
+): number {
+  const k = (sourceKind || "").toLowerCase()
+  if (lane === StyleMakerLane.Pad) {
+    if (k === "brass" || k === "solo") return 1
+    if (k === "guitar") return 2
+    return 0
+  }
+  if (lane === StyleMakerLane.Chord1 || lane === StyleMakerLane.Chord2) {
+    if (k === "brass") return 0
+    if (guitarMode === StyleMakerGuitarCasmMode.YamahaSourceStrum) return 2
+    if (guitarMode === StyleMakerGuitarCasmMode.YamahaSourceArpeggio) return 3
+    if (guitarMode === StyleMakerGuitarCasmMode.YamahaSourceMixed) return 4
+    return 1
+  }
+  // Phrase1 / Phrase2
+  if (k === "solo") return 0
+  if (k === "brass") return 1
+  if (guitarMode === StyleMakerGuitarCasmMode.YamahaSourceStrum) return 3
+  if (guitarMode === StyleMakerGuitarCasmMode.YamahaSourceArpeggio) return 4
+  if (guitarMode === StyleMakerGuitarCasmMode.YamahaSourceMixed) return 5
+  return 2
+}
+
 /** @deprecated Use StyleMakerLane assignments directly. Kept for older call sites. */
 export type ProductLane = "drums" | "bass" | "guitar"
 

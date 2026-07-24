@@ -170,22 +170,20 @@ export function timeFeelFactor(id: TimeFeelId): number {
 }
 
 /**
- * LibraryPhraseService::lookupDrumKitForCategory channel overrides (Genos).
- * Only applied when drum channel is Auto.
+ * Former Genos secondary-kit overrides (ch 9) are intentionally unused for
+ * Style Maker library audition — drums always target Rhythm 2 (ch 10).
+ * Kept as a null stub so call sites/tests stay explicit.
  */
 export function drumKitChannelOverrideForCategory(
-  categoryName: string | null | undefined,
+  _categoryName: string | null | undefined,
 ): number | null {
-  const cat = (categoryName || "").trim().toLowerCase().replace(/ /g, "_")
-  if (cat === "funk_percussion") return 9
-  if (cat === "action_drums" || cat === "cinematic_percussion") return 9
-  if (cat === "latin_percussion" || cat.startsWith("latin_")) return 9
   return null
 }
 
+/** Library drum audition: Auto → ch 10 (Rhythm 2); manual 1–16 respected. */
 export function resolveDrumAuditionChannel(
   channelSelection: number,
-  categoryName: string | null | undefined,
+  categoryName?: string | null | undefined,
 ): number {
   if (channelSelection !== DRUM_AUTO_CHANNEL) {
     return Math.max(1, Math.min(16, channelSelection))

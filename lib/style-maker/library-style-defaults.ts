@@ -89,9 +89,10 @@ export function libraryDefaultsFromStyle(options: {
     "Style bass",
   )
 
+  // Prefer Rhythm 2 (ch 10) for the kit voice — library drum audition targets
+  // that part; fall back to Rhythm 1 only for the voice identity.
   let drumVoice: VoiceChoice | null = null
-  let drumLane: StyleMakerLane | null = null
-  for (const lane of [StyleMakerLane.Rhythm1, StyleMakerLane.Rhythm2]) {
+  for (const lane of [StyleMakerLane.Rhythm2, StyleMakerLane.Rhythm1]) {
     const mixer = mixerForLane(lane, sectionMixer, snapshots)
     const choice = voiceChoiceFromMixerSettings(
       mixer,
@@ -100,7 +101,6 @@ export function libraryDefaultsFromStyle(options: {
     )
     if (choice) {
       drumVoice = choice
-      drumLane = lane
       break
     }
   }
@@ -109,6 +109,7 @@ export function libraryDefaultsFromStyle(options: {
     bassVoice,
     drumVoice,
     bassChannel: bassVoice ? styleChannel(StyleMakerLane.Bass) : null,
-    drumChannel: drumLane != null ? styleChannel(drumLane) : null,
+    // Always audition/assign library drums on Rhythm 2 (MIDI ch 10).
+    drumChannel: drumVoice ? styleChannel(StyleMakerLane.Rhythm2) : null,
   }
 }

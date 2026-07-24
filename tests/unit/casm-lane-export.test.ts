@@ -6,6 +6,7 @@ import {
   laneAccepts,
   laneNeedsPartTypePrompt,
   partTypeChoicesForLane,
+  partTypeIndexFromState,
   StyleMakerGuitarCasmMode,
   StyleMakerLane,
 } from "@/lib/style-maker/lanes"
@@ -63,12 +64,35 @@ describe("StyleMakerLanes accepts + part type (desktop verbatim)", () => {
     })
   })
 
-  it("keeps desktop part-type labels", () => {
+  it("keeps desktop part-type labels and reverse index", () => {
     expect(partTypeChoicesForLane(StyleMakerLane.Chord1)[0]).toBe(
       "Chord comp / keys",
     )
     expect(partTypeChoicesForLane(StyleMakerLane.Pad)[0]).toBe("Pad / sustained")
     expect(partTypeChoicesForLane(StyleMakerLane.Phrase1)).toHaveLength(6)
+    expect(partTypeChoicesForLane(StyleMakerLane.Pad)).toHaveLength(3)
+    expect(partTypeChoicesForLane(StyleMakerLane.Chord2)).toHaveLength(5)
+    expect(
+      partTypeIndexFromState(
+        StyleMakerLane.Pad,
+        "pad",
+        StyleMakerGuitarCasmMode.RenderedMegaVoice,
+      ),
+    ).toBe(0)
+    expect(
+      partTypeIndexFromState(
+        StyleMakerLane.Chord1,
+        "guitar",
+        StyleMakerGuitarCasmMode.YamahaSourceStrum,
+      ),
+    ).toBe(2)
+    expect(
+      partTypeIndexFromState(
+        StyleMakerLane.Phrase2,
+        "solo",
+        StyleMakerGuitarCasmMode.RenderedMegaVoice,
+      ),
+    ).toBe(0)
     expect(guitarCasmModeName(StyleMakerGuitarCasmMode.YamahaSourceMixed)).toBe(
       "Yamaha Guitar source - Mixed",
     )

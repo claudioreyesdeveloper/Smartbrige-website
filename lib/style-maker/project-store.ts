@@ -29,6 +29,10 @@ export type StyleMakerProjectPayload = {
   sectionAssignments: Record<string, SectionAssignmentMap>
   sectionMinorAssignments?: Record<string, SectionAssignmentMap>
   guitarCasmModes: Partial<Record<StyleMakerLane, StyleMakerGuitarCasmMode>>
+  sectionGuitarCasmModes?: Record<
+    string,
+    Partial<Record<StyleMakerLane, StyleMakerGuitarCasmMode>>
+  >
   auditionChannels: AuditionChannelMap
   voiceSelection: VoiceSelectionMap
   partMixers?: Record<string, PartMixerMap>
@@ -130,6 +134,7 @@ export function payloadFromSnapshot(
     sectionAssignments: normalized.sectionAssignments || {},
     sectionMinorAssignments: normalized.sectionMinorAssignments || {},
     guitarCasmModes: normalized.guitarCasmModes || {},
+    sectionGuitarCasmModes: normalized.sectionGuitarCasmModes || {},
     auditionChannels: normalized.auditionChannels,
     voiceSelection: normalized.voiceSelection,
     partMixers: normalized.partMixers || {},
@@ -159,6 +164,7 @@ export function snapshotFromProjectWire(
       sectionAssignments: payload.sectionAssignments || {},
       sectionMinorAssignments: payload.sectionMinorAssignments || {},
       guitarCasmModes: payload.guitarCasmModes || {},
+      sectionGuitarCasmModes: payload.sectionGuitarCasmModes || {},
       auditionChannels: payload.auditionChannels,
       voiceSelection: payload.voiceSelection,
       partMixers: payload.partMixers || {},
@@ -177,6 +183,7 @@ export function snapshotFromProjectWire(
       sectionAssignments: payload.sectionAssignments || {},
       sectionMinorAssignments: payload.sectionMinorAssignments || {},
       guitarCasmModes: payload.guitarCasmModes || {},
+      sectionGuitarCasmModes: payload.sectionGuitarCasmModes || {},
       auditionChannels: payload.auditionChannels,
       voiceSelection: payload.voiceSelection,
       partMixers: payload.partMixers || {},

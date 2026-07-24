@@ -62,9 +62,9 @@ import {
   guitarCasmModeName,
   isYamahaGuitarSourceMode,
   laneAccepts,
-  laneCanUseGuitar,
   laneNeedsPartTypePrompt,
   partTypeChoicesForLane,
+  partTypeIndexFromState,
   sectionIsIntroOrEnding,
   sourceKindForLane,
   StyleMakerGuitarCasmMode,
@@ -235,14 +235,6 @@ const ALL_LIB_TABS: { id: LibraryTab; label: string }[] = [
 
 const LIB_TABS = ALL_LIB_TABS.filter((tab) => !LIB_TABS_HIDDEN.has(tab.id))
 
-const GUITAR_CASM_MODE_OPTIONS: StyleMakerGuitarCasmMode[] = [
-  StyleMakerGuitarCasmMode.RenderedMegaVoice,
-  StyleMakerGuitarCasmMode.PreserveDonor,
-  StyleMakerGuitarCasmMode.YamahaSourceStrum,
-  StyleMakerGuitarCasmMode.YamahaSourceArpeggio,
-  StyleMakerGuitarCasmMode.YamahaSourceMixed,
-]
-
 function sourceKindForLibraryTab(tab: LibraryTab): string {
   return tab
 }
@@ -301,6 +293,14 @@ function instrumentForLibTab(tab: LibraryTab): AuditionInstrument {
   if (tab === "bass") return "bass"
   if (tab === "guitar") return "guitar"
   return "brass"
+}
+
+/** Part card focused when browsing / selecting from a library tab. */
+function laneForLibTab(tab: LibraryTab): StyleMakerLane | null {
+  if (tab === "drums") return StyleMakerLane.Rhythm2
+  if (tab === "bass") return StyleMakerLane.Bass
+  if (tab === "guitar") return StyleMakerLane.Chord1
+  return null
 }
 
 function formatClipTitle(name: string | null | undefined, id: number): string {
@@ -483,8 +483,12 @@ export function StyleMakerApp() {
   const [transferNamePrompt, setTransferNamePrompt] = useState<{
     name: string
   } | null>(null)
-  const [guitarCasmModes, setGuitarCasmModes] = useState<
-    Partial<Record<StyleMakerLane, StyleMakerGuitarCasmMode>>
+  /**
+   * Per-section Part Type / guitar modes
+   * (desktop StyleSectionRecipe::guitarCasmModes).
+   */
+  const [sectionGuitarCasmModes, setSectionGuitarCasmModes] = useState<
+    Record<string, Partial<Record<StyleMakerLane, StyleMakerGuitarCasmMode>>>
   >({})
   /** Saved StyleSectionRecipe::partMixer per section display label. */
   const [savedPartMixers, setSavedPartMixers] = useState<
@@ -701,7 +705,20 @@ export function StyleMakerApp() {
       )
       setSectionAssignments(nextSectionAssignments)
       setSectionMinorAssignments(nextSectionMinors)
-      setGuitarCasmModes(cached.guitarCasmModes || {})
+      {
+        const sectionModes = { ...(cached.sectionGuitarCasmModes || {}) }
+        // Migrate legacy flat map onto the cached active section.
+        if (
+          !Object.keys(sectionModes).length &&
+          cached.guitarCasmModes &&
+          Object.keys(cached.guitarCasmModes).length
+        ) {
+          sectionModes[cached.sectionName.trim() || "Main A"] = {
+            ...cached.guitarCasmModes,
+          }
+        }
+        setSectionGuitarCasmModes(sectionModes)
+      }
       setAuditionChannels(cached.auditionChannels || defaultAuditionChannels())
       setVoiceSelection(cached.voiceSelection || defaultVoiceSelection())
       setSavedPartMixers(cached.partMixers || {})
@@ -866,6 +883,31 @@ export function StyleMakerApp() {
       if (!key) return
       setSectionMinorAssignments((prev) => {
         const current = prev[key] ?? emptyAssignments()
+        const next = typeof update === "function" ? update(current) : update
+        return { ...prev, [key]: next }
+      })
+    },
+    [],
+  )
+
+  /** Active section's Part Type / guitar modes. */
+  const guitarCasmModes = useMemo(
+    () => sectionGuitarCasmModes[activeSectionKey] ?? {},
+    [activeSectionKey, sectionGuitarCasmModes],
+  )
+
+  const setGuitarCasmModes = useCallback(
+    (
+      update:
+        | Partial<Record<StyleMakerLane, StyleMakerGuitarCasmMode>>
+        | ((
+            prev: Partial<Record<StyleMakerLane, StyleMakerGuitarCasmMode>>,
+          ) => Partial<Record<StyleMakerLane, StyleMakerGuitarCasmMode>>),
+    ) => {
+      const key = activeSectionKeyRef.current
+      if (!key) return
+      setSectionGuitarCasmModes((prev) => {
+        const current = prev[key] ?? {}
         const next = typeof update === "function" ? update(current) : update
         return { ...prev, [key]: next }
       })
@@ -1093,13 +1135,14 @@ export function StyleMakerApp() {
       const minorMap = sectionMinorAssignments[key]
       const lanes: Partial<Record<StyleMakerLane, LaneReplacement>> = {}
       const minorLanes: Partial<Record<StyleMakerLane, LaneReplacement>> = {}
+      const sectionModes = sectionGuitarCasmModes[key] ?? {}
       if (laneMap) {
         for (const lane of ALL_LANES) {
           const a = laneMap[lane]
           if (!a) continue
           lanes[lane] = laneReplacementFromAssignment(
             a,
-            guitarCasmModes[lane] ?? StyleMakerGuitarCasmMode.RenderedMegaVoice,
+            sectionModes[lane] ?? StyleMakerGuitarCasmMode.RenderedMegaVoice,
           )
         }
       }
@@ -1109,7 +1152,7 @@ export function StyleMakerApp() {
           if (!m) continue
           minorLanes[lane] = laneReplacementFromAssignment(
             m,
-            guitarCasmModes[lane] ?? StyleMakerGuitarCasmMode.RenderedMegaVoice,
+            sectionModes[lane] ?? StyleMakerGuitarCasmMode.RenderedMegaVoice,
           )
         }
       }
@@ -1138,9 +1181,9 @@ export function StyleMakerApp() {
   }, [
     dirtyMixerSections,
     donor,
-    guitarCasmModes,
     savedPartMixers,
     sectionAssignments,
+    sectionGuitarCasmModes,
     sectionMinorAssignments,
     styleSections,
     workingPartMixers,
@@ -1202,7 +1245,8 @@ export function StyleMakerApp() {
         sectionMinorAssignments: sectionMinorRows,
         assignments: sectionRows[activeKey] || {},
         minorAssignments: sectionMinorRows[activeKey] || {},
-        guitarCasmModes,
+        guitarCasmModes: sectionGuitarCasmModes[activeKey] || {},
+        sectionGuitarCasmModes,
         auditionChannels,
         voiceSelection,
         partMixers: options?.partMixers ?? savedPartMixers,
@@ -1225,12 +1269,12 @@ export function StyleMakerApp() {
       cloudProjectName,
       donor,
       donorFile,
-      guitarCasmModes,
       includeCC,
       libTab,
       modified,
       savedPartMixers,
       sectionAssignments,
+      sectionGuitarCasmModes,
       sectionMinorAssignments,
       sectionName,
       selectedLane,
@@ -1279,7 +1323,7 @@ export function StyleMakerApp() {
     savedPartMixers,
     workingPartMixers,
     dirtyMixerSections,
-    guitarCasmModes,
+    sectionGuitarCasmModes,
     workspaceHydrated,
   ])
 
@@ -1350,7 +1394,7 @@ export function StyleMakerApp() {
       setSectionName(preferred.label.trim())
       setSectionAssignments({})
       setSectionMinorAssignments({})
-      setGuitarCasmModes({})
+      setSectionGuitarCasmModes({})
       setStyleLibraryVoices({})
       setSavedPartMixers({})
       setWorkingPartMixers({})
@@ -1625,6 +1669,8 @@ export function StyleMakerApp() {
     }
     try {
       setSelectedClipId(clip.id)
+      const mapped = laneForLibTab(libTab)
+      if (mapped != null) setSelectedLane(mapped)
       const bytes = await fetchClipMidi(clip.id)
       const channel = resolveClipAuditionChannel(clip)
       const voice = activeVoice
@@ -2427,6 +2473,7 @@ export function StyleMakerApp() {
       setModified(null)
       setSectionAssignments({})
       setSectionMinorAssignments({})
+      setSectionGuitarCasmModes({})
       setSavedPartMixers({})
       setWorkingPartMixers({})
       setDirtyMixerSections(new Set())
@@ -2596,53 +2643,72 @@ export function StyleMakerApp() {
     return `Empty — drop .mid / assign · ${acceptedHint(lane)}`
   }
 
-  const setGuitarCasmModeForLane = (
-    lane: StyleMakerLane,
-    mode: StyleMakerGuitarCasmMode,
-  ) => {
+  /**
+   * Desktop BuildTab::choosePartTypeForLaneAsync — Part Type is lane-specific
+   * (Chord / Pad / Phrase lists differ). Triggered on drag/assign; also shown
+   * on the selected lane so each card keeps its own stored choice.
+   */
+  const setPartTypeForLane = (lane: StyleMakerLane, selectedId1Based: number) => {
     const assignment =
       selectedVariant === "minor"
         ? minorAssignments[lane]
         : assignments[lane]
+    const choice = applyPartTypeChoice(
+      lane,
+      selectedId1Based,
+      assignment?.sourceKind || sourceKindForLane(lane),
+    )
     if (
       assignment &&
-      assignment.sourceKind === "guitar" &&
-      isYamahaGuitarSourceMode(mode) &&
+      choice.sourceKind === "guitar" &&
+      isYamahaGuitarSourceMode(choice.guitarMode) &&
       !assignment.frozen
     ) {
       toast.error(
-        `${displayName(lane)}: ${guitarCasmModeName(mode)} requires a frozen/imported Yamaha Guitar-source MIDI take. Normal rendered guitar MIDI must use Rendered MegaVoice performance.`,
+        `${displayName(lane)}: ${guitarCasmModeName(choice.guitarMode)} requires a frozen/imported Yamaha Guitar-source MIDI take. Normal rendered guitar MIDI must use Rendered MegaVoice performance.`,
       )
       return
     }
-    setGuitarCasmModes((prev) => ({ ...prev, [lane]: mode }))
+    setGuitarCasmModes((prev) => ({ ...prev, [lane]: choice.guitarMode }))
+    if (assignment && assignment.sourceKind !== choice.sourceKind) {
+      const nextAssignment = { ...assignment, sourceKind: choice.sourceKind }
+      if (selectedVariant === "minor") {
+        setMinorAssignments((prev) => ({ ...prev, [lane]: nextAssignment }))
+      } else {
+        setAssignments((prev) => ({ ...prev, [lane]: nextAssignment }))
+      }
+    }
   }
 
-  /** Only on the selected Chord/Pad/Phrase lane — not above the whole list. */
-  const guitarCasmControlForLane = (lane: StyleMakerLane) => {
-    if (selectedLane !== lane || !laneCanUseGuitar(lane)) return null
+  /** Only on the selected Chord/Pad/Phrase lane — desktop Part Type lists. */
+  const partTypeControlForLane = (lane: StyleMakerLane) => {
+    if (selectedLane !== lane || !laneNeedsPartTypePrompt(lane)) return null
+    const assignment =
+      selectedVariant === "minor"
+        ? minorAssignments[lane]
+        : assignments[lane]
     const mode =
       guitarCasmModes[lane] ?? StyleMakerGuitarCasmMode.RenderedMegaVoice
+    const sourceKind = assignment?.sourceKind || sourceKindForLane(lane)
+    const selectedIndex = partTypeIndexFromState(lane, sourceKind, mode)
+    const choices = partTypeChoicesForLane(lane)
     return (
       <div
         className="sm-guitar-casm-row"
         onClick={(event) => event.stopPropagation()}
         onKeyDown={(event) => event.stopPropagation()}
       >
-        <span>Guitar CASM</span>
+        <span>Part Type</span>
         <select
-          value={String(mode)}
+          value={String(selectedIndex)}
           onChange={(event) => {
-            setGuitarCasmModeForLane(
-              lane,
-              Number(event.target.value) as StyleMakerGuitarCasmMode,
-            )
+            setPartTypeForLane(lane, Number(event.target.value) + 1)
           }}
-          title="Applies only to this guitar-capable lane."
+          title={`Part Type for ${displayName(lane)} only (desktop BuildTab).`}
         >
-          {GUITAR_CASM_MODE_OPTIONS.map((option) => (
-            <option key={option} value={String(option)}>
-              {guitarCasmModeName(option)}
+          {choices.map((label, index) => (
+            <option key={label} value={String(index)}>
+              {label}
             </option>
           ))}
         </select>
@@ -3477,7 +3543,7 @@ export function StyleMakerApp() {
                           (Channel {styleChannel(lane)})
                         </span>
                       </div>
-                      {guitarCasmControlForLane(lane)}
+                      {partTypeControlForLane(lane)}
                       <div className="sm-lane-twins">
                         {(
                           [
@@ -3643,7 +3709,7 @@ export function StyleMakerApp() {
                         (Channel {styleChannel(lane)})
                       </span>
                     </div>
-                    {guitarCasmControlForLane(lane)}
+                    {partTypeControlForLane(lane)}
                     <div className="sm-lane-actions">
                       <button
                         type="button"
@@ -3703,15 +3769,17 @@ export function StyleMakerApp() {
                     className={libTab === tab.id ? "is-active" : ""}
                     onClick={() => {
                       setLibTab(tab.id)
-                      const mapped =
-                        tab.id === "drums"
-                          ? StyleMakerLane.Rhythm1
-                          : tab.id === "bass"
-                            ? StyleMakerLane.Bass
-                            : tab.id === "guitar"
-                              ? StyleMakerLane.Chord1
-                              : selectedLane
-                      if (tab.id !== "brass") setSelectedLane(mapped)
+                      const mapped = laneForLibTab(tab.id)
+                      if (mapped != null) setSelectedLane(mapped)
+                      // Heal older sessions that pinned drums to Rhythm 1 (ch 9).
+                      if (tab.id === "drums") {
+                        setDrumChannelSelection((prev) =>
+                          prev === 9 ? DRUM_AUTO_CHANNEL : prev,
+                        )
+                        setAuditionChannels((prev) =>
+                          prev.drums === 9 ? { ...prev, drums: 10 } : prev,
+                        )
+                      }
                     }}
                   >
                     {tab.label}
@@ -3905,12 +3973,18 @@ export function StyleMakerApp() {
                           draggable
                           aria-selected={selectedClipId === clip.id}
                           className={`sm-clip${selectedClipId === clip.id ? " is-selected" : ""}`}
-                          onClick={() => setSelectedClipId(clip.id)}
+                          onClick={() => {
+                            setSelectedClipId(clip.id)
+                            const mapped = laneForLibTab(libTab)
+                            if (mapped != null) setSelectedLane(mapped)
+                          }}
                           onDoubleClick={() => void auditionClip(clip)}
                           onKeyDown={(event) => {
                             if (event.key === "Enter" || event.key === " ") {
                               event.preventDefault()
                               setSelectedClipId(clip.id)
+                              const mapped = laneForLibTab(libTab)
+                              if (mapped != null) setSelectedLane(mapped)
                             }
                           }}
                           onDragStart={(event) => {

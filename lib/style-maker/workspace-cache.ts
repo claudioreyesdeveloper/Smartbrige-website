@@ -61,7 +61,19 @@ export type StyleMakerWorkspaceSnapshot = {
    */
   assignments?: SectionAssignmentMap
   minorAssignments?: SectionAssignmentMap
+  /**
+   * Active-section guitar/part modes (legacy flat map). Prefer
+   * sectionGuitarCasmModes — desktop StyleSectionRecipe::guitarCasmModes.
+   */
   guitarCasmModes: Partial<Record<StyleMakerLane, StyleMakerGuitarCasmMode>>
+  /**
+   * Per-section Part Type / guitar CASM modes keyed by section label
+   * (StyleSectionRecipe::guitarCasmModes per section).
+   */
+  sectionGuitarCasmModes?: Record<
+    string,
+    Partial<Record<StyleMakerLane, StyleMakerGuitarCasmMode>>
+  >
   auditionChannels: AuditionChannelMap
   voiceSelection: VoiceSelectionMap
   /**
