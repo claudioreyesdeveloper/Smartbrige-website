@@ -552,6 +552,8 @@ export function StyleMakerApp() {
   const [pendingTemplateImport, setPendingTemplateImport] = useState<{
     file: File
   } | null>(null)
+  /** Confirm before Clear all purges the in-app workspace. */
+  const [clearAllPrompt, setClearAllPrompt] = useState(false)
   const [cloudProjectId, setCloudProjectId] = useState<string | null>(null)
   const [cloudProjectName, setCloudProjectName] = useState<string | null>(null)
   const [projectDirty, setProjectDirty] = useState(false)
@@ -2088,11 +2090,79 @@ export function StyleMakerApp() {
     setStatus(`Cleared ${displayName(lane)}`)
   }
 
+  /**
+   * Wipe the in-app Style Maker session: template, takes, mixers, build,
+   * cloud draft pointer, and IndexedDB workspace. Cloud-saved projects stay
+   * in the account until deleted explicitly.
+   */
+  const purgeLoadedWorkspace = async () => {
+    stopPreview()
+    const previousId = cloudProjectIdRef.current
+    suppressDirtyRef.current = true
+    try {
+      await clearStyleMakerDraft({
+        userId: accountUserIdRef.current,
+        projectId: previousId,
+      })
+      await clearStyleMakerDraft({
+        userId: accountUserIdRef.current,
+        projectId: null,
+      })
+      await clearLegacyStyleMakerWorkspace()
+      setDonor(null)
+      setDonorFile(null)
+      setModified(null)
+      setSectionName("Main A")
+      setBars(2)
+      setSectionBarsMap({})
+      setIncludeCC(true)
+      setSectionAssignments({})
+      setSectionMinorAssignments({})
+      setSectionGuitarCasmModes({})
+      setStyleLibraryVoices({})
+      setSavedPartMixers({})
+      setWorkingPartMixers({})
+      setDirtyMixerSections(new Set())
+      setSelectedLane(StyleMakerLane.Rhythm1)
+      setSelectedVariant("major")
+      setPianoRollTarget(null)
+      setDropLane(null)
+      setDropKind(null)
+      setDropVariant(null)
+      setTransfer(null)
+      setTransferComplete("")
+      setTransferNamePrompt(null)
+      setPartTypePrompt(null)
+      setCloudProjectId(null)
+      setCloudProjectName(null)
+      setProjectDirty(false)
+      setModeTab("build")
+      setAuditionChannels(defaultAuditionChannels())
+      setVoiceSelection(defaultVoiceSelection())
+      setStatus("Import a style template to begin.")
+      toast.success("Workspace cleared")
+    } finally {
+      window.setTimeout(() => {
+        suppressDirtyRef.current = false
+      }, 0)
+    }
+  }
+
   const clearAll = () => {
-    // Desktop clears the active section recipe only.
-    setAssignments(emptyAssignments())
-    setMinorAssignments(emptyAssignments())
-    setStatus(`Cleared all lanes on ${activeSectionKey || "section"}`)
+    if (!workspaceHasContent) {
+      void purgeLoadedWorkspace()
+      return
+    }
+    setClearAllPrompt(true)
+  }
+
+  const finishClearAllPrompt = (accepted: boolean) => {
+    setClearAllPrompt(false)
+    if (!accepted) {
+      setStatus("Clear cancelled — current project kept.")
+      return
+    }
+    void purgeLoadedWorkspace()
   }
 
   /**
@@ -3017,6 +3087,40 @@ export function StyleMakerApp() {
                 onClick={() => finishTemplateImportPrompt(true)}
               >
                 Clear and load
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {clearAllPrompt && (
+        <div className="sm-modal-backdrop" role="presentation">
+          <div
+            className="sm-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="sm-purge-workspace-title"
+          >
+            <h3 id="sm-purge-workspace-title">Clear everything?</h3>
+            <p>
+              This removes the loaded style template, every section take, part
+              mixer edit, and local draft from this browser session. Cloud
+              projects stay in your account until you delete them.
+            </p>
+            <div className="sm-modal-actions">
+              <button
+                type="button"
+                className="sm-btn"
+                onClick={() => finishClearAllPrompt(false)}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="sm-btn is-primary"
+                onClick={() => finishClearAllPrompt(true)}
+              >
+                Clear all
               </button>
             </div>
           </div>
