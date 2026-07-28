@@ -23,6 +23,7 @@ import {
   type PracticeStore,
 } from "@/lib/band-jam/engine/practice-store"
 import { arrange } from "@/lib/band-jam/engine/arrange"
+import { applyJamPlayerFreeTier } from "@/lib/band-jam/free-tier"
 import { BandPlayer } from "@/lib/band-jam/engine/player"
 import {
   EffectsRack,
@@ -86,17 +87,17 @@ const emptyMix = (): Record<BandPart, PartMixState> => ({
 export type PracticeScreenProps = {
   /**
    * From lib/billing/entitlements.ts getJamPlayerEntitlement(), computed
-   * server-side in app/jam-player/app/page.tsx. Not yet used to limit
-   * content — the free tier currently sees the same catalogue as paid
-   * users. Wiring this through to actually restrict styles/progressions
-   * for `hasFullAccess === false` is left for a follow-up
-   * (docs/jam-player-product-plan.md §5 "gate on content and memory").
+   * server-side in app/jam-player/app/page.tsx.
+   *
+   * Free (`false`): all four launch styles + 6 progressions, all practice
+   * features, no practice-history persistence, no Web MIDI out.
+   * Paid (`true`): full progression catalogue + memory + MIDI.
+   * See docs/jam-player-product-plan.md §5 (launch: styles free, breadth gated).
    */
   hasFullAccess?: boolean
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars -- accepted now, wired into content limiting in a follow-up.
-export function PracticeScreen(_props: PracticeScreenProps = {}) {
+export function PracticeScreen({ hasFullAccess = false }: PracticeScreenProps = {}) {
   const [catalog, setCatalog] = useState<CatalogJson | null>(null)
   const [clips, setClips] = useState<Map<number, { events: NoteEvent[]; sourceKeyPc: number }> | null>(null)
   const [loadError, setLoadError] = useState("")
@@ -151,12 +152,14 @@ export function PracticeScreen(_props: PracticeScreenProps = {}) {
   const instrumentsStaleRef = useRef(false)
 
   useEffect(() => {
-    practiceRef.current = loadPracticeStore()
-  }, [])
+    // Free tier: all practice features, no saved state (product plan §5).
+    practiceRef.current = hasFullAccess ? loadPracticeStore() : {}
+  }, [hasFullAccess])
 
   // Web MIDI is the same event stream sent to a real keyboard instead of the
-  // browser sampler. Access must be requested from a user gesture.
+  // browser sampler. Access must be requested from a user gesture. Paid only.
   const midi = useMidiOut()
+  const midiLive = hasFullAccess && midi.enabled
 
   // Catalogue + clips are code-split so they stay out of the initial bundle.
   useEffect(() => {
@@ -169,15 +172,26 @@ export function PracticeScreen(_props: PracticeScreenProps = {}) {
         ])
         if (cancelled) return
         const c = (cat.default ?? cat) as unknown as CatalogJson
-        // Launch slice: only ship styles we've ear-checked for the web mix.
-        const styles = c.styles.filter((s) =>
-          (JAM_PLAYER_LAUNCH_STYLE_IDS as readonly string[]).includes(s.id),
-        )
-        if (styles.length === 0) {
+        // Launch order (ear-checked mix), then free-tier breadth if unpaid.
+        const launchStyles = JAM_PLAYER_LAUNCH_STYLE_IDS.map((id) =>
+          c.styles.find((s) => s.id === id),
+        ).filter((s): s is BandStyle => Boolean(s))
+        if (launchStyles.length === 0) {
           setLoadError("No launch styles found in catalogue.")
           return
         }
-        const filtered = { ...c, styles }
+        const gated = applyJamPlayerFreeTier(
+          { styles: launchStyles, progressions: c.progressions },
+          hasFullAccess,
+        )
+        if (gated.styles.length === 0 || gated.progressions.length === 0) {
+          setLoadError("Free-tier catalogue is empty.")
+          return
+        }
+        const filtered: CatalogJson = {
+          styles: gated.styles,
+          progressions: gated.progressions,
+        }
         const raw = (clipData.default ?? clipData) as unknown as ClipJson
         const map = new Map<number, { events: NoteEvent[]; sourceKeyPc: number }>()
         for (const [id, v] of Object.entries(raw)) {
@@ -185,7 +199,7 @@ export function PracticeScreen(_props: PracticeScreenProps = {}) {
         }
         setCatalog(filtered)
         setClips(map)
-        const firstStyle = styles[0]
+        const firstStyle = filtered.styles[0]
         const firstProg = filtered.progressions[0]
         if (firstStyle) {
           setStyleId(firstStyle.id)
@@ -207,7 +221,7 @@ export function PracticeScreen(_props: PracticeScreenProps = {}) {
     return () => {
       cancelled = true
     }
-  }, [])
+  }, [hasFullAccess])
 
   const style = useMemo(
     () => catalog?.styles.find((s) => s.id === styleId) ?? null,
@@ -386,7 +400,7 @@ export function PracticeScreen(_props: PracticeScreenProps = {}) {
 
       // Same event stream, second sink. Built lazily so users who never touch
       // MIDI pay nothing for it.
-      if (midi.enabled && midi.midiOut && !midiSchedRef.current) {
+      if (midiLive && midi.midiOut && !midiSchedRef.current) {
         midiSchedRef.current = new MidiScheduler(ctx, midi.midiOut)
       }
       return player
@@ -399,7 +413,7 @@ export function PracticeScreen(_props: PracticeScreenProps = {}) {
       setProgress(null)
       return null
     }
-  }, [arrangement, styleId, midi.enabled, midi.midiOut])
+  }, [arrangement, styleId, midiLive, midi.midiOut])
 
   useEffect(() => {
     const player = playerRef.current
@@ -408,8 +422,8 @@ export function PracticeScreen(_props: PracticeScreenProps = {}) {
     // stays silent until it arrives.
     if (!player || !arrangement) return
     player.setArrangement(arrangement)
-    if (midi.enabled) midiSchedRef.current?.setArrangement(arrangement)
-  }, [arrangement, midi.enabled])
+    if (midiLive) midiSchedRef.current?.setArrangement(arrangement)
+  }, [arrangement, midiLive])
 
   useEffect(() => {
     let raf = 0
@@ -481,7 +495,7 @@ export function PracticeScreen(_props: PracticeScreenProps = {}) {
       player.setVolume(part, mix[part].volume)
     }
     const ms = midiSchedRef.current
-    if (ms && midi.enabled) {
+    if (ms && midiLive) {
       ms.setArrangement(arrangement)
       ms.setTempo(tempo)
       ms.setLoop(loop)
@@ -519,7 +533,7 @@ export function PracticeScreen(_props: PracticeScreenProps = {}) {
     player.seekToBar(section.startBar)
 
     const ms = midiSchedRef.current
-    if (ms && midi.enabled) {
+    if (ms && midiLive) {
       ms.setArrangement(arrangement)
       ms.setTempo(tempo)
       ms.setLoop(range)
@@ -539,6 +553,7 @@ export function PracticeScreen(_props: PracticeScreenProps = {}) {
 
   const commitSpan = useCallback(
     (newSession = false) => {
+      if (!hasFullAccess) return
       if (!styleId || !progressionId) return
       const beats = spanBeatsRef.current
       if (beats < 1) return
@@ -555,7 +570,7 @@ export function PracticeScreen(_props: PracticeScreenProps = {}) {
       spanBeatsRef.current = 0
       spanStartTempoRef.current = tempo
     },
-    [styleId, progressionId, tempo, targetTempo],
+    [hasFullAccess, styleId, progressionId, tempo, targetTempo],
   )
 
   // Style change re-voices the whole mix, not just the notes.
@@ -593,7 +608,7 @@ export function PracticeScreen(_props: PracticeScreenProps = {}) {
         p.setVolume(part, mix[part].volume)
       }
       const ms = midiSchedRef.current
-      if (ms && midi.enabled) {
+      if (ms && midiLive) {
         ms.setArrangement(arrangement)
         ms.setTempo(tempo)
         ms.setLoop(loop)
@@ -794,6 +809,18 @@ export function PracticeScreen(_props: PracticeScreenProps = {}) {
                 <ArrowLeft className="size-3.5" />
                 Library
               </Link>
+              {!hasFullAccess ? (
+                <p className="mb-4 rounded-xl border border-orange-400/20 bg-orange-400/5 px-3 py-2 text-[11px] leading-relaxed text-orange-100/70">
+                  Free pack: funk, pop, rock, ballad · 6 progressions.{" "}
+                  <Link
+                    href="/sign-in?redirect_url=/jam-player/app"
+                    className="text-orange-300 underline-offset-2 hover:underline"
+                  >
+                    Sign in
+                  </Link>{" "}
+                  for the full progression catalogue, practice memory, and MIDI out.
+                </p>
+              ) : null}
               {setupControls}
               <div className="my-5 h-px bg-white/8" />
               <TransportBar {...transportProps} variant="rail" />
@@ -819,7 +846,13 @@ export function PracticeScreen(_props: PracticeScreenProps = {}) {
                 }}
                 className="w-full"
               />
-              <MidiOutControl midi={midi} className="w-full" />
+              {hasFullAccess ? (
+                <MidiOutControl midi={midi} className="w-full" />
+              ) : (
+                <p className="text-[10px] leading-relaxed text-white/30">
+                  MIDI out unlocks with Jam Player.
+                </p>
+              )}
             </div>
           </aside>
         ) : null}
@@ -944,6 +977,18 @@ export function PracticeScreen(_props: PracticeScreenProps = {}) {
             </div>
             {mobilePanel === "setup" ? (
               <div className="space-y-4">
+                {!hasFullAccess ? (
+                  <p className="rounded-xl border border-orange-400/20 bg-orange-400/5 px-3 py-2 text-[11px] leading-relaxed text-orange-100/70">
+                    Free pack: funk, pop, rock, ballad · 6 progressions.{" "}
+                    <Link
+                      href="/sign-in?redirect_url=/jam-player/app"
+                      className="text-orange-300 underline-offset-2 hover:underline"
+                    >
+                      Sign in
+                    </Link>{" "}
+                    for the full catalogue.
+                  </p>
+                ) : null}
                 {setupControls}
                 <EffectsControl
                   preset={effectsRef.current?.getPreset() ?? presetForStyle(styleId)}
@@ -964,7 +1009,13 @@ export function PracticeScreen(_props: PracticeScreenProps = {}) {
                     effectsRef.current?.setReverbSend(part, value)
                   }}
                 />
-                <MidiOutControl midi={midi} />
+                {hasFullAccess ? (
+                  <MidiOutControl midi={midi} />
+                ) : (
+                  <p className="text-[10px] leading-relaxed text-white/30">
+                    MIDI out unlocks with Jam Player.
+                  </p>
+                )}
               </div>
             ) : (
               <MixerPanel {...mixerProps} variant="compact" className="overflow-x-auto" />
