@@ -1,0 +1,26 @@
+{
+  "instrumentId": "piano-grand",
+  "label": "Grand Piano Live",
+  "sfzUrl": "/jam-player/instruments/piano-grand/piano-grand.sfz",
+  "sampleBaseUrl": "/jam-player/instruments/piano-grand/samples/",
+  "sourceSampleRates": {
+    "001_GrandPiano_Live_-102-127.ogg": 44100,
+    "001_GrandPiano_Live_-24-127.ogg": 44100,
+    "001_GrandPiano_Live_-30-127.ogg": 44100,
+    "001_GrandPiano_Live_-36-127.ogg": 44100,
+    "001_GrandPiano_Live_-42-127.ogg": 44100,
+    "001_GrandPiano_Live_-48-127.ogg": 44100,
+    "001_GrandPiano_Live_-54-127.ogg": 44100,
+    "001_GrandPiano_Live_-60-127.ogg": 44100,
+    "001_GrandPiano_Live_-66-127.ogg": 44100,
+    "001_GrandPiano_Live_-72-127.ogg": 44100,
+    "001_GrandPiano_Live_-78-127.ogg": 44100,
+    "001_GrandPiano_Live_-84-127.ogg": 44100,
+    "001_GrandPiano_Live_-90-127.ogg": 44100,
+    "001_GrandPiano_Live_-96-127.ogg": 44100
+  },
+  "totalBytes": 2173063,
+  "regionCount": 14,
+  "sampleCount": 14,
+  "instrumentGain": 1.4784369149173866
+}

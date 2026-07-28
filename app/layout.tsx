@@ -5,6 +5,7 @@ import { SiteFooter } from "@/components/site-footer"
 import { SiteHeader } from "@/components/site-header"
 import { Toaster } from "@/components/ui/sonner"
 import { TooltipProvider } from "@/components/ui/tooltip"
+import { isClerkPublishableEnabled } from "@/lib/billing/clerk-config"
 import { SITE } from "@/lib/site"
 import { cn } from "@/lib/utils"
 import "./globals.css"
@@ -43,7 +44,7 @@ export const metadata: Metadata = {
   },
 }
 
-const clerkConfigured = Boolean(process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY)
+const clerkConfigured = isClerkPublishableEnabled()
 
 function Providers({ children }: { children: React.ReactNode }) {
   const body = (

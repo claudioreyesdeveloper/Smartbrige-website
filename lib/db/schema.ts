@@ -49,7 +49,16 @@ export const libraryClips = pgTable(
   (table) => [uniqueIndex("library_clips_midi_path_idx").on(table.midiPath)],
 )
 
-/** Stripe subscription entitlement keyed by Clerk user id. */
+/**
+ * Stripe subscription entitlement keyed by Clerk user id.
+ *
+ * `userId` is UNIQUE — one subscription row per user, deliberately, even
+ * though a user can now be entitled to more than one product. Multi-product
+ * access is modelled as a `plan` *tier* on the single row (see `plan` below),
+ * not as multiple concurrent subscription rows. That keeps upgrades a single
+ * Stripe plan-change (proration) instead of two invoices/renewal dates/
+ * cancellation flows for the same customer. See docs/jam-player-product-plan.md §9.
+ */
 export const subscriptions = pgTable(
   "subscriptions",
   {
@@ -59,6 +68,14 @@ export const subscriptions = pgTable(
     stripeSubscriptionId: text("stripe_subscription_id"),
     stripePriceId: text("stripe_price_id"),
     status: text("status").notNull().default("inactive"),
+    /**
+     * Plan tier, which determines which products this row entitles.
+     * 'style_maker' -> Style Maker only (default; preserves pre-tier rows).
+     * 'jam_player'  -> Jam Player only.
+     * 'all_access'  -> Style Maker + Jam Player.
+     * See lib/billing/entitlements.ts PLAN_ENTITLEMENTS for the mapping.
+     */
+    plan: text("plan").notNull().default("style_maker"),
     currentPeriodEnd: timestamp("current_period_end", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),

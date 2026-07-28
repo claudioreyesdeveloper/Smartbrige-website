@@ -4,6 +4,7 @@
 
 import { eq } from "drizzle-orm"
 import { clerkClient } from "@clerk/nextjs/server"
+import { isClerkFullyConfigured } from "@/lib/billing/clerk-config"
 import { requireDb } from "@/lib/db"
 import { subscriptions } from "@/lib/db/schema"
 import { syncSubscriptionsFromStripe } from "@/lib/style-maker/subscription-sync"
@@ -83,9 +84,7 @@ export async function listAdminUsers(options?: {
   const subRows = await db.select().from(subscriptions)
   const byUser = new Map(subRows.map((row) => [row.userId, row]))
 
-  const clerkConfigured = Boolean(
-    process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY && process.env.CLERK_SECRET_KEY,
-  )
+  const clerkConfigured = isClerkFullyConfigured()
 
   const rows: AdminUserRow[] = []
   const seen = new Set<string>()

@@ -1,7 +1,13 @@
+"use client"
+
 import Link from "next/link"
+import { usePathname } from "next/navigation"
 import { SITE } from "@/lib/site"
 
 export function SiteFooter() {
+  const pathname = usePathname()
+  if (pathname === "/jam-player/app") return null
+
   return (
     <footer className="site-footer">
       <div className="site-footer-inner">

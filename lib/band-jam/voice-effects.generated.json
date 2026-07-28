@@ -1,0 +1,368 @@
+{
+  "8:1:4": {
+    "voiceName": "SolidGuitar1",
+    "role": "guitar",
+    "effectType": "Echo",
+    "effectCategory": "delay",
+    "settings": {},
+    "untranslated": [
+      "Echo (Delay) assigned by Yamaha, but only the algorithm choice is recorded — its tuned parameter values (only names/ranges are catalogued, see yamahaParameterNames) are not present anywhere in smartbridge.db, so no Web Audio equivalent can be defended."
+    ],
+    "confidence": "low",
+    "noInsertEffect": false,
+    "yamahaParameterNames": [
+      "Lch Delay 1 Time",
+      "Lch Feedback Level",
+      "Rch Delay 1 Time",
+      "Rch Feedback Level",
+      "Feedback High Damp",
+      "Lch Delay 2 Time",
+      "Rch Delay 2 Time",
+      "Delay 2 Level",
+      "Dry/Wet",
+      "EQ Low Frequency",
+      "EQ Low Gain",
+      "EQ High Frequency",
+      "EQ High Gain"
+    ],
+    "provenance": {
+      "msb": 8,
+      "lsb": 1,
+      "prg": 4,
+      "note": "Priority voice. Backs the guitar-solid1 instrument (scripts/band_jam_pilot/build_web_samples.py).",
+      "matchedInsertEffectRow": true,
+      "effectMsb": 7,
+      "effectLsb": 0,
+      "effectTypeId": 4569
+    }
+  },
+  "8:0:18": {
+    "voiceName": "ElectricBass",
+    "role": "bass",
+    "effectType": null,
+    "effectCategory": null,
+    "settings": {},
+    "untranslated": [],
+    "confidence": "high",
+    "noInsertEffect": true,
+    "provenance": {
+      "msb": 8,
+      "lsb": 0,
+      "prg": 18,
+      "note": "Priority voice. Backs the bass-electric instrument.",
+      "matchedInsertEffectRow": false
+    }
+  },
+  "0:113:1": {
+    "voiceName": "GrandPiano(Legacy)",
+    "role": "piano",
+    "effectType": null,
+    "effectCategory": null,
+    "settings": {},
+    "untranslated": [],
+    "confidence": "high",
+    "noInsertEffect": true,
+    "provenance": {
+      "msb": 0,
+      "lsb": 113,
+      "prg": 1,
+      "note": "Priority voice, candidate A. Same msb/lsb/prg as psr_s900's 'LiveGrandPiano', the closest DB name match to the shipped sfz '001_GrandPiano Live!.sfz'. voice_insert_effects_sysex has no per-model column, so this row is identical regardless of which generation's voice list it's read against.",
+      "matchedInsertEffectRow": false
+    }
+  },
+  "104:21:1": {
+    "voiceName": "CFX ConcertGrand",
+    "role": "piano",
+    "effectType": "Tempo Delay 1",
+    "effectCategory": "delay",
+    "settings": {},
+    "untranslated": [
+      "Tempo Delay 1 (Delay) assigned by Yamaha, but only the algorithm choice is recorded — its tuned parameter values (only names/ranges are catalogued, see yamahaParameterNames) are not present anywhere in smartbridge.db, so no Web Audio equivalent can be defended."
+    ],
+    "confidence": "low",
+    "noInsertEffect": false,
+    "yamahaParameterNames": [
+      "Delay Time",
+      "Feedback Level",
+      "Feedback High Damp",
+      "L/R Diffusion",
+      "Lag",
+      "Dry/Wet",
+      "EQ Low Frequency",
+      "EQ Low Gain",
+      "EQ High Frequency",
+      "EQ High Gain"
+    ],
+    "provenance": {
+      "msb": 104,
+      "lsb": 21,
+      "prg": 1,
+      "note": "Priority voice, candidate B. Genos2's flagship modern grand piano voice. Reported alongside candidate A because 'piano-grand' in the instrument manifest doesn't identify its Yamaha source voice precisely enough to pick one over the other with confidence.",
+      "matchedInsertEffectRow": true,
+      "effectMsb": 21,
+      "effectLsb": 0,
+      "effectTypeId": 4458
+    }
+  },
+  "127:0:1": {
+    "voiceName": "StandardKit",
+    "role": "drums",
+    "effectType": null,
+    "effectCategory": null,
+    "settings": {},
+    "untranslated": [],
+    "confidence": "high",
+    "noInsertEffect": true,
+    "provenance": {
+      "msb": 127,
+      "lsb": 0,
+      "prg": 1,
+      "note": "Priority voice. Backs the drums-standard1 instrument ('014_StandardKit1_gm.sfz'). Genos2 names this voice 'StandardKit' (no trailing '1'); psr_s900/S-series call the same msb/lsb/prg 'StandardKit1'. Drum kits are addressed as ONE voice per whole kit in this table (channel column is the GM drum channel, 9 or 1 — see 'How drum kits are addressed' in the printed summary), not per-drum-piece.",
+      "matchedInsertEffectRow": false
+    }
+  },
+  "127:0:2": {
+    "voiceName": "StandardKit2",
+    "role": "drums",
+    "effectType": null,
+    "effectCategory": null,
+    "settings": {},
+    "untranslated": [],
+    "confidence": "high",
+    "noInsertEffect": true,
+    "provenance": {
+      "msb": 127,
+      "lsb": 0,
+      "prg": 2,
+      "note": "Reported for comparison against StandardKit.",
+      "matchedInsertEffectRow": false
+    }
+  },
+  "8:0:1": {
+    "voiceName": "NylonGuitar",
+    "role": "guitar",
+    "effectType": null,
+    "effectCategory": null,
+    "settings": {},
+    "untranslated": [],
+    "confidence": "high",
+    "noInsertEffect": true,
+    "provenance": {
+      "msb": 8,
+      "lsb": 0,
+      "prg": 1,
+      "note": "MegaVoice — next instrument in.",
+      "matchedInsertEffectRow": false
+    }
+  },
+  "8:0:2": {
+    "voiceName": "SteelGuitar",
+    "role": "guitar",
+    "effectType": null,
+    "effectCategory": null,
+    "settings": {},
+    "untranslated": [],
+    "confidence": "high",
+    "noInsertEffect": true,
+    "provenance": {
+      "msb": 8,
+      "lsb": 0,
+      "prg": 2,
+      "note": "MegaVoice — next instrument in.",
+      "matchedInsertEffectRow": false
+    }
+  },
+  "8:2:4": {
+    "voiceName": "SolidGuitar2",
+    "role": "guitar",
+    "effectType": "Echo",
+    "effectCategory": "delay",
+    "settings": {},
+    "untranslated": [
+      "Echo (Delay) assigned by Yamaha, but only the algorithm choice is recorded — its tuned parameter values (only names/ranges are catalogued, see yamahaParameterNames) are not present anywhere in smartbridge.db, so no Web Audio equivalent can be defended."
+    ],
+    "confidence": "low",
+    "noInsertEffect": false,
+    "yamahaParameterNames": [
+      "Lch Delay 1 Time",
+      "Lch Feedback Level",
+      "Rch Delay 1 Time",
+      "Rch Feedback Level",
+      "Feedback High Damp",
+      "Lch Delay 2 Time",
+      "Rch Delay 2 Time",
+      "Delay 2 Level",
+      "Dry/Wet",
+      "EQ Low Frequency",
+      "EQ Low Gain",
+      "EQ High Frequency",
+      "EQ High Gain"
+    ],
+    "provenance": {
+      "msb": 8,
+      "lsb": 2,
+      "prg": 4,
+      "note": "MegaVoice — next instrument in.",
+      "matchedInsertEffectRow": true,
+      "effectMsb": 7,
+      "effectLsb": 0,
+      "effectTypeId": 4569
+    }
+  },
+  "8:0:7": {
+    "voiceName": "JazzGuitar",
+    "role": "guitar",
+    "effectType": "Hall 3",
+    "effectCategory": "reverb",
+    "settings": {},
+    "untranslated": [
+      "Hall 3 (Reverb) assigned by Yamaha, but only the algorithm choice is recorded — its tuned parameter values (only names/ranges are catalogued, see yamahaParameterNames) are not present anywhere in smartbridge.db, so no Web Audio equivalent can be defended."
+    ],
+    "confidence": "low",
+    "noInsertEffect": false,
+    "yamahaParameterNames": [
+      "Reverb Time",
+      "Diffusion",
+      "Initial Delay Time",
+      "HPF Cutoff Frequency",
+      "LPF Cutoff Frequency",
+      "Dry/Wet",
+      "Reverb Delay Time",
+      "Density",
+      "ER/Reverb Balance",
+      "High Damp",
+      "Feedback Level"
+    ],
+    "provenance": {
+      "msb": 8,
+      "lsb": 0,
+      "prg": 7,
+      "note": "MegaVoice — next instrument in.",
+      "matchedInsertEffectRow": true,
+      "effectMsb": 1,
+      "effectLsb": 17,
+      "effectTypeId": 4401
+    }
+  },
+  "8:0:4": {
+    "voiceName": "CleanGuitar",
+    "role": "guitar",
+    "effectType": "Tempo Cross 1",
+    "effectCategory": "delay",
+    "settings": {},
+    "untranslated": [
+      "Tempo Cross 1 (Delay) assigned by Yamaha, but only the algorithm choice is recorded — its tuned parameter values (only names/ranges are catalogued, see yamahaParameterNames) are not present anywhere in smartbridge.db, so no Web Audio equivalent can be defended."
+    ],
+    "confidence": "low",
+    "noInsertEffect": false,
+    "yamahaParameterNames": [
+      "Delay Time L>R",
+      "Delay Time R>L",
+      "Feedback Level",
+      "Input Select",
+      "Feedback High Damp",
+      "Lag",
+      "Dry/Wet",
+      "EQ Low Frequency",
+      "EQ Low Gain",
+      "EQ High Frequency",
+      "EQ High Gain"
+    ],
+    "provenance": {
+      "msb": 8,
+      "lsb": 0,
+      "prg": 4,
+      "note": "MegaVoice — next instrument in.",
+      "matchedInsertEffectRow": true,
+      "effectMsb": 22,
+      "effectLsb": 0,
+      "effectTypeId": 4461
+    }
+  },
+  "8:0:17": {
+    "voiceName": "AcousticBass",
+    "role": "bass",
+    "effectType": "Acoustic Room",
+    "effectCategory": "reverb",
+    "settings": {},
+    "untranslated": [
+      "Acoustic Room (Reverb) assigned by Yamaha, but only the algorithm choice is recorded — its tuned parameter values (only names/ranges are catalogued, see yamahaParameterNames) are not present anywhere in smartbridge.db, so no Web Audio equivalent can be defended."
+    ],
+    "confidence": "low",
+    "noInsertEffect": false,
+    "yamahaParameterNames": [
+      "Reverb Time",
+      "Diffusion",
+      "Initial Delay Time",
+      "HPF Cutoff Frequency",
+      "LPF Cutoff Frequency",
+      "Dry/Wet",
+      "Reverb Delay Time",
+      "Density",
+      "ER/Reverb Balance",
+      "High Damp",
+      "Feedback Level"
+    ],
+    "provenance": {
+      "msb": 8,
+      "lsb": 0,
+      "prg": 17,
+      "note": "MegaVoice — next instrument in.",
+      "matchedInsertEffectRow": true,
+      "effectMsb": 2,
+      "effectLsb": 20,
+      "effectTypeId": 4409
+    }
+  },
+  "8:0:19": {
+    "voiceName": "PickBass",
+    "role": "bass",
+    "effectType": null,
+    "effectCategory": null,
+    "settings": {},
+    "untranslated": [],
+    "confidence": "high",
+    "noInsertEffect": true,
+    "provenance": {
+      "msb": 8,
+      "lsb": 0,
+      "prg": 19,
+      "note": "MegaVoice — next instrument in.",
+      "matchedInsertEffectRow": false
+    }
+  },
+  "8:0:20": {
+    "voiceName": "FretlessBass",
+    "role": "bass",
+    "effectType": "Pitch Change 1",
+    "effectCategory": "modulation",
+    "settings": {},
+    "untranslated": [
+      "Pitch Change 1 (Modulation) assigned by Yamaha, but only the algorithm choice is recorded — its tuned parameter values (only names/ranges are catalogued, see yamahaParameterNames) are not present anywhere in smartbridge.db, so no Web Audio equivalent can be defended."
+    ],
+    "confidence": "low",
+    "noInsertEffect": false,
+    "yamahaParameterNames": [
+      "Pitch",
+      "Initial Delay Time",
+      "Fine 1",
+      "Fine 2",
+      "Feedback Level",
+      "Dry/Wet",
+      "Pan 1",
+      "Output Level 1",
+      "Pan 2",
+      "Output Level 2"
+    ],
+    "provenance": {
+      "msb": 8,
+      "lsb": 0,
+      "prg": 20,
+      "note": "MegaVoice — next instrument in.",
+      "matchedInsertEffectRow": true,
+      "effectMsb": 80,
+      "effectLsb": 16,
+      "effectTypeId": 4553
+    }
+  }
+}

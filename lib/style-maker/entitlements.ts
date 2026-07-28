@@ -1,45 +1,20 @@
-import { auth } from "@clerk/nextjs/server"
-import { eq } from "drizzle-orm"
-import { requireDb } from "@/lib/db"
-import { subscriptions } from "@/lib/db/schema"
+/**
+ * Style Maker entitlement helpers.
+ *
+ * Generalised into lib/billing/entitlements.ts to also cover Jam Player
+ * (see docs/jam-player-product-plan.md §9). Re-exported here so existing
+ * imports of `@/lib/style-maker/entitlements` keep working unchanged.
+ */
 
-const ACTIVE = new Set(["active", "trialing"])
+import { getSubscription, userHasProduct } from "@/lib/billing/entitlements"
 
-const clerkConfigured = Boolean(
-  process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY && process.env.CLERK_SECRET_KEY,
-)
+export { getAuthUserId, getJamPlayerEntitlement, PLAN_ENTITLEMENTS } from "@/lib/billing/entitlements"
+export type { Plan, Product } from "@/lib/billing/entitlements"
 
-export async function getAuthUserId(): Promise<string | null> {
-  if (!clerkConfigured) {
-    // Local-only escape hatch. Production / live Stripe must use real Clerk.
-    const allowLocalBypass =
-      process.env.NODE_ENV === "development" &&
-      !process.env.STRIPE_SECRET_KEY?.startsWith("sk_live_")
-    return allowLocalBypass ? "local-dev-user" : null
-  }
-  const session = await auth()
-  return session.userId
-}
+/** @deprecated use `getSubscription` from `@/lib/billing/entitlements` */
+export const getSubscriptionStatus = getSubscription
 
-export async function getSubscriptionStatus(userId: string) {
-  try {
-    const db = requireDb()
-    const rows = await db
-      .select()
-      .from(subscriptions)
-      .where(eq(subscriptions.userId, userId))
-      .limit(1)
-    return rows[0] || null
-  } catch {
-    return null
-  }
-}
-
+/** @deprecated use `userHasProduct(userId, "style-maker")` from `@/lib/billing/entitlements` */
 export async function userHasActiveSubscription(userId: string): Promise<boolean> {
-  // Until Stripe + DB are configured, allow local/dev use after sign-in (or local-dev-user).
-  if (!process.env.STRIPE_SECRET_KEY || !process.env.DATABASE_URL) {
-    return process.env.NODE_ENV === "development"
-  }
-  const sub = await getSubscriptionStatus(userId)
-  return !!sub && ACTIVE.has(sub.status)
+  return userHasProduct(userId, "style-maker")
 }

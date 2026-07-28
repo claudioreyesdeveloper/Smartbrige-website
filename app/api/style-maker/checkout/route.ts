@@ -1,82 +1,58 @@
-import { eq } from "drizzle-orm"
 import { NextResponse } from "next/server"
-import { requireDb } from "@/lib/db"
-import { subscriptions } from "@/lib/db/schema"
+import { startOrChangeSubscription } from "@/lib/billing/checkout"
 import { getAuthUserId } from "@/lib/style-maker/entitlements"
-import { appUrl, getStripe } from "@/lib/style-maker/stripe"
+import type { Plan } from "@/lib/billing/entitlements"
+
+const ALLOWED_PLANS: readonly Plan[] = ["style_maker", "all_access"]
 
 /**
- * Stripe Checkout for Style Maker subscription.
+ * Stripe Checkout for the Style Maker product.
+ *
+ * Defaults to the `style_maker` plan. Accepts an optional
+ * `{ "plan": "all_access" }` JSON body for the All Access upsell — any
+ * other plan value is rejected. If the user already has an active
+ * subscription on a different plan, this changes the plan on the existing
+ * Stripe subscription (proration) instead of starting a second one; see
+ * lib/billing/checkout.ts.
  *
  * Uses Managed Payments (merchant of record) as enabled on the Stripe account:
  * product must have an eligible tax_code (SaaS txcd_10103000), and Checkout
  * sets managed_payments.enabled = true per Stripe docs.
  * https://docs.stripe.com/payments/managed-payments/set-up
  */
-export async function POST() {
+export async function POST(request: Request) {
   const userId = await getAuthUserId()
   if (!userId) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }
 
-  const priceId = process.env.STRIPE_PRICE_ID
-  if (!priceId || !process.env.STRIPE_SECRET_KEY) {
-    return NextResponse.json(
-      { error: "Stripe is not configured. Set STRIPE_SECRET_KEY and STRIPE_PRICE_ID." },
-      { status: 503 },
-    )
+  let plan: Plan = "style_maker"
+  try {
+    const body = await request.json()
+    if (body && typeof body.plan === "string") {
+      if (!ALLOWED_PLANS.includes(body.plan as Plan)) {
+        return NextResponse.json(
+          { error: `Invalid plan for this endpoint. Allowed: ${ALLOWED_PLANS.join(", ")}.` },
+          { status: 400 },
+        )
+      }
+      plan = body.plan as Plan
+    }
+  } catch {
+    // No/invalid JSON body — fall back to the default plan.
   }
 
   try {
-    const stripe = getStripe()
-    const db = requireDb()
-    const existing = await db
-      .select()
-      .from(subscriptions)
-      .where(eq(subscriptions.userId, userId))
-      .limit(1)
-
-    let customerId = existing[0]?.stripeCustomerId || undefined
-    if (!customerId) {
-      const customer = await stripe.customers.create({
-        metadata: { clerkUserId: userId },
-      })
-      customerId = customer.id
-      if (existing[0]) {
-        await db
-          .update(subscriptions)
-          .set({ stripeCustomerId: customerId, updatedAt: new Date() })
-          .where(eq(subscriptions.userId, userId))
-      } else {
-        await db.insert(subscriptions).values({
-          id: `sub_pending_${userId}`,
-          userId,
-          stripeCustomerId: customerId,
-          status: "inactive",
-        })
-      }
-    }
-
-    const session = await stripe.checkout.sessions.create({
-      mode: "subscription",
-      customer: customerId,
-      line_items: [{ price: priceId, quantity: 1 }],
-      success_url: appUrl("/style-maker/app?checkout=success"),
-      cancel_url: appUrl("/style-maker?checkout=cancel"),
-      // Force English Checkout UI (otherwise Stripe follows browser locale).
-      locale: "en",
-      metadata: { clerkUserId: userId },
-      subscription_data: {
-        metadata: { clerkUserId: userId },
-        // Card collected at checkout; first charge after 14 free days.
-        trial_period_days: 14,
-      },
-      managed_payments: {
-        enabled: true,
-      },
+    const result = await startOrChangeSubscription({
+      userId,
+      plan,
+      successPath: "/style-maker/app?checkout=success",
+      cancelPath: "/style-maker?checkout=cancel",
     })
-
-    return NextResponse.json({ url: session.url })
+    if ("error" in result) {
+      return NextResponse.json({ error: result.error }, { status: result.status })
+    }
+    return NextResponse.json({ url: result.url })
   } catch (error) {
     return NextResponse.json(
       {
