@@ -199,7 +199,7 @@ export function PracticeScreen({ hasFullAccess = false }: PracticeScreenProps = 
   const [catalog, setCatalog] = useState<CatalogJson | null>(null)
   const [clips, setClips] = useState<Map<number, { events: NoteEvent[]; sourceKeyPc: number }> | null>(null)
   const [loadError, setLoadError] = useState("")
-  const [progress, setProgress] = useState<{ label: string; pct: number } | null>(null)
+  const [progress, setProgress] = useState<number | null>(null)
 
   const [styleId, setStyleId] = useState<string>("")
   const [progressionId, setProgressionId] = useState<string>("")
@@ -542,13 +542,33 @@ export function PracticeScreen({ hasFullAccess = false }: PracticeScreenProps = 
       // in live later; waiting until then would leave the newly enabled notes
       // without a registered sound source.
       const roles = ALL_PARTS.filter((part) => Boolean(style?.parts[part]))
+      const expectedInstrumentIds = [...new Set([
+        ...roles
+          .map((role) => instrumentForRole(role, requestedStyleId))
+          .filter((id): id is string => Boolean(id)),
+        ...(requestedStyleId === "rock" ? [ROCK_GUITAR_LAYERS[1].id] : []),
+      ])]
+      const loadedFractions = new Map(
+        expectedInstrumentIds.map((id) => [id, 0]),
+      )
+      const reportInstrumentProgress = (
+        instrumentId: string,
+        done: number,
+        total: number,
+      ) => {
+        loadedFractions.set(
+          instrumentId,
+          total > 0 ? Math.max(0, Math.min(1, done / total)) : 0,
+        )
+        const overall = loadedFractions.size
+          ? [...loadedFractions.values()].reduce((sum, value) => sum + value, 0)
+              / loadedFractions.size
+          : 0
+        setProgress(Math.round(overall * 100))
+      }
       const loaded = await loadInstrumentsForRoles(ctx, roles, {
         styleId: requestedStyleId,
-        onProgress: (id, done, total) =>
-          setProgress({
-            label: id,
-            pct: total ? Math.round((done / total) * 100) : 0,
-          }),
+        onProgress: reportInstrumentProgress,
       })
 
       // Rock gets a real double-track rather than a chorus imitation. Load
@@ -558,10 +578,11 @@ export function PracticeScreen({ hasFullAccess = false }: PracticeScreenProps = 
         requestedStyleId === "rock" && loaded.has("guitar")
           ? await loadInstrument(ctx, ROCK_GUITAR_LAYERS[1].id, {
               onProgress: (done, total) =>
-                setProgress({
-                  label: ROCK_GUITAR_LAYERS[1].id,
-                  pct: total ? Math.round((done / total) * 100) : 0,
-                }),
+                reportInstrumentProgress(
+                  ROCK_GUITAR_LAYERS[1].id,
+                  done,
+                  total,
+                ),
             })
           : null
       if (
@@ -1212,7 +1233,11 @@ export function PracticeScreen({ hasFullAccess = false }: PracticeScreenProps = 
     },
     onReset: () => {
       clearStyleMix(styleId, variation)
-      const next = defaultStyleMixer(styleId)
+      const next = loadStyleMixer(
+        styleId,
+        variation,
+        defaultStyleMixer(styleId),
+      )
       applyMix(next.mix)
       eqRef.current = next.eq
       sendsRef.current = next.sends
@@ -1366,10 +1391,20 @@ export function PracticeScreen({ hasFullAccess = false }: PracticeScreenProps = 
                 {progression.name}
               </h1>
             </div>
-            {progress ? (
-              <span className="hidden text-xs text-white/30 sm:block">
-                Loading {progress.label} · {progress.pct}%
-              </span>
+            {progress !== null ? (
+              <div
+                className="h-1.5 w-24 overflow-hidden rounded-full bg-white/10 sm:w-36"
+                role="progressbar"
+                aria-label="Loading instruments"
+                aria-valuemin={0}
+                aria-valuemax={100}
+                aria-valuenow={progress}
+              >
+                <div
+                  className="h-full rounded-full bg-orange-400 transition-[width] duration-150 ease-out"
+                  style={{ width: `${progress}%` }}
+                />
+              </div>
             ) : null}
             <div className="ml-auto flex items-center gap-2">
               <button

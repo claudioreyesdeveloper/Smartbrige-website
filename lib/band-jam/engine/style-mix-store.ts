@@ -1,5 +1,6 @@
 import type { UserEqSettings } from "@/lib/band-jam/engine/effects"
 import type { BandPart, PartMixState } from "@/lib/band-jam/engine/types"
+import productionDefaultsJson from "@/lib/band-jam/style-mix-production-defaults.json"
 
 // v2 starts with the source-headroom rebuild (guitars -6 dB, keys -3 dB).
 // Old fader balances were made against louder samples and would double-apply
@@ -32,6 +33,7 @@ type StoredStyle = {
 // an existing user's guitar balance is not lost when the full mixer arrives.
 type LegacyStyle = Partial<Record<BandPart, number>>
 type StoredMixes = Record<string, StoredStyle | LegacyStyle>
+const PRODUCTION_DEFAULTS = productionDefaultsJson as StoredMixes
 
 function mixKey(styleId: string, variation: number): string {
   const safeVariation = Math.max(0, Math.min(3, Math.floor(variation)))
@@ -79,27 +81,22 @@ function storedChannel(style: StoredStyle | LegacyStyle, part: BandPart): Stored
   return typeof legacyVolume === "number" ? { volume: legacyVolume } : {}
 }
 
-export function loadStyleMixer(
-  styleId: string,
-  variation: number,
+function applyStoredStyle(
   fallback: StyleMixerState,
+  stored: StoredStyle | LegacyStyle,
 ): StyleMixerState {
-  // A mix saved by the previous per-style implementation becomes Variation A.
-  // B-D intentionally start from the curated defaults until explicitly saved.
-  const saved = readStore()[mixKey(styleId, variation)]
-    ?? (variation === 0 ? readLegacyStyle(styleId) : undefined)
-  if (!saved) return fallback
-
   const next: StyleMixerState = {
     mix: { ...fallback.mix },
     eq: { ...fallback.eq },
     sends: { ...fallback.sends },
     pan: { ...fallback.pan },
-    room: "room" in saved ? (level(saved.room) ?? fallback.room) : fallback.room,
+    room: "room" in stored
+      ? (level(stored.room) ?? fallback.room)
+      : fallback.room,
   }
 
   for (const part of PARTS) {
-    const channel = storedChannel(saved, part)
+    const channel = storedChannel(stored, part)
     const fallbackEq = fallback.eq[part]
     next.mix[part] = {
       ...fallback.mix[part],
@@ -116,6 +113,27 @@ export function loadStyleMixer(
     next.pan[part] = panorama(channel.pan) ?? fallback.pan[part]
   }
   return next
+}
+
+export function loadStyleMixer(
+  styleId: string,
+  variation: number,
+  fallback: StyleMixerState,
+): StyleMixerState {
+  const key = mixKey(styleId, variation)
+  // The musician-approved localhost balances are versioned with the app, so a
+  // first-time production visitor hears the same A-D mixes. Browser saves are
+  // still applied last and therefore remain the user's personal overrides.
+  const productionDefault = PRODUCTION_DEFAULTS[key]
+  const base = productionDefault
+    ? applyStoredStyle(fallback, productionDefault)
+    : fallback
+
+  // A mix saved by the previous per-style implementation becomes Variation A.
+  // B-D intentionally start from the curated defaults until explicitly saved.
+  const saved = readStore()[key]
+    ?? (variation === 0 ? readLegacyStyle(styleId) : undefined)
+  return saved ? applyStoredStyle(base, saved) : base
 }
 
 /** Save only when the user presses the mixer's dedicated Save button. */

@@ -55,22 +55,22 @@ describe("per-style and variation mixer memory", () => {
     const funk = base()
     funk.guitar.volume = 0.31
     funk.keys.volume = 0.62
-    saveStyleMix("funk", funk)
+    saveStyleMix("test-funk", funk)
 
     const rock = base()
     rock.guitar.volume = 0.55
-    saveStyleMix("rock", rock)
+    saveStyleMix("test-rock", rock)
 
-    expect(loadStyleMix("funk", base()).guitar.volume).toBe(0.31)
-    expect(loadStyleMix("funk", base()).keys.volume).toBe(0.62)
-    expect(loadStyleMix("rock", base()).guitar.volume).toBe(0.55)
+    expect(loadStyleMix("test-funk", base()).guitar.volume).toBe(0.31)
+    expect(loadStyleMix("test-funk", base()).keys.volume).toBe(0.62)
+    expect(loadStyleMix("test-rock", base()).guitar.volume).toBe(0.55)
   })
 
   it("never restores temporary mute state", () => {
     const funk = base()
     funk.guitar.muted = true
-    saveStyleMix("funk", funk)
-    expect(loadStyleMix("funk", base()).guitar.muted).toBe(false)
+    saveStyleMix("test-funk", funk)
+    expect(loadStyleMix("test-funk", base()).guitar.muted).toBe(false)
   })
 
   it("stores EQ, pan, sends and room with the style", () => {
@@ -79,9 +79,9 @@ describe("per-style and variation mixer memory", () => {
     funk.pan.guitar = -0.35
     funk.sends.guitar = 0.27
     funk.room = 0.31
-    saveStyleMixer("funk", 0, funk)
+    saveStyleMixer("test-funk", 0, funk)
 
-    const loaded = loadStyleMixer("funk", 0, mixer())
+    const loaded = loadStyleMixer("test-funk", 0, mixer())
     expect(loaded.eq.guitar).toEqual({ low: -2.5, mid: 1.5, high: 3 })
     expect(loaded.pan.guitar).toBe(-0.35)
     expect(loaded.sends.guitar).toBe(0.27)
@@ -91,43 +91,76 @@ describe("per-style and variation mixer memory", () => {
   it("keeps A-D mixes independent inside the same style", () => {
     const popA = mixer()
     popA.mix.guitar.volume = 0.28
-    saveStyleMixer("pop", 0, popA)
+    saveStyleMixer("test-pop", 0, popA)
 
     const popB = mixer()
     popB.mix.guitar.volume = 0.61
     popB.eq.drums.mid = 2.5
-    saveStyleMixer("pop", 1, popB)
+    saveStyleMixer("test-pop", 1, popB)
 
-    expect(loadStyleMixer("pop", 0, mixer()).mix.guitar.volume).toBe(0.28)
-    expect(loadStyleMixer("pop", 1, mixer()).mix.guitar.volume).toBe(0.61)
-    expect(loadStyleMixer("pop", 0, mixer()).eq.drums.mid).toBe(0)
-    expect(loadStyleMixer("pop", 1, mixer()).eq.drums.mid).toBe(2.5)
+    expect(loadStyleMixer("test-pop", 0, mixer()).mix.guitar.volume).toBe(0.28)
+    expect(loadStyleMixer("test-pop", 1, mixer()).mix.guitar.volume).toBe(0.61)
+    expect(loadStyleMixer("test-pop", 0, mixer()).eq.drums.mid).toBe(0)
+    expect(loadStyleMixer("test-pop", 1, mixer()).eq.drums.mid).toBe(2.5)
   })
 
   it("resets only the selected variation", () => {
     const popA = mixer()
     popA.mix.bass.volume = 0.4
-    saveStyleMixer("pop", 0, popA)
+    saveStyleMixer("test-pop", 0, popA)
     const popB = mixer()
     popB.mix.bass.volume = 0.7
-    saveStyleMixer("pop", 1, popB)
+    saveStyleMixer("test-pop", 1, popB)
 
-    clearStyleMix("pop", 1)
-    expect(loadStyleMixer("pop", 0, mixer()).mix.bass.volume).toBe(0.4)
-    expect(loadStyleMixer("pop", 1, mixer()).mix.bass.volume).toBe(1)
+    clearStyleMix("test-pop", 1)
+    expect(loadStyleMixer("test-pop", 0, mixer()).mix.bass.volume).toBe(0.4)
+    expect(loadStyleMixer("test-pop", 1, mixer()).mix.bass.volume).toBe(1)
   })
 
   it("clears one style without changing the others", () => {
     const funk = base()
     funk.guitar.volume = 0.2
-    saveStyleMix("funk", funk)
+    saveStyleMix("test-funk", funk)
     const rock = base()
     rock.guitar.volume = 0.4
-    saveStyleMix("rock", rock)
+    saveStyleMix("test-rock", rock)
 
-    clearStyleMix("funk", 0)
-    expect(loadStyleMix("funk", base()).guitar.volume).toBe(0.8)
-    expect(loadStyleMix("rock", base()).guitar.volume).toBe(0.4)
-    expect(window.localStorage.getItem(STYLE_MIX_STORAGE_KEY)).toContain("rock")
+    clearStyleMix("test-funk", 0)
+    expect(loadStyleMix("test-funk", base()).guitar.volume).toBe(0.8)
+    expect(loadStyleMix("test-rock", base()).guitar.volume).toBe(0.4)
+    expect(window.localStorage.getItem(STYLE_MIX_STORAGE_KEY)).toContain("test-rock")
+  })
+
+  it("loads the musician-approved production mix for each variation", () => {
+    const popB = loadStyleMixer("pop", 1, mixer())
+
+    expect(popB.room).toBe(0.26)
+    expect(popB.mix.drums.volume).toBe(0.806182861328125)
+    expect(popB.eq.bass).toEqual({ low: 9.5, mid: 2.5, high: -7.5 })
+    expect(popB.sends.guitar).toBe(0.55)
+    expect(popB.pan.keys).toBe(-0.61)
+  })
+
+  it("applies a browser save over the production mix", () => {
+    const personalPopB = loadStyleMixer("pop", 1, mixer())
+    personalPopB.mix.guitar.volume = 0.33
+    personalPopB.eq.drums.mid = -1.5
+    saveStyleMixer("pop", 1, personalPopB)
+
+    const loaded = loadStyleMixer("pop", 1, mixer())
+    expect(loaded.mix.guitar.volume).toBe(0.33)
+    expect(loaded.eq.drums.mid).toBe(-1.5)
+    expect(loaded.room).toBe(0.26)
+  })
+
+  it("returns to the production mix when a personal override is reset", () => {
+    const personalPopB = loadStyleMixer("pop", 1, mixer())
+    personalPopB.mix.bass.volume = 0.25
+    saveStyleMixer("pop", 1, personalPopB)
+
+    clearStyleMix("pop", 1)
+    const reset = loadStyleMixer("pop", 1, mixer())
+    expect(reset.mix.bass.volume).toBe(0.791015625)
+    expect(reset.room).toBe(0.26)
   })
 })

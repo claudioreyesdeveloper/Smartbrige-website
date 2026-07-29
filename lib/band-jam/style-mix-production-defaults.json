@@ -1,0 +1,882 @@
+{
+  "funk::1": {
+    "room": 0.16,
+    "channels": {
+      "drums": {
+        "volume": 0.806610107421875,
+        "eq": {
+          "low": 2,
+          "mid": -2.5,
+          "high": -3
+        },
+        "reverbSend": 0.41,
+        "pan": 0
+      },
+      "bass": {
+        "volume": 0.584381103515625,
+        "eq": {
+          "low": 8.5,
+          "mid": -2,
+          "high": -8.5
+        },
+        "reverbSend": 0,
+        "pan": 0
+      },
+      "guitar": {
+        "volume": 0.593597412109375,
+        "eq": {
+          "low": 6.5,
+          "mid": 0,
+          "high": -5.5
+        },
+        "reverbSend": 0.35,
+        "pan": -0.66
+      },
+      "keys": {
+        "volume": 0.250579833984375,
+        "eq": {
+          "low": -2,
+          "mid": 0,
+          "high": 2
+        },
+        "reverbSend": 0.29,
+        "pan": 0.52
+      },
+      "solo": {
+        "volume": 0.8,
+        "eq": {
+          "low": 0,
+          "mid": 0,
+          "high": 0
+        },
+        "reverbSend": 0.4,
+        "pan": 0.08
+      }
+    }
+  },
+  "funk::3": {
+    "room": 0.43,
+    "channels": {
+      "drums": {
+        "volume": 0.7930908203125,
+        "eq": {
+          "low": -3,
+          "mid": 3.5,
+          "high": 2.5
+        },
+        "reverbSend": 0.36,
+        "pan": 0
+      },
+      "bass": {
+        "volume": 1,
+        "eq": {
+          "low": 10,
+          "mid": -9,
+          "high": 0
+        },
+        "reverbSend": 0,
+        "pan": 0
+      },
+      "guitar": {
+        "volume": 0.640380859375,
+        "eq": {
+          "low": 3,
+          "mid": -1,
+          "high": -3
+        },
+        "reverbSend": 0.42,
+        "pan": -0.52
+      },
+      "keys": {
+        "volume": 0.28594970703125,
+        "eq": {
+          "low": -5.5,
+          "mid": 2.5,
+          "high": 0
+        },
+        "reverbSend": 0.41,
+        "pan": 0.18
+      },
+      "solo": {
+        "volume": 0.8,
+        "eq": {
+          "low": 0,
+          "mid": 0,
+          "high": 0
+        },
+        "reverbSend": 0.4,
+        "pan": 0.08
+      }
+    }
+  },
+  "funk::0": {
+    "room": 0.53,
+    "channels": {
+      "drums": {
+        "volume": 0.494293212890625,
+        "eq": {
+          "low": 3.5,
+          "mid": 0,
+          "high": -1
+        },
+        "reverbSend": 0.4,
+        "pan": 0
+      },
+      "bass": {
+        "volume": 0.472259521484375,
+        "eq": {
+          "low": 11,
+          "mid": -3.5,
+          "high": -8.5
+        },
+        "reverbSend": 0,
+        "pan": 0
+      },
+      "guitar": {
+        "volume": 0.20806884765625,
+        "eq": {
+          "low": 6.5,
+          "mid": -2.5,
+          "high": -10
+        },
+        "reverbSend": 0.44,
+        "pan": -0.69
+      },
+      "keys": {
+        "volume": 0.29248046875,
+        "eq": {
+          "low": 0,
+          "mid": 5,
+          "high": 0
+        },
+        "reverbSend": 0.42,
+        "pan": 0.18
+      },
+      "solo": {
+        "volume": 0.8,
+        "eq": {
+          "low": 0,
+          "mid": 0,
+          "high": 0
+        },
+        "reverbSend": 0.4,
+        "pan": 0.08
+      }
+    }
+  },
+  "rock::0": {
+    "room": 0.46,
+    "channels": {
+      "drums": {
+        "volume": 0.516845703125,
+        "eq": {
+          "low": 1.5,
+          "mid": 5.5,
+          "high": -0.5
+        },
+        "reverbSend": 0.69,
+        "pan": 0
+      },
+      "bass": {
+        "volume": 0.49249267578125,
+        "eq": {
+          "low": 9,
+          "mid": -1.5,
+          "high": -4
+        },
+        "reverbSend": 0,
+        "pan": 0
+      },
+      "guitar": {
+        "volume": 0.74969482421875,
+        "eq": {
+          "low": -5,
+          "mid": 2,
+          "high": 7
+        },
+        "reverbSend": 0.37,
+        "pan": -0.22
+      },
+      "keys": {
+        "volume": 0.75,
+        "eq": {
+          "low": 0,
+          "mid": 0,
+          "high": 0
+        },
+        "reverbSend": 0.16,
+        "pan": 0.18
+      },
+      "solo": {
+        "volume": 0.8,
+        "eq": {
+          "low": 0,
+          "mid": 0,
+          "high": 0
+        },
+        "reverbSend": 0.4,
+        "pan": 0.08
+      }
+    }
+  },
+  "funk::2": {
+    "room": 0.38,
+    "channels": {
+      "drums": {
+        "volume": 0.619171142578125,
+        "eq": {
+          "low": 3.5,
+          "mid": -7,
+          "high": 0
+        },
+        "reverbSend": 0.29,
+        "pan": 0
+      },
+      "bass": {
+        "volume": 1,
+        "eq": {
+          "low": 7,
+          "mid": -3,
+          "high": -7.5
+        },
+        "reverbSend": 0,
+        "pan": 0
+      },
+      "guitar": {
+        "volume": 0.3114013671875,
+        "eq": {
+          "low": -4,
+          "mid": 0,
+          "high": 7
+        },
+        "reverbSend": 0.48,
+        "pan": -0.22
+      },
+      "keys": {
+        "volume": 0.479705810546875,
+        "eq": {
+          "low": 0,
+          "mid": 0,
+          "high": 0
+        },
+        "reverbSend": 0.14,
+        "pan": 0.18
+      },
+      "solo": {
+        "volume": 0.8,
+        "eq": {
+          "low": 0,
+          "mid": 0,
+          "high": 0
+        },
+        "reverbSend": 0.4,
+        "pan": 0.08
+      }
+    }
+  },
+  "pop::0": {
+    "room": 0.26,
+    "channels": {
+      "drums": {
+        "volume": 0.415008544921875,
+        "eq": {
+          "low": 5.5,
+          "mid": -3.5,
+          "high": -1
+        },
+        "reverbSend": 0.51,
+        "pan": 0
+      },
+      "bass": {
+        "volume": 0.4541015625,
+        "eq": {
+          "low": 6.5,
+          "mid": 1.5,
+          "high": -5
+        },
+        "reverbSend": 0,
+        "pan": 0
+      },
+      "guitar": {
+        "volume": 0.650421142578125,
+        "eq": {
+          "low": -9,
+          "mid": 4,
+          "high": 10
+        },
+        "reverbSend": 0.61,
+        "pan": 0.07
+      },
+      "keys": {
+        "volume": 0.75,
+        "eq": {
+          "low": 0,
+          "mid": 0,
+          "high": 0
+        },
+        "reverbSend": 0.22,
+        "pan": 0.18
+      },
+      "solo": {
+        "volume": 0.8,
+        "eq": {
+          "low": 0,
+          "mid": 0,
+          "high": 0
+        },
+        "reverbSend": 0.4,
+        "pan": 0.08
+      }
+    }
+  },
+  "pop::1": {
+    "room": 0.26,
+    "channels": {
+      "drums": {
+        "volume": 0.806182861328125,
+        "eq": {
+          "low": 6.5,
+          "mid": 1,
+          "high": -2.5
+        },
+        "reverbSend": 0.47,
+        "pan": 0
+      },
+      "bass": {
+        "volume": 0.791015625,
+        "eq": {
+          "low": 9.5,
+          "mid": 2.5,
+          "high": -7.5
+        },
+        "reverbSend": 0,
+        "pan": 0
+      },
+      "guitar": {
+        "volume": 0.8,
+        "eq": {
+          "low": -5.5,
+          "mid": -2.5,
+          "high": 5
+        },
+        "reverbSend": 0.55,
+        "pan": 0.52
+      },
+      "keys": {
+        "volume": 0.526397705078125,
+        "eq": {
+          "low": -5.5,
+          "mid": 0,
+          "high": 4
+        },
+        "reverbSend": 0.52,
+        "pan": -0.61
+      },
+      "solo": {
+        "volume": 0.8,
+        "eq": {
+          "low": 0,
+          "mid": 0,
+          "high": 0
+        },
+        "reverbSend": 0.4,
+        "pan": 0.08
+      }
+    }
+  },
+  "pop::2": {
+    "room": 0.26,
+    "channels": {
+      "drums": {
+        "volume": 1,
+        "eq": {
+          "low": 3.5,
+          "mid": 0.5,
+          "high": -3
+        },
+        "reverbSend": 0.27,
+        "pan": 0
+      },
+      "bass": {
+        "volume": 1,
+        "eq": {
+          "low": 10,
+          "mid": -2,
+          "high": -5
+        },
+        "reverbSend": 0,
+        "pan": 0
+      },
+      "guitar": {
+        "volume": 0.8,
+        "eq": {
+          "low": -7,
+          "mid": -2.5,
+          "high": 6
+        },
+        "reverbSend": 0.42,
+        "pan": -0.72
+      },
+      "keys": {
+        "volume": 0.75,
+        "eq": {
+          "low": -3,
+          "mid": 0,
+          "high": 4.5
+        },
+        "reverbSend": 0.41,
+        "pan": 0.6
+      },
+      "solo": {
+        "volume": 0.8,
+        "eq": {
+          "low": 0,
+          "mid": 0,
+          "high": 0
+        },
+        "reverbSend": 0.4,
+        "pan": 0.08
+      }
+    }
+  },
+  "pop::3": {
+    "room": 0.26,
+    "channels": {
+      "drums": {
+        "volume": 1,
+        "eq": {
+          "low": -4.5,
+          "mid": -1.5,
+          "high": 4
+        },
+        "reverbSend": 0.46,
+        "pan": 0
+      },
+      "bass": {
+        "volume": 0.777069091796875,
+        "eq": {
+          "low": 9.5,
+          "mid": -3,
+          "high": -6
+        },
+        "reverbSend": 0,
+        "pan": 0
+      },
+      "guitar": {
+        "volume": 0.670654296875,
+        "eq": {
+          "low": -8.5,
+          "mid": -5.5,
+          "high": 5.5
+        },
+        "reverbSend": 0.47,
+        "pan": -0.68
+      },
+      "keys": {
+        "volume": 0.391937255859375,
+        "eq": {
+          "low": -7,
+          "mid": -3,
+          "high": 0
+        },
+        "reverbSend": 0.56,
+        "pan": 0.49
+      },
+      "solo": {
+        "volume": 0.8,
+        "eq": {
+          "low": 0,
+          "mid": 0,
+          "high": 0
+        },
+        "reverbSend": 0.4,
+        "pan": 0.08
+      }
+    }
+  },
+  "ballad::0": {
+    "room": 0.52,
+    "channels": {
+      "drums": {
+        "volume": 0.7127685546875,
+        "eq": {
+          "low": -5,
+          "mid": -2.5,
+          "high": 4
+        },
+        "reverbSend": 0.36,
+        "pan": 0
+      },
+      "bass": {
+        "volume": 0.302032470703125,
+        "eq": {
+          "low": 8.5,
+          "mid": 0,
+          "high": -5.5
+        },
+        "reverbSend": 0,
+        "pan": 0
+      },
+      "guitar": {
+        "volume": 0.610107421875,
+        "eq": {
+          "low": -9.5,
+          "mid": -2.5,
+          "high": 9
+        },
+        "reverbSend": 0.48,
+        "pan": -0.6
+      },
+      "keys": {
+        "volume": 0.214691162109375,
+        "eq": {
+          "low": -6.5,
+          "mid": 0,
+          "high": 4.5
+        },
+        "reverbSend": 0.59,
+        "pan": 0.51
+      },
+      "solo": {
+        "volume": 0.8,
+        "eq": {
+          "low": 0,
+          "mid": 0,
+          "high": 0
+        },
+        "reverbSend": 0.4,
+        "pan": 0.08
+      }
+    }
+  },
+  "ballad::1": {
+    "room": 0.38,
+    "channels": {
+      "drums": {
+        "volume": 0.752777099609375,
+        "eq": {
+          "low": 5,
+          "mid": -4,
+          "high": 0.5
+        },
+        "reverbSend": 0.35,
+        "pan": 0
+      },
+      "bass": {
+        "volume": 0.378204345703125,
+        "eq": {
+          "low": 6.5,
+          "mid": 5,
+          "high": -5
+        },
+        "reverbSend": 0,
+        "pan": 0
+      },
+      "guitar": {
+        "volume": 0.581207275390625,
+        "eq": {
+          "low": -8,
+          "mid": 1,
+          "high": 5.5
+        },
+        "reverbSend": 0.43,
+        "pan": -0.67
+      },
+      "keys": {
+        "volume": 0.4505615234375,
+        "eq": {
+          "low": -5.5,
+          "mid": 2,
+          "high": 4
+        },
+        "reverbSend": 0.42,
+        "pan": 0.55
+      },
+      "solo": {
+        "volume": 0.8,
+        "eq": {
+          "low": 0,
+          "mid": 0,
+          "high": 0
+        },
+        "reverbSend": 0.4,
+        "pan": 0.08
+      }
+    }
+  },
+  "ballad::3": {
+    "room": 0.33,
+    "channels": {
+      "drums": {
+        "volume": 1,
+        "eq": {
+          "low": -4.5,
+          "mid": 0,
+          "high": 2.5
+        },
+        "reverbSend": 0.42,
+        "pan": 0
+      },
+      "bass": {
+        "volume": 0.588653564453125,
+        "eq": {
+          "low": 10,
+          "mid": -4.5,
+          "high": -10
+        },
+        "reverbSend": 0,
+        "pan": 0
+      },
+      "guitar": {
+        "volume": 0.8,
+        "eq": {
+          "low": -7.5,
+          "mid": 1,
+          "high": 9.5
+        },
+        "reverbSend": 0.5,
+        "pan": -0.36
+      },
+      "keys": {
+        "volume": 0.306304931640625,
+        "eq": {
+          "low": 0,
+          "mid": 0,
+          "high": 0
+        },
+        "reverbSend": 0.42,
+        "pan": 0.39
+      },
+      "solo": {
+        "volume": 0.8,
+        "eq": {
+          "low": 0,
+          "mid": 0,
+          "high": 0
+        },
+        "reverbSend": 0.4,
+        "pan": 0.08
+      }
+    }
+  },
+  "ballad::2": {
+    "room": 0.38,
+    "channels": {
+      "drums": {
+        "volume": 0.834686279296875,
+        "eq": {
+          "low": -5.5,
+          "mid": -2,
+          "high": 3.5
+        },
+        "reverbSend": 0.38,
+        "pan": 0
+      },
+      "bass": {
+        "volume": 0.53924560546875,
+        "eq": {
+          "low": 9,
+          "mid": -4,
+          "high": -7.5
+        },
+        "reverbSend": 0,
+        "pan": 0
+      },
+      "guitar": {
+        "volume": 0.8,
+        "eq": {
+          "low": -8.5,
+          "mid": -3,
+          "high": 3.5
+        },
+        "reverbSend": 0.49,
+        "pan": -0.22
+      },
+      "keys": {
+        "volume": 0.333343505859375,
+        "eq": {
+          "low": -9,
+          "mid": -3.5,
+          "high": 2
+        },
+        "reverbSend": 0.52,
+        "pan": 0.18
+      },
+      "solo": {
+        "volume": 0.8,
+        "eq": {
+          "low": 0,
+          "mid": 0,
+          "high": 0
+        },
+        "reverbSend": 0.4,
+        "pan": 0.08
+      }
+    }
+  },
+  "rock::1": {
+    "room": 0.29,
+    "channels": {
+      "drums": {
+        "volume": 0.67230224609375,
+        "eq": {
+          "low": 4,
+          "mid": 0,
+          "high": 6
+        },
+        "reverbSend": 0.49,
+        "pan": 0
+      },
+      "bass": {
+        "volume": 0.607269287109375,
+        "eq": {
+          "low": 8.5,
+          "mid": 3.5,
+          "high": 0
+        },
+        "reverbSend": 0,
+        "pan": 0
+      },
+      "guitar": {
+        "volume": 0.8,
+        "eq": {
+          "low": -3,
+          "mid": 3,
+          "high": 7
+        },
+        "reverbSend": 0.035,
+        "pan": -0.22
+      },
+      "keys": {
+        "volume": 0.75,
+        "eq": {
+          "low": 0,
+          "mid": 0,
+          "high": 0
+        },
+        "reverbSend": 0.16,
+        "pan": 0.18
+      },
+      "solo": {
+        "volume": 0.8,
+        "eq": {
+          "low": 0,
+          "mid": 0,
+          "high": 0
+        },
+        "reverbSend": 0.3,
+        "pan": 0.08
+      }
+    }
+  },
+  "rock::2": {
+    "room": 0.2,
+    "channels": {
+      "drums": {
+        "volume": 0.843902587890625,
+        "eq": {
+          "low": 4.5,
+          "mid": 0,
+          "high": 3.5
+        },
+        "reverbSend": 0.58,
+        "pan": 0
+      },
+      "bass": {
+        "volume": 1,
+        "eq": {
+          "low": 10,
+          "mid": -2.5,
+          "high": -3.5
+        },
+        "reverbSend": 0,
+        "pan": 0
+      },
+      "guitar": {
+        "volume": 0.8,
+        "eq": {
+          "low": -4.5,
+          "mid": 6,
+          "high": 9
+        },
+        "reverbSend": 0.33,
+        "pan": -0.22
+      },
+      "keys": {
+        "volume": 0.75,
+        "eq": {
+          "low": 0,
+          "mid": 0,
+          "high": 0
+        },
+        "reverbSend": 0.16,
+        "pan": 0.18
+      },
+      "solo": {
+        "volume": 0.8,
+        "eq": {
+          "low": 0,
+          "mid": 0,
+          "high": 0
+        },
+        "reverbSend": 0.3,
+        "pan": 0.08
+      }
+    }
+  },
+  "rock::3": {
+    "room": 0.2,
+    "channels": {
+      "drums": {
+        "volume": 0.765380859375,
+        "eq": {
+          "low": 5.5,
+          "mid": 0,
+          "high": 4.5
+        },
+        "reverbSend": 0.47,
+        "pan": 0
+      },
+      "bass": {
+        "volume": 0.471099853515625,
+        "eq": {
+          "low": 10,
+          "mid": 6.5,
+          "high": 0
+        },
+        "reverbSend": 0,
+        "pan": 0
+      },
+      "guitar": {
+        "volume": 0.419342041015625,
+        "eq": {
+          "low": -3.5,
+          "mid": 2.5,
+          "high": -2.5
+        },
+        "reverbSend": 0.26,
+        "pan": -0.22
+      },
+      "keys": {
+        "volume": 0.75,
+        "eq": {
+          "low": 0,
+          "mid": 0,
+          "high": 0
+        },
+        "reverbSend": 0.16,
+        "pan": 0.18
+      },
+      "solo": {
+        "volume": 0.8,
+        "eq": {
+          "low": 0,
+          "mid": 0,
+          "high": 0
+        },
+        "reverbSend": 0.3,
+        "pan": 0.08
+      }
+    }
+  }
+}
