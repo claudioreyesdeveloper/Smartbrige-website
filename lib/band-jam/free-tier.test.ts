@@ -1,6 +1,5 @@
 import { describe, expect, it } from "vitest"
 import {
-  JAM_PLAYER_FREE_PROGRESSION_COUNT,
   JAM_PLAYER_FREE_STYLE_IDS,
   applyJamPlayerFreeTier,
 } from "./free-tier"
@@ -20,13 +19,10 @@ describe("applyJamPlayerFreeTier", () => {
     expect(applyJamPlayerFreeTier(catalog, true)).toEqual(catalog)
   })
 
-  it("keeps the free style set and first N progressions for free users", () => {
+  it("keeps the free style set and complete song catalogue for free users", () => {
     const limited = applyJamPlayerFreeTier(catalog, false)
     expect(limited.styles.map((s) => s.id)).toEqual(["funk", "rock", "pop", "ballad"])
-    expect(limited.progressions).toHaveLength(JAM_PLAYER_FREE_PROGRESSION_COUNT)
-    expect(limited.progressions.map((p) => p.id)).toEqual(
-      catalog.progressions.slice(0, JAM_PLAYER_FREE_PROGRESSION_COUNT).map((p) => p.id),
-    )
+    expect(limited.progressions).toEqual(catalog.progressions)
   })
 
   it("drops styles outside the free set", () => {

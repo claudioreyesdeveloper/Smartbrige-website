@@ -68,7 +68,23 @@ const MAX_NOTE_SECONDS = 12
 export class BandPlayer {
   private master: GainNode
   private partGains = new Map<BandPart, GainNode>()
+  private partVoiceInputs = new Map<
+    BandPart,
+    (note: number, velocity: number) => AudioNode
+  >()
   private sources = new Map<BandPart, PartVoiceSource>()
+  private layeredSources = new Map<
+    BandPart,
+    Map<
+      string,
+      {
+        source: PartVoiceSource
+        gain: GainNode
+        inputForNote: (note: number, velocity: number) => AudioNode
+        instrumentGain: number
+      }
+    >
+  >()
   private active: {
     node: AudioBufferSourceNode
     gain: GainNode
@@ -136,6 +152,7 @@ export class BandPlayer {
       )
       chain.gain.gain.value = this.gainValueFor(part)
       this.partGains.set(part, chain.gain)
+      this.partVoiceInputs.set(part, chain.inputForNote)
       return
     }
 
@@ -143,6 +160,68 @@ export class BandPlayer {
     g.gain.value = this.gainValueFor(part)
     g.connect(this.master)
     this.partGains.set(part, g)
+    this.partVoiceInputs.set(part, () => g)
+  }
+
+  /**
+   * Register another independently processed and panned sound for one musical
+   * part. Rock uses this for a true Emily + SolidGuitar2 double: both voices
+   * receive the same notes, but each owns its own amp/cabinet chain so the
+   * neural mono amp cannot collapse the stereo pair before panning.
+   */
+  registerPartLayer(
+    part: BandPart,
+    layerId: string,
+    source: PartVoiceSource,
+    options: {
+      settings?: unknown
+      pan: number
+      instrumentGain?: number
+    },
+  ) {
+    let layers = this.layeredSources.get(part)
+    if (!layers) {
+      layers = new Map()
+      this.layeredSources.set(part, layers)
+    }
+    layers.get(layerId)?.gain.disconnect()
+
+    const instrumentGain = Math.max(0, options.instrumentGain ?? 1)
+    const rack = this.options.effects
+    if (rack) {
+      const chain = rack.createPartChain(
+        part,
+        (options.settings as Parameters<EffectsRack["createPartChain"]>[1]) ?? undefined,
+        { layerId, panOffset: options.pan },
+      )
+      chain.gain.gain.value = this.gainValueFor(part) * instrumentGain
+      layers.set(layerId, {
+        source,
+        gain: chain.gain,
+        inputForNote: chain.inputForNote,
+        instrumentGain,
+      })
+      return
+    }
+
+    const gain = this.ctx.createGain()
+    gain.gain.value = this.gainValueFor(part) * instrumentGain
+    let destination: AudioNode = this.master
+    if ("createStereoPanner" in this.ctx) {
+      const panner = this.ctx.createStereoPanner()
+      panner.pan.value = Math.max(-1, Math.min(1, options.pan))
+      gain.connect(panner)
+      panner.connect(this.master)
+      destination = gain
+    } else {
+      gain.connect(this.master)
+    }
+    layers.set(layerId, {
+      source,
+      gain,
+      inputForNote: () => destination,
+      instrumentGain,
+    })
   }
 
   /**
@@ -162,6 +241,7 @@ export class BandPlayer {
     )
     chain.gain.gain.value = this.gainValueFor(part)
     this.partGains.set(part, chain.gain)
+    this.partVoiceInputs.set(part, chain.inputForNote)
   }
 
   setArrangement(arrangement: Arrangement) {
@@ -186,35 +266,23 @@ export class BandPlayer {
 
     this.arrangement = arrangement
 
-    // Drop any part the new arrangement does not contain. `sources` and
-    // `partGains` outlive a style change, so a voice registered by an earlier
-    // style stays wired to the master bus and is ready to play the moment
-    // anything schedules into it. Belt and braces: the arrangement is already
-    // filtered upstream, but nothing should be able to sound a part the
-    // current arrangement does not have.
-    const live = new Set(arrangement.parts.map((p) => p.part))
-    for (const part of [...this.partGains.keys()]) {
-      if (live.has(part)) continue
-      this.partGains.get(part)?.disconnect()
-      this.partGains.delete(part)
-      this.sources.delete(part)
-    }
+    // Keep every registered voice alive. An arrangement can temporarily omit
+    // a part because the live Arranger disabled it; deleting its source here
+    // made that part impossible to restore and could leave the latter half of
+    // an eight-bar audition silent after a live arrangement change. Silence is
+    // already guaranteed by the absence of scheduled events. A style reload
+    // safely replaces the registered source and effect chain in registerPart().
 
     const total = arrangement.totalBeats
     this.cursorBeat =
       total > 0 ? Math.min(Math.max(0, preservedBeat), Math.max(0, total - 1e-9)) : 0
 
-    if (!wasPlaying) {
-      this.setTempo(arrangement.tempo)
-      if (this.status !== "idle") this.setStatus("ready")
-      return
-    }
-
-    // Resume in place — keep the live tempo and skip count-in.
-    const savedCountIn = this.countInBars
-    this.countInBars = 0
-    void this.play()
-    this.countInBars = savedCountIn
+    this.setTempo(arrangement.tempo)
+    if (this.status !== "idle") this.setStatus("ready")
+    // Never auto-resume here. The screen commits arrangement + loop + seek +
+    // audio/MIDI resume as one playback pass; resuming inside this low-level
+    // setter was the race that could start an old variation midway through a
+    // section before the new loop and seek had landed.
   }
 
   // -- mix ------------------------------------------------------------------
@@ -232,11 +300,20 @@ export class BandPlayer {
 
   private applyGain(part: BandPart) {
     const g = this.partGains.get(part)
-    if (!g) return
     const now = this.ctx.currentTime
     // Short ramp: instant enough to feel immediate, long enough not to click.
-    g.gain.cancelScheduledValues(now)
-    g.gain.setTargetAtTime(this.gainValueFor(part), now, 0.015)
+    if (g) {
+      g.gain.cancelScheduledValues(now)
+      g.gain.setTargetAtTime(this.gainValueFor(part), now, 0.015)
+    }
+    for (const layer of this.layeredSources.get(part)?.values() ?? []) {
+      layer.gain.gain.cancelScheduledValues(now)
+      layer.gain.gain.setTargetAtTime(
+        this.gainValueFor(part) * layer.instrumentGain,
+        now,
+        0.015,
+      )
+    }
   }
 
   setMuted(part: BandPart, muted: boolean) {
@@ -459,10 +536,21 @@ export class BandPlayer {
     for (const { part, events } of arr.parts) {
       const src = this.sources.get(part)
       const gain = this.partGains.get(part)
-      if (!src || !gain) continue
+      const layers = [...(this.layeredSources.get(part)?.values() ?? [])]
+      if ((!src || !gain) && layers.length === 0) continue
       for (const ev of events) {
         const hits = this.playbackBeatsFor(ev.beat, fromBeat, toBeat)
-        for (const pb of hits) this.scheduleNote(src, gain, ev, pb)
+        if (src && gain) {
+          const destination =
+            this.partVoiceInputs.get(part)?.(ev.note, ev.velocity) ?? gain
+          for (const pb of hits) this.scheduleNote(src, destination, ev, pb)
+        }
+        for (const layer of layers) {
+          const destination = layer.inputForNote(ev.note, ev.velocity)
+          for (const pb of hits) {
+            this.scheduleNote(layer.source, destination, ev, pb)
+          }
+        }
       }
     }
 
@@ -507,7 +595,7 @@ export class BandPlayer {
 
   private scheduleNote(
     src: PartVoiceSource,
-    partGain: GainNode,
+    destination: AudioNode,
     ev: NoteEvent,
     playbackBeat: number,
   ) {
@@ -540,7 +628,7 @@ export class BandPlayer {
     const vGain = this.ctx.createGain()
     vGain.gain.value = amp
     node.connect(vGain)
-    vGain.connect(partGain)
+    vGain.connect(destination)
 
     const release = Math.max(0.005, region.ampegRelease || 0.02)
     const endAt = when + playSec
@@ -619,8 +707,13 @@ export class BandPlayer {
   dispose() {
     this.stop()
     this.partGains.forEach((g) => g.disconnect())
+    for (const layers of this.layeredSources.values()) {
+      for (const layer of layers.values()) layer.gain.disconnect()
+    }
     this.partGains.clear()
+    this.partVoiceInputs.clear()
     this.sources.clear()
+    this.layeredSources.clear()
     this.master.disconnect()
     this.setStatus("idle")
   }

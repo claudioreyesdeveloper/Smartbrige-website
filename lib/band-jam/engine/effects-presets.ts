@@ -136,22 +136,22 @@ export const AMP_RIGS: Record<string, DriveSettings> = {
     cabinet: { ir: "cab-4x12-warm.ogg", lowPassHz: 6000, resonanceHz: 120, resonanceGain: 1.5 },
   },
   /**
-   * Funk rhythm guitar — warm, not chimey.
-   *
-   * The first pass (Mesa clean + rock cab + big 2.8/5.5 kHz boosts) read as
-   * overbright and high-pitched on SolidGuitar2 DI. Funk chicken-scratch
-   * wants body and muted thunk, not hi-fi string air: Princeton + warm cab,
-   * speaker rolled off hard so the top never gets fizzy.
+   * 1980s Minneapolis funk rhythm: tight, percussive and almost entirely
+   * clean.  The Princeton is our closest shipped capture to the Fender Deluxe
+   * Reverb used by Toontrack's "Funky Clean" chain.  Their chain finishes in a
+   * G12-65 Creamback, so the warmer IR is a closer match than the former rock
+   * 4x12; the gentle upper roll-off keeps muted scratches crisp without the
+   * brittle fizz that was building up around 3-7 kHz.
    */
   funk: {
-    amp: { model: "FenderPrinceton_clean", inputGain: 1.15, outputGain: 2.0 },
-    amount: 0.15,
+    amp: { model: "FenderPrinceton_clean", inputGain: 0.88, outputGain: 2.28 },
+    amount: 0.04,
     mix: 1,
     cabinet: {
       ir: "cab-4x12-warm.ogg",
-      lowPassHz: 4200,
-      resonanceHz: 110,
-      resonanceGain: 2.0,
+      lowPassHz: 6200,
+      resonanceHz: 120,
+      resonanceGain: 1.1,
     },
   },
   /** Mesa clean channel — brighter and stiffer than the Princeton. */
@@ -168,12 +168,16 @@ export const AMP_RIGS: Record<string, DriveSettings> = {
     mix: 1,
     cabinet: { ir: "cab-4x12-warm.ogg", lowPassHz: 4800, resonanceHz: 150, resonanceGain: 3 },
   },
-  /** Cranked Soldano. This is the rock sound. */
+  /**
+   * Cranked Soldano, voiced for weight rather than fizz. The lower cabinet
+   * resonance supplies the chest of a closed-back 4x12 while the early
+   * low-pass keeps the top from turning thin when several strums overlap.
+   */
   "high-gain": {
-    amp: { model: "Soldano_highGain", inputGain: 2.6, outputGain: 0.43 },
-    amount: 0.6,
+    amp: { model: "Soldano_highGain", inputGain: 2.4, outputGain: 0.47 },
+    amount: 0.58,
     mix: 1,
-    cabinet: { ir: "cab-4x12-rock.ogg", lowPassHz: 4500, resonanceHz: 140, resonanceGain: 3 },
+    cabinet: { ir: "cab-4x12-rock.ogg", lowPassHz: 4000, resonanceHz: 125, resonanceGain: 4 },
   },
 }
 
@@ -212,7 +216,12 @@ const KEYS_COMP = {
 export const DEFAULT_PRESET: StyleEffectPreset = {
   id: "default",
   label: "Neutral room",
-  reverb: { ir: "room-small.ogg", wet: 0.22, sendHighPassHz: 220 },
+  reverb: {
+    ir: "room-small.ogg",
+    character: "tight-room",
+    wet: 0.22,
+    sendHighPassHz: 220,
+  },
   master: {
     threshold: -12,
     knee: 6,
@@ -220,6 +229,11 @@ export const DEFAULT_PRESET: StyleEffectPreset = {
     attack: 0.006,
     release: 0.18,
     gain: 0.9,
+    highPassHz: 25,
+    lowShelf: { freq: 90, gain: -0.5 },
+    peak: { freq: 280, gain: -0.75, q: 0.75 },
+    highShelf: { freq: 9000, gain: 0.5 },
+    limiterThreshold: -1,
   },
   parts: {
     drums: {
@@ -228,6 +242,7 @@ export const DEFAULT_PRESET: StyleEffectPreset = {
       compressor: DRUM_COMP,
       reverbSend: 0.1,
       trim: 1,
+      pan: 0,
     },
     bass: {
       // Bass needs no reverb send at all; it only blurs the low end.
@@ -246,6 +261,7 @@ export const DEFAULT_PRESET: StyleEffectPreset = {
       compressor: BASS_COMP,
       reverbSend: 0,
       trim: 0.95,
+      pan: 0,
     },
     guitar: {
       // Nothing useful below 100 Hz on a guitar, and clearing it stops the
@@ -264,6 +280,7 @@ export const DEFAULT_PRESET: StyleEffectPreset = {
       compressor: GUITAR_COMP,
       reverbSend: 0.2,
       trim: 0.9,
+      pan: -0.22,
     },
     keys: {
       // A grand piano genuinely uses its bottom octave, so this sits far lower
@@ -279,12 +296,14 @@ export const DEFAULT_PRESET: StyleEffectPreset = {
       compressor: KEYS_COMP,
       reverbSend: 0.24,
       trim: 0.85,
+      pan: 0.18,
     },
     solo: {
       highPassHz: 120,
       peak: { freq: 3000, gain: 2, q: 1 },
       reverbSend: 0.3,
       trim: 0.9,
+      pan: 0.08,
     },
   },
 }
@@ -310,60 +329,149 @@ function derive(
 
 export const STYLE_EFFECT_PRESETS: Record<string, StyleEffectPreset> = {
   funk: derive("funk", "Tight room", {
-    reverb: { ir: "room-small.ogg", wet: 0.14, sendHighPassHz: 300 },
-    master: { threshold: -14, knee: 4, ratio: 3, attack: 0.004, release: 0.12, gain: 0.9 },
+    reverb: {
+      ir: "room-small.ogg",
+      character: "tight-room",
+      wet: 0.1,
+      sendHighPassHz: 420,
+    },
+    // Let the kick/snare transient through, then use the limiter only as a
+    // safety net. The old 4 ms / 3:1 bus comp made the mix loud but flat.
+    master: {
+      threshold: -10.5,
+      knee: 8,
+      ratio: 2,
+      attack: 0.015,
+      release: 0.14,
+      gain: 0.94,
+      highPassHz: 25,
+      lowShelf: { freq: 100, gain: -1.25 },
+      peak: { freq: 270, gain: -1.6, q: 0.8 },
+      highShelf: { freq: 7800, gain: 0.8 },
+      limiterThreshold: -1,
+    },
     parts: {
       ...DEFAULT_PRESET.parts,
       drums: {
         ...DEFAULT_PRESET.parts.drums,
-        // Funk wants the kit tighter, but still never fast enough to
-        // swallow the transient.
-        compressor: { ...DRUM_COMP, threshold: -16, ratio: 3, attack: 0.012 },
-        reverbSend: 0.06,
+        // The hard kick and hybrid-snare samples now supply the punch. Keep
+        // the bus slower and lighter so it does not shave their attack off.
+        compressor: { ...DRUM_COMP, threshold: -15, ratio: 2.6, attack: 0.022 },
+        highPassHz: 42,
+        lowShelf: { freq: 78, gain: 1.8 },
+        peak: { freq: 280, gain: -2.4, q: 0.9 },
+        peaks: [{ freq: 3600, gain: 2.4, q: 0.85 }],
+        // Strong backbeats are remapped to GM alternate snare 40 upstream.
+        // Compress that hybrid layer alone; natural note-38 ghost notes stay
+        // on the open drum path and retain their full dynamic contrast.
+        snarePunch: {
+          notes: [40],
+          minVelocity: 72,
+          highPassHz: 52,
+          lowPassHz: 1450,
+          peak: { freq: 185, gain: 4.5, q: 0.85 },
+          compressor: {
+            threshold: -28,
+            knee: 5,
+            ratio: 7,
+            attack: 0.006,
+            release: 0.105,
+          },
+          trim: 1,
+          parallelMix: 0.48,
+        },
+        // Keep the cymbal/hat stream almost dry. A 16th-note hat pattern
+        // otherwise creates a dense stack of overlapping room tails.
+        reverbSend: 0.012,
         trim: 1.0,
       },
-      // Warm funk rhythm: more body, less string air. Quack lives in the
-      // low-presence band; everything above ~4 kHz is cut, not boosted.
+      // Dry and narrow: a clean Fender-style amp and warm speaker provide the
+      // body. Moderate compression controls the chord without shaving off the
+      // pick transient—the attack itself is what makes funk feel percussive.
       guitar: {
         ...DEFAULT_PRESET.parts.guitar,
-        reverbSend: 0.1,
-        highPassHz: 110,
+        // A dark, very low-level slap approximates tape delay. It is perceived
+        // as a little air, not a separate rhythmic repeat.
+        delay: { beats: 0.16, feedback: 0.08, mix: 0.03, dampHz: 4200 },
+        reverbSend: 0.045,
+        // 140 Hz clears the bass while retaining more of the guitar body than
+        // the previous 165 Hz cut.
+        highPassHz: 140,
         peaks: [
-          { freq: 280, gain: -2, q: 1.0 },
-          { freq: 800, gain: -2, q: 1.1 },
-          // Soft quack — definition without the icepick.
-          { freq: 1800, gain: 2, q: 1.0 },
-          // Pull the cheap DI fizz.
-          { freq: 4500, gain: -4, q: 1.0 },
-          { freq: 7000, gain: -5, q: 0.8 },
+          { freq: 280, gain: -2.8, q: 0.9 },
+          { freq: 650, gain: -2.0, q: 1.0 },
+          // Focused upper mids give the muted chords their "quack" while a
+          // smaller 3.2 kHz lift avoids the former hard, glassy edge.
+          { freq: 1800, gain: 2.4, q: 1.0 },
+          { freq: 3200, gain: 1.6, q: 0.9 },
         ],
-        highShelf: { freq: 6000, gain: -3 },
         compressor: {
-          threshold: -18,
-          knee: 6,
-          ratio: 3.5,
-          attack: 0.012,
-          release: 0.12,
+          threshold: -19,
+          knee: 5,
+          ratio: 3.2,
+          attack: 0.009,
+          release: 0.085,
         },
         trim: 0.88,
       },
       keys: {
         ...DEFAULT_PRESET.parts.keys,
+        highPassHz: 85,
+        peaks: [
+          { freq: 260, gain: -3.8, q: 0.9 },
+          { freq: 700, gain: -1.4, q: 1.0 },
+          { freq: 2600, gain: 2.2, q: 0.9 },
+        ],
+        highShelf: { freq: 9000, gain: 1.2 },
+        reverbSend: 0.14,
         compressor: { ...KEYS_COMP, ratio: 2.5, threshold: -18 },
         trim: 0.88,
       },
-      // Funk bass wants the fingers audible — more grit, more presence.
+      // Let the fundamental stay centred and firm, while taking the sustained
+      // boxiness out of the 180-350 Hz region.
       bass: {
         ...DEFAULT_PRESET.parts.bass,
-        drive: { ...BASS_AMP, amount: 0.38, mix: 0.45 },
-        compressor: { ...BASS_COMP, ratio: 6, threshold: -24 },
-        trim: 1.05,
+        highPassHz: 40,
+        lowShelf: { freq: 72, gain: 0.35 },
+        peaks: [
+          { freq: 210, gain: -5.5, q: 0.85 },
+          { freq: 850, gain: 3.0, q: 1.0 },
+          { freq: 2400, gain: 2.2, q: 0.9 },
+        ],
+        drive: {
+          ...BASS_AMP,
+          amount: 0.25,
+          driveHighPassHz: 240,
+          mix: 0.22,
+          cabinet: {
+            ...BASS_AMP.cabinet,
+            resonanceHz: 82,
+            resonanceGain: 1.0,
+          },
+        },
+        parallelCompressor: {
+          threshold: -30,
+          knee: 5,
+          ratio: 7,
+          attack: 0.008,
+          release: 0.12,
+          highPassHz: 42,
+          lowPassHz: 1400,
+          mix: 0.24,
+        },
+        compressor: { ...BASS_COMP, ratio: 3.5, threshold: -19, attack: 0.03 },
+        trim: 0.98,
       },
     },
   }),
 
   ballad: derive("ballad", "Long plate", {
-    reverb: { ir: "plate-long.ogg", wet: 0.38, sendHighPassHz: 180 },
+    reverb: {
+      ir: "plate-long.ogg",
+      character: "plate",
+      wet: 0.38,
+      sendHighPassHz: 180,
+    },
     master: { threshold: -10, knee: 8, ratio: 2, attack: 0.01, release: 0.25, gain: 0.9 },
     parts: {
       ...DEFAULT_PRESET.parts,
@@ -405,8 +513,13 @@ export const STYLE_EFFECT_PRESETS: Record<string, StyleEffectPreset> = {
     },
   }),
 
-  rock: derive("rock", "Big room", {
-    reverb: { ir: "room-large.ogg", wet: 0.26, sendHighPassHz: 250 },
+  rock: derive("rock", "Dry heavy room", {
+    reverb: {
+      ir: "room-large.ogg",
+      character: "large-room",
+      wet: 0.2,
+      sendHighPassHz: 250,
+    },
     master: { threshold: -13, knee: 4, ratio: 3.2, attack: 0.005, release: 0.14, gain: 0.88 },
     parts: {
       ...DEFAULT_PRESET.parts,
@@ -417,32 +530,58 @@ export const STYLE_EFFECT_PRESETS: Record<string, StyleEffectPreset> = {
         reverbSend: 0.18,
         trim: 1.05,
       },
-      /**
-       * Rock guitar: Soldano high-gain (STYLE_RIGS) + cabinet + dotted-8th
-       * delay. SolidGuitar2 is clean DI, so the amp supplies all the gain.
-       */
+      /** Rock guitar: a thick Soldano/4x12 sound with only a short dark slap. */
       guitar: {
         ...DEFAULT_PRESET.parts.guitar,
-        // Light dotted-8th slap — was muddy at mix 0.18 / feedback 0.28 / send 0.3.
-        delay: { beats: 0.75, feedback: 0.14, mix: 0.08, dampHz: 2800 },
-        compressor: { threshold: -20, knee: 6, ratio: 4, attack: 0.012, release: 0.16 },
+        highPassHz: 85,
+        lowShelf: { freq: 160, gain: 1.5 },
+        // Roughly a 90 ms slap near 155 BPM: width, not an audible repeat.
+        delay: { beats: 0.25, feedback: 0.05, mix: 0.025, dampHz: 2400 },
+        compressor: { threshold: -18, knee: 6, ratio: 3.5, attack: 0.018, release: 0.14 },
         peaks: [
-          { freq: 350, gain: -3, q: 1.0 },
-          { freq: 900, gain: 2.5, q: 1.0 },
-          { freq: 2600, gain: 2.5, q: 0.9 },
+          { freq: 300, gain: -1.8, q: 1.0 },
+          { freq: 650, gain: 2.5, q: 0.9 },
+          { freq: 1700, gain: 1.8, q: 1.0 },
+          { freq: 3200, gain: -1.2, q: 0.8 },
         ],
-        reverbSend: 0.12,
-        trim: 0.82,
+        highShelf: { freq: 6500, gain: -2.5 },
+        reverbSend: 0.035,
+        trim: 0.84,
       },
-      // Medium grit so the bass growls under Soldano without muddying it.
+      // Big clean fundamental plus driven upper harmonics and parallel body.
       bass: {
         ...DEFAULT_PRESET.parts.bass,
-        drive: { ...BASS_AMP, amount: 0.32, mix: 0.4 },
+        highPassHz: 30,
+        lowShelf: { freq: 72, gain: 4 },
+        drive: {
+          ...BASS_AMP,
+          amount: 0.34,
+          driveHighPassHz: 240,
+          mix: 0.3,
+          cabinet: {
+            lowPassHz: 3200,
+            resonanceHz: 78,
+            resonanceGain: 4,
+          },
+        },
         peaks: [
-          { freq: 250, gain: -3.5, q: 1.0 },
-          { freq: 800, gain: 3, q: 1.1 },
-          { freq: 2400, gain: 2, q: 0.9 },
+          { freq: 180, gain: 1.8, q: 0.8 },
+          { freq: 280, gain: -2.5, q: 1.0 },
+          { freq: 700, gain: 2.6, q: 1.0 },
+          { freq: 1800, gain: 1.2, q: 0.9 },
         ],
+        parallelCompressor: {
+          threshold: -30,
+          knee: 5,
+          ratio: 6,
+          attack: 0.012,
+          release: 0.16,
+          highPassHz: 38,
+          lowPassHz: 1400,
+          mix: 0.28,
+        },
+        compressor: { ...BASS_COMP, threshold: -24, ratio: 5.5, attack: 0.03, release: 0.18 },
+        reverbSend: 0,
         trim: 1.0,
       },
       // Grand: firmer, drier, slight presence so it cuts a loud mix.
@@ -460,7 +599,7 @@ export const STYLE_EFFECT_PRESETS: Record<string, StyleEffectPreset> = {
   }),
 
   pop: derive("pop", "Modern room", {
-    reverb: { ir: "room-small.ogg", wet: 0.26 },
+    reverb: { ir: "room-small.ogg", character: "tight-room", wet: 0.26 },
     master: { threshold: -12, knee: 6, ratio: 3, attack: 0.005, release: 0.16, gain: 0.9 },
     parts: {
       ...DEFAULT_PRESET.parts,
@@ -485,7 +624,18 @@ export const STYLE_EFFECT_PRESETS: Record<string, StyleEffectPreset> = {
           { freq: 900, gain: 2, q: 1.0 },
           { freq: 2800, gain: 2, q: 0.9 },
         ],
-        trim: 0.95,
+        parallelCompressor: {
+          threshold: -29,
+          knee: 5,
+          ratio: 6,
+          attack: 0.009,
+          release: 0.14,
+          highPassHz: 38,
+          lowPassHz: 1500,
+          mix: 0.2,
+        },
+        compressor: { ...BASS_COMP, ratio: 3.2, threshold: -19, attack: 0.03 },
+        trim: 0.9,
       },
       // Suitcase EP: own polish on top of INSTRUMENT_EFFECTS soft-clip.
       keys: {
@@ -500,12 +650,42 @@ export const STYLE_EFFECT_PRESETS: Record<string, StyleEffectPreset> = {
         compressor: { ...KEYS_COMP, ratio: 2.2, threshold: -17 },
         trim: 0.9,
       },
-      drums: { ...DEFAULT_PRESET.parts.drums, trim: 0.95 },
+      drums: {
+        ...DEFAULT_PRESET.parts.drums,
+        compressor: { ...DRUM_COMP, threshold: -15, ratio: 2.6, attack: 0.024 },
+        highPassHz: 38,
+        lowShelf: { freq: 76, gain: 2.1 },
+        peak: { freq: 265, gain: -2.2, q: 0.9 },
+        peaks: [{ freq: 3500, gain: 2.2, q: 0.85 }],
+        snarePunch: {
+          notes: [40],
+          minVelocity: 72,
+          highPassHz: 50,
+          lowPassHz: 1500,
+          peak: { freq: 190, gain: 4.8, q: 0.85 },
+          compressor: {
+            threshold: -28,
+            knee: 5,
+            ratio: 7,
+            attack: 0.006,
+            release: 0.11,
+          },
+          trim: 1,
+          parallelMix: 0.5,
+        },
+        reverbSend: 0.012,
+        trim: 0.95,
+      },
     },
   }),
 
   rnb: derive("rnb", "Warm plate", {
-    reverb: { ir: "plate-long.ogg", wet: 0.28, sendHighPassHz: 220 },
+    reverb: {
+      ir: "plate-long.ogg",
+      character: "plate",
+      wet: 0.28,
+      sendHighPassHz: 220,
+    },
     parts: {
       ...DEFAULT_PRESET.parts,
       keys: {
@@ -547,7 +727,7 @@ export const STYLE_EFFECT_PRESETS: Record<string, StyleEffectPreset> = {
   }),
 
   country: derive("country", "Natural room", {
-    reverb: { ir: "room-small.ogg", wet: 0.2 },
+    reverb: { ir: "room-small.ogg", character: "tight-room", wet: 0.2 },
     parts: {
       ...DEFAULT_PRESET.parts,
       // Acoustic steel-string: brighter top than ballad, no amp.
@@ -586,7 +766,12 @@ export const STYLE_EFFECT_PRESETS: Record<string, StyleEffectPreset> = {
   }),
 
   "swing-jazz": derive("swing-jazz", "Club", {
-    reverb: { ir: "room-large.ogg", wet: 0.3, sendHighPassHz: 200 },
+    reverb: {
+      ir: "room-large.ogg",
+      character: "large-room",
+      wet: 0.3,
+      sendHighPassHz: 200,
+    },
     // Jazz wants dynamics left alone; barely any bus compression.
     master: { threshold: -8, knee: 10, ratio: 1.6, attack: 0.015, release: 0.3, gain: 0.92 },
     parts: {
@@ -630,7 +815,12 @@ export const STYLE_EFFECT_PRESETS: Record<string, StyleEffectPreset> = {
   }),
 
   reggae: derive("reggae", "Dub space", {
-    reverb: { ir: "plate-long.ogg", wet: 0.34, sendHighPassHz: 260 },
+    reverb: {
+      ir: "plate-long.ogg",
+      character: "plate",
+      wet: 0.34,
+      sendHighPassHz: 260,
+    },
     parts: {
       ...DEFAULT_PRESET.parts,
       // Skank: thin and bright on purpose, so the chops cut through the space.
@@ -669,7 +859,7 @@ export const STYLE_EFFECT_PRESETS: Record<string, StyleEffectPreset> = {
   }),
 
   blues: derive("blues", "Small hall", {
-    reverb: { ir: "room-large.ogg", wet: 0.24 },
+    reverb: { ir: "room-large.ogg", character: "large-room", wet: 0.24 },
     master: { threshold: -10, knee: 8, ratio: 2, attack: 0.008, release: 0.2, gain: 0.9 },
     parts: {
       ...DEFAULT_PRESET.parts,
@@ -742,9 +932,9 @@ export const STYLE_PART_TRIMS: Record<
   Partial<Record<BandPart, number>>
 > = {
   // Rock: drums forward, keys under the guitars (PowerRock / HardRock ratios).
-  rock: { drums: 1.1, bass: 1.02, guitar: 0.72, keys: 0.72 },
+  rock: { drums: 1.1, bass: 1.08, guitar: 0.74, keys: 0.72 },
   // Funk: bass up; Chord1 CHD guitar deliberately quiet in Genos (~36 vs ~50).
-  funk: { drums: 1.05, bass: 1.1, guitar: 0.68, keys: 0.9 },
+  funk: { drums: 1.05, bass: 1.1, guitar: 0.5, keys: 0.765 },
   // Pop: even radio balance, slight keys presence; guitar a step under the kit.
   pop: { drums: 1.0, bass: 1.02, guitar: 0.72, keys: 0.96 },
   // Ballad: piano is the lead voice in the jam arrangement.
@@ -928,7 +1118,11 @@ export function resolveChannelEffects(
       // Very light slap — just enough air, not a audible echo trail.
       resolved.delay = { beats: 0.25, feedback: 0.1, mix: 0.045, dampHz: 2800 }
     }
-    resolved.reverbSend = Math.min(0.42, (resolved.reverbSend ?? 0.18) + 0.1)
+    // Rock has an intentionally dry close-miked cabinet sound; every other
+    // Emily style gets the small room lift used by the general DI voicing.
+    if (styleId !== "rock") {
+      resolved.reverbSend = Math.min(0.42, (resolved.reverbSend ?? 0.18) + 0.1)
+    }
     // Two −25% cuts from the style trim (Emily reads hot against the kit).
     resolved.trim = (resolved.trim ?? 0.9) * 0.75 * 0.75
   }

@@ -22,11 +22,22 @@ import {
   STYLE_PART_TRIMS,
   STYLE_RIGS,
   ampModelsInUse,
+  presetForStyle,
   resolveChannelEffects,
 } from "@/lib/band-jam/engine/effects-presets"
 import { instrumentForRole } from "@/lib/band-jam/engine/instruments"
+import { reverbSendGainFromControl } from "@/lib/band-jam/engine/effects"
 
 const STYLES = Object.keys(STYLE_EFFECT_PRESETS)
+
+describe("mixer reverb send range", () => {
+  it("keeps subtle sends subtle but makes a fully-open send obvious", () => {
+    expect(reverbSendGainFromControl(0)).toBe(0)
+    expect(reverbSendGainFromControl(0.045)).toBeCloseTo(0.047025, 6)
+    expect(reverbSendGainFromControl(0.5)).toBe(0.75)
+    expect(reverbSendGainFromControl(1)).toBe(2)
+  })
+})
 
 describe("amp rigs are opt-in", () => {
   it("has no drive on the default guitar part", () => {
@@ -110,9 +121,9 @@ describe("amp rigs are opt-in", () => {
 describe("style × instrument tone matrix", () => {
   /** Soft-clip bass drive amounts from the approved amp-preset plan. */
   const BASS_DRIVE_AMOUNT: Record<string, number> = {
-    funk: 0.38,
+    funk: 0.25,
     reggae: 0.1,
-    rock: 0.32,
+    rock: 0.34,
     blues: 0.36,
     pop: 0.22,
     rnb: 0.26,
@@ -124,7 +135,7 @@ describe("style × instrument tone matrix", () => {
   /** Guitar STYLE_RIGS expectation for every shipped style. */
   const GUITAR_RIG: Record<string, string | null> = {
     funk: "funk",
-    pop: "chime",
+    pop: null, // curated Shimmer Pop take uses acoustic Mega SteelGuitar
     rock: "high-gain",
     blues: "crunch",
     rnb: "clean",
@@ -187,6 +198,80 @@ describe("style × instrument tone matrix", () => {
     expect(amount("funk")).toBeGreaterThan(amount("reggae"))
   })
 
+  it("keeps the funk bass amp tight and out of the muddy low mids", () => {
+    const bass = resolveChannelEffects(
+      "bass",
+      instrumentForRole("bass", "funk"),
+      "funk",
+    )
+    expect(bass.highPassHz).toBe(40)
+    expect(bass.lowShelf?.gain).toBeLessThanOrEqual(0.5)
+    expect(bass.peaks?.[0]).toMatchObject({ freq: 210, gain: -5.5 })
+    expect(bass.drive).toMatchObject({
+      amount: 0.25,
+      driveHighPassHz: 240,
+      mix: 0.22,
+      cabinet: { resonanceHz: 82, resonanceGain: 1.0 },
+    })
+    expect(bass.parallelCompressor).toMatchObject({
+      ratio: 7,
+      highPassHz: 42,
+      lowPassHz: 1400,
+      mix: 0.24,
+    })
+    expect(bass.compressor?.ratio).toBeLessThan(4)
+  })
+
+  it("makes Rock guitar heavy and dry while keeping the bass large", () => {
+    const guitar = resolveChannelEffects(
+      "guitar",
+      instrumentForRole("guitar", "rock"),
+      "rock",
+    )
+    const bass = resolveChannelEffects(
+      "bass",
+      instrumentForRole("bass", "rock"),
+      "rock",
+    )
+
+    expect(guitar.drive).toEqual(AMP_RIGS["high-gain"])
+    expect(guitar.drive?.cabinet).toMatchObject({
+      lowPassHz: 4000,
+      resonanceHz: 125,
+      resonanceGain: 4,
+    })
+    expect(guitar.delay).toMatchObject({ beats: 0.25, feedback: 0.05, mix: 0.025 })
+    expect(guitar.reverbSend).toBeLessThanOrEqual(0.04)
+    expect(guitar.lowShelf).toMatchObject({ freq: 160, gain: 1.5 })
+    expect(guitar.highShelf?.gain).toBeLessThan(0)
+
+    expect(bass.reverbSend).toBe(0)
+    expect(bass.lowShelf).toMatchObject({ freq: 72, gain: 4 })
+    expect(bass.drive).toMatchObject({
+      amount: 0.34,
+      driveHighPassHz: 240,
+      mix: 0.3,
+      cabinet: { resonanceHz: 78, resonanceGain: 4 },
+    })
+    expect(bass.parallelCompressor?.mix).toBe(0.28)
+  })
+
+  it("uses a restrained DI-preserving parallel bass lane for Pop", () => {
+    const bass = resolveChannelEffects(
+      "bass",
+      instrumentForRole("bass", "pop"),
+      "pop",
+    )
+    expect(bass.reverbSend).toBe(0)
+    expect(bass.parallelCompressor).toMatchObject({
+      ratio: 6,
+      highPassHz: 38,
+      lowPassHz: 1500,
+      mix: 0.2,
+    })
+    expect(bass.compressor?.ratio).toBeLessThan(4)
+  })
+
   it("preloads every amp model named by a production rig", () => {
     const models = ampModelsInUse()
     expect(models.sort()).toEqual(
@@ -203,9 +288,9 @@ describe("style × instrument tone matrix", () => {
 describe("style × part trim matrix", () => {
   // Genos SInt CC7–inspired balances — single source in STYLE_PART_TRIMS.
   const TRIM = {
-    funk: { drums: 1.05, bass: 1.1, guitar: 0.68, keys: 0.9 },
+    funk: { drums: 1.05, bass: 1.1, guitar: 0.5, keys: 0.765 },
     pop: { drums: 1.0, bass: 1.02, guitar: 0.72, keys: 0.96 },
-    rock: { drums: 1.1, bass: 1.02, guitar: 0.72, keys: 0.72 },
+    rock: { drums: 1.1, bass: 1.08, guitar: 0.74, keys: 0.72 },
     blues: { drums: 1.0, bass: 1.04, guitar: 0.74, keys: 0.9 },
     rnb: { drums: 0.98, bass: 1.04, guitar: 0.7, keys: 1.0 },
     reggae: { drums: 0.98, bass: 1.12, guitar: 0.62, keys: 0.8 },
@@ -239,19 +324,20 @@ describe("style × part trim matrix", () => {
   it("gives Emilyguitar a short slap and a little extra reverb", () => {
     const funk = resolveChannelEffects("guitar", "guitar-emily", "funk")
     expect(funk.delay).toEqual({
-      beats: 0.25,
-      feedback: 0.1,
-      mix: 0.045,
-      dampHz: 2800,
+      beats: 0.16,
+      feedback: 0.08,
+      mix: 0.03,
+      dampHz: 4200,
     })
-    // Funk base send is 0.1; Emily adds 0.1 → 0.2.
-    expect(funk.reverbSend).toBeCloseTo(0.2, 5)
-    expect(funk.trim).toBeCloseTo(0.68 * 0.75 * 0.75, 5)
+    // Funk base send is 0.045; Emily adds 0.1 → 0.145.
+    expect(funk.reverbSend).toBeCloseTo(0.145, 5)
+    expect(funk.trim).toBeCloseTo(0.5 * 0.75 * 0.75, 5)
 
-    // Rock already ships its own dotted-8th delay — leave it, still trim.
+    // Rock ships a very short dark slap and deliberately skips the extra room.
     const rock = resolveChannelEffects("guitar", "guitar-emily", "rock")
-    expect(rock.delay?.beats).toBe(0.75)
-    expect(rock.trim).toBeCloseTo(0.72 * 0.75 * 0.75, 5)
+    expect(rock.delay?.beats).toBe(0.25)
+    expect(rock.reverbSend).toBeCloseTo(0.035, 5)
+    expect(rock.trim).toBeCloseTo(0.74 * 0.75 * 0.75, 5)
   })
 
   it("keeps every style's guitar under its drums and bass", () => {
@@ -263,6 +349,100 @@ describe("style × part trim matrix", () => {
       expect(parts.guitar, `${styleId} vs drums`).toBeLessThan(parts.drums)
       expect(parts.guitar, `${styleId} vs bass`).toBeLessThan(parts.bass)
     }
+  })
+})
+
+describe("mix and mastering defaults", () => {
+  it("keeps the rhythm foundation centred and separates harmonic parts", () => {
+    const funk = presetForStyle("funk")
+    expect(funk.parts.drums?.pan).toBe(0)
+    expect(funk.parts.bass?.pan).toBe(0)
+    expect(funk.parts.guitar?.pan).toBeLessThan(0)
+    expect(funk.parts.keys?.pan).toBeGreaterThan(0)
+    expect(Math.abs(funk.parts.guitar?.pan ?? 1)).toBeLessThanOrEqual(0.25)
+    expect(Math.abs(funk.parts.keys?.pan ?? 1)).toBeLessThanOrEqual(0.25)
+  })
+
+  it("uses a headroom-safe, transient-preserving Funk master", () => {
+    const master = presetForStyle("funk").master
+    expect(master.highPassHz).toBeGreaterThanOrEqual(20)
+    expect(master.highPassHz).toBeLessThanOrEqual(30)
+    expect(master.attack).toBeGreaterThanOrEqual(0.01)
+    expect(master.ratio).toBeLessThanOrEqual(2)
+    expect(master.limiterThreshold).toBeLessThanOrEqual(-1)
+    expect(master.gain).toBeLessThan(1)
+    expect(Math.abs(master.lowShelf?.gain ?? 99)).toBeLessThanOrEqual(1.5)
+    expect(master.peak?.freq).toBeGreaterThanOrEqual(200)
+    expect(master.peak?.freq).toBeLessThanOrEqual(400)
+    expect(master.peak?.gain).toBeLessThan(0)
+    expect(Math.abs(master.highShelf?.gain ?? 99)).toBeLessThanOrEqual(1)
+  })
+
+  it("clears low-mid buildup before adding presence in the Funk mix", () => {
+    const funk = presetForStyle("funk")
+    expect(funk.reverb.sendHighPassHz).toBeGreaterThanOrEqual(400)
+    expect(funk.reverb.wet).toBeLessThanOrEqual(0.12)
+    expect(funk.parts.drums?.peak?.gain).toBeLessThan(0)
+    expect(funk.parts.bass?.peaks?.[0]?.gain).toBeLessThanOrEqual(-4)
+    expect(funk.parts.guitar?.highPassHz).toBeGreaterThanOrEqual(130)
+    expect(funk.parts.guitar?.peaks?.[0]?.gain).toBeLessThanOrEqual(-2.5)
+    expect(funk.parts.keys?.highPassHz).toBeGreaterThanOrEqual(80)
+    expect(funk.parts.keys?.peaks?.[0]?.gain).toBeLessThanOrEqual(-3)
+  })
+
+  it("uses a warm clean Toontrack-inspired Funk rig and preserves pick transients", () => {
+    const funk = presetForStyle("funk")
+    const guitar = resolveChannelEffects(
+      "guitar",
+      instrumentForRole("guitar", "funk"),
+      "funk",
+    )
+
+    expect(guitar.drive).toMatchObject({
+      amp: { model: "FenderPrinceton_clean", inputGain: 0.88 },
+      amount: 0.04,
+      cabinet: { ir: "cab-4x12-warm.ogg", lowPassHz: 6200 },
+    })
+    expect(guitar.compressor).toMatchObject({
+      ratio: 3.2,
+      attack: 0.009,
+      release: 0.085,
+    })
+    expect(guitar.delay).toMatchObject({
+      beats: 0.16,
+      feedback: 0.08,
+      mix: 0.03,
+      dampHz: 4200,
+    })
+    expect(guitar.reverbSend).toBeCloseTo(0.045, 5)
+    expect(guitar.highPassHz).toBe(140)
+    expect(guitar.highShelf).toBeUndefined()
+    expect(Math.max(...(guitar.peaks ?? []).map((band) => band.freq))).toBe(3200)
+
+    expect(funk.parts.drums?.snarePunch).toMatchObject({
+      notes: [40],
+      minVelocity: 72,
+      lowPassHz: 1450,
+      parallelMix: 0.48,
+      compressor: { ratio: 7, attack: 0.006, release: 0.105 },
+    })
+    expect(funk.parts.drums?.compressor?.attack).toBeGreaterThanOrEqual(0.02)
+    expect(funk.parts.drums?.reverbSend).toBeLessThanOrEqual(0.015)
+    expect(funk.parts.drums?.lowShelf?.gain).toBeGreaterThan(0)
+  })
+
+  it("keeps Pop drums nearly dry and lets the hybrid snare sample provide the punch", () => {
+    const drums = presetForStyle("pop").parts.drums
+    expect(drums?.snarePunch).toMatchObject({
+      notes: [40],
+      minVelocity: 72,
+      lowPassHz: 1500,
+      parallelMix: 0.5,
+      compressor: { ratio: 7, attack: 0.006, release: 0.11 },
+    })
+    expect(drums?.compressor?.attack).toBeGreaterThanOrEqual(0.02)
+    expect(drums?.reverbSend).toBeLessThanOrEqual(0.015)
+    expect(drums?.lowShelf?.gain).toBeGreaterThan(0)
   })
 })
 

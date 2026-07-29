@@ -84,8 +84,9 @@
     "gb5_mp_rr1.ogg": 44100,
     "gb5_p_rr1.ogg": 44100
   },
-  "totalBytes": 3680443,
+  "totalBytes": 3662880,
   "regionCount": 104,
   "sampleCount": 79,
+  "renderGainDb": -6.0,
   "instrumentGain": 2.9456543922350384
 }

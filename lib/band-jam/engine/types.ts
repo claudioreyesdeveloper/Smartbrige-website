@@ -72,7 +72,22 @@ export type ProgressionSection = {
   label: string
   bars: number
   chords: ChordEvent[]
+  /** SmartBridge database clip that owns this section. */
+  sourceClipId?: number
+  clipOrder?: number
+  /** Desktop arranger assignment for this section (Main A-D). */
+  styleVariation?: "A" | "B" | "C" | "D"
+  sectionKey?: string
+  /**
+   * Generated compact reharmonizations: [style bitmask, chord tuples].
+   * Tuple fields are startBeat, durationBeats, root, name, optional bassRoot.
+   * Bit positions correspond to Progression.reharmStyles.
+   */
+  reharmonizations?: ReharmonizationGroup[]
 }
+
+export type CompactChordEvent = [number, number, number, string, number?]
+export type ReharmonizationGroup = [number, CompactChordEvent[]]
 
 export type Progression = {
   id: string
@@ -82,7 +97,13 @@ export type Progression = {
   keyLabel: string
   tempo?: number
   category?: string
+  /** Source song meter, e.g. "4/4" or "3/4". Defaults to 4/4 for legacy rows. */
+  timeSignature?: string
   sections: ProgressionSection[]
+  /** Named chord-only alternatives, in desktop JamPlayer selector order. */
+  reharmStyles?: string[]
+  sourceSongId?: string
+  source?: "factory" | "jam"
   /** Provenance: roman_progression_patterns.id it was derived from. */
   sourcePatternId?: number
 }
@@ -124,6 +145,9 @@ export type SfzRegion = {
   ampegRelease: number
   ampegSustain: number
   transpose: number
+  /** Deterministic round-robin position (1-based); defaults to 1/1. */
+  seqPosition?: number
+  seqLength?: number
 }
 
 export type SfzInstrument = {
@@ -163,6 +187,8 @@ export type StylePartDef = {
     atSectionEnd: boolean
     minSectionBars: number
     pool: number[]
+    /** Optional exact fill family for a particular A/B/C/D variation. */
+    variationPools?: Array<number[] | null>
   }
   /**
    * Alternative clips of increasing density, ordered sparse -> busy.
@@ -205,6 +231,8 @@ export type BandStyle = {
   tempoMin: number
   tempoMax: number
   parts: Partial<Record<BandPart, StylePartDef>>
+  /** Parts deliberately silent in one A/B/C/D take; null keeps that take unchanged. */
+  disabledPartsByVariation?: Array<BandPart[] | null>
 }
 
 // ---------------------------------------------------------------------------
@@ -246,6 +274,7 @@ export type Arrangement = {
 export type ArrangementSection = {
   role: SectionRole
   label: string
+  styleVariation?: "A" | "B" | "C" | "D"
   /** 1-indexed, inclusive. */
   startBar: number
   endBar: number

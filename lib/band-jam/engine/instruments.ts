@@ -1,5 +1,6 @@
 import {
   buildRegionIndex,
+  createRoundRobinSelector,
   parseSfz,
   playbackRateFor,
   regionGain,
@@ -84,9 +85,9 @@ export const INSTRUMENTS_BASE = "/jam-player/instruments"
  * `guitar-steel`. SolidGuitar2 remains available as a fallback id.
  */
 export const ROLE_INSTRUMENTS: Record<string, string> = {
-  // SM Drums (Public Domain) — multi-velocity acoustic kit, GM-remapped.
-  // Replaces Yamaha PowerKit1: far deeper velocity layers on kick/snare/hats.
-  drums: "drums-sm",
+  // PowerKit2 replaces the much larger SMDrums bundle as the acoustic
+  // default. Rock and swing-jazz retain their deliberate kit overrides.
+  drums: "drums-power2",
   bass: "bass-electric",
   guitar: "guitar-emily",
   keys: "piano-grand",
@@ -104,9 +105,14 @@ export const STYLE_ROLE_INSTRUMENTS: Record<
   string,
   Partial<Record<string, string>>
 > = {
-  // guitar-emily is the default electric; these only override keys / acoustic.
-  funk: { keys: "keys-suitcase-ep" },
-  pop: { keys: "keys-suitcase-ep" },
+  // The curated Classic Funk generated performances were authored for the
+  // Yamaha Mega SolidGuitar2 velocity/articulation layout. Emilyguitar treats
+  // those velocities as ordinary dynamics and loses the intended mutes and
+  // hard/open attacks, so Funk deliberately returns to SolidGuitar2.
+  // PowerKit2 is the global acoustic default. These entries remain explicit
+  // so the curated launch styles document their intended sound source.
+  funk: { drums: "drums-power2", guitar: "guitar-solid2", keys: "keys-suitcase-ep" },
+  pop: { drums: "drums-power2", guitar: "guitar-steel", keys: "keys-suitcase-ep" },
   rnb: { keys: "keys-suitcase-ep" },
   // Acoustic steel-string. NOTE: the effect presets must drop the amp/cabinet
   // for these styles -- an acoustic guitar through a 4x12 sounds as wrong as
@@ -117,12 +123,24 @@ export const STYLE_ROLE_INSTRUMENTS: Record<
   // 85-127 (34). Our style clips fire strum/fret-noise notes up to 118, so on
   // DistortionGtr a large share of the articulation simply has no sample.
   // Distortion character comes from the amp sim in effects-presets instead.
-  ballad: { guitar: "guitar-steel" },
+  ballad: { drums: "drums-brushkit", guitar: "guitar-steel" },
   country: { guitar: "guitar-steel" },
   // Drum kits from the PSR-S900 Kontakt library (not PowerKit1).
   rock: { drums: "drums-rockkit" },
   "swing-jazz": { drums: "drums-brushkit" },
 }
+
+/**
+ * Rock is deliberately double-tracked at playback: the organic Emily DI and
+ * the articulation-complete SolidGuitar2 receive the same performance through
+ * independent amp chains, then sit at opposite sides of the stereo field.
+ * Keeping this recipe here makes the sound-source choice as explicit and
+ * testable as the single-instrument style overrides above.
+ */
+export const ROCK_GUITAR_LAYERS = [
+  { id: "guitar-emily", layerId: "emily-left", pan: -0.88, trim: 0.42 },
+  { id: "guitar-solid2", layerId: "solid2-right", pan: 0.88, trim: 0.42 },
+] as const
 
 export function instrumentForRole(role: string, styleId?: string): string | undefined {
   if (styleId) {
@@ -234,6 +252,7 @@ export async function loadInstrument(
     manifest.label,
   )
   const index = buildRegionIndex(instrument)
+  const chooseRegion = createRoundRobinSelector(index)
 
   const bank = new SampleBank(ctx, {
     sourceSampleRates: manifest.sourceSampleRates,
@@ -243,7 +262,7 @@ export async function loadInstrument(
   await bank.loadInstrument(instrument)
 
   const selector: RegionSelector = {
-    selectRegion: (note, velocity) => selectRegion(index, note, velocity),
+    selectRegion: chooseRegion,
     regionGain,
     playbackRateFor,
   }

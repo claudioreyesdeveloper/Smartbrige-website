@@ -19,8 +19,9 @@
     "001_GrandPiano_Live_-90-127.ogg": 44100,
     "001_GrandPiano_Live_-96-127.ogg": 44100
   },
-  "totalBytes": 2173063,
+  "totalBytes": 2172083,
   "regionCount": 14,
   "sampleCount": 14,
+  "renderGainDb": -3.0,
   "instrumentGain": 1.4784369149173866
 }

@@ -1,21 +1,57 @@
 import { describe, expect, it } from "vitest"
-import { FX_PITCH_MIN } from "@/lib/band-jam/engine/types"
+import { BEATS_PER_BAR, FX_PITCH_MIN } from "@/lib/band-jam/engine/types"
 import type {
   BandStyle,
   ChordEvent,
   NoteEvent,
   Progression,
+  SectionRole,
 } from "@/lib/band-jam/engine/types"
 import {
   adaptHarmonic,
+  applyBassInversions,
   arrange,
   foldToRegister,
+  shapeModernDrumAccent,
+  shapeFunkSnareVelocity,
   shiftForRoot,
   tileEvents,
   transposeChordSymbol,
 } from "@/lib/band-jam/engine/arrange"
 
 const EPS_TEST = 1e-6
+
+describe("Funk snare velocity shape", () => {
+  it("leaves ghost notes untouched and lifts only medium/accented snares", () => {
+    expect(shapeFunkSnareVelocity(38, 42)).toBe(42)
+    expect(shapeFunkSnareVelocity(38, 59)).toBe(59)
+    expect(shapeFunkSnareVelocity(38, 80)).toBe(82)
+    expect(shapeFunkSnareVelocity(38, 100)).toBe(112)
+    expect(shapeFunkSnareVelocity(38, 127)).toBe(127)
+  })
+
+  it("never changes kick, hats, or other drum notes", () => {
+    for (const noteNumber of [36, 37, 42, 46, 49, 51]) {
+      expect(shapeFunkSnareVelocity(noteNumber, 100)).toBe(100)
+    }
+  })
+})
+
+describe("modern drum sample routing", () => {
+  it("uses E1 for every snare while preserving the soft layers for ghost notes", () => {
+    expect(shapeModernDrumAccent(38, 50)).toEqual({ note: 40, velocity: 50 })
+    expect(shapeModernDrumAccent(38, 71)).toEqual({ note: 40, velocity: 71 })
+    expect(shapeModernDrumAccent(38, 72)).toEqual({ note: 40, velocity: 86 })
+    expect(shapeModernDrumAccent(38, 120)).toEqual({ note: 40, velocity: 127 })
+  })
+
+  it("moves kick accents into harder layers without changing hats", () => {
+    expect(shapeModernDrumAccent(36, 50)).toEqual({ note: 36, velocity: 50 })
+    expect(shapeModernDrumAccent(36, 70)).toEqual({ note: 36, velocity: 82 })
+    expect(shapeModernDrumAccent(36, 110)).toEqual({ note: 36, velocity: 127 })
+    expect(shapeModernDrumAccent(42, 110)).toEqual({ note: 42, velocity: 110 })
+  })
+})
 
 function note(beat: number, pitch: number, velocity: number, durationBeats: number): NoteEvent {
   return { beat, note: pitch, velocity, durationBeats }
@@ -149,6 +185,39 @@ describe("adaptHarmonic", () => {
     const out = adaptHarmonic([pitched, fx], 0, chords, [0, 127])
     expect(out).toEqual([note(0, 55, 90, 1), fx])
   })
+
+  it("keeps slash chords adapted to their harmonic root", () => {
+    const slash: ChordEvent[] = [
+      { ...chord(0, 4, 0, "C/E"), bassRoot: 4 },
+    ]
+    const source = [note(0, 36, 90, 1)]
+    expect(adaptHarmonic(source, 0, slash, [24, 60])).toEqual(source)
+  })
+})
+
+describe("applyBassInversions", () => {
+  it("redirects root-emphasis notes to the slash bass without transposing the line", () => {
+    const slash: ChordEvent[] = [
+      { ...chord(0, 4, 0, "C/E"), bassRoot: 4 },
+    ]
+    const source = [
+      note(0, 36, 90, 1),
+      note(1, 40, 85, 1),
+      note(2, 43, 80, 1),
+      note(3, 96, 40, 0.1),
+    ]
+    expect(applyBassInversions(source, slash, [28, 55])).toEqual([
+      note(0, 40, 90, 1),
+      note(1, 40, 85, 1),
+      note(2, 43, 80, 1),
+      note(3, 96, 40, 0.1),
+    ])
+  })
+
+  it("leaves root-position chords unchanged", () => {
+    const source = [note(0, 36, 90, 1), note(1, 40, 85, 1)]
+    expect(applyBassInversions(source, [chord(0, 4, 0, "C")], [28, 55])).toEqual(source)
+  })
 })
 
 describe("transposeChordSymbol", () => {
@@ -270,6 +339,7 @@ function buildFixtureClips(): Map<number, { events: NoteEvent[]; sourceKeyPc: nu
     [3, { events: GUITAR_CLIP, sourceKeyPc: 0 }],
     [10, { events: DRUM_FILL_CLIP, sourceKeyPc: 0 }],
     [11, { events: DRUM_FILL_CLIP, sourceKeyPc: 0 }],
+    [12, { events: [note(0, 57, 120, 0.5)], sourceKeyPc: 0 }],
   ])
 }
 
@@ -383,6 +453,80 @@ describe("arrange", () => {
     expect(preFillEvents.length).toBeGreaterThan(0)
   })
 
+  it("keeps the section groove intact when transition fills are disabled", () => {
+    const result = arrange({
+      style: buildFixtureStyle(),
+      progression: buildFixtureProgression(),
+      keyPc: 0,
+      tempo: 100,
+      clips: buildFixtureClips(),
+      includeSectionFills: false,
+    })
+    const drums = result.parts.find((p) => p.part === "drums")!
+    const chorusLastBar = drums.events.filter(
+      (event) => event.beat >= 60 - EPS_TEST && event.beat < 64,
+    )
+    expect(chorusLastBar).toHaveLength(DRUM_CLIP.length)
+    expect(chorusLastBar.map((event) => event.note)).toEqual(
+      DRUM_CLIP.map((event) => event.note),
+    )
+  })
+
+  it("arranges bass notes against slash-bass pitch classes", () => {
+    const progression: Progression = {
+      id: "slash-bass",
+      name: "Slash bass",
+      keyPc: 0,
+      keyLabel: "C",
+      sections: [
+        {
+          role: "verse",
+          label: "Verse",
+          bars: 1,
+          chords: [{ ...chord(0, 4, 0, "C/E"), bassRoot: 4 }],
+        },
+      ],
+    }
+    const clips = buildFixtureClips()
+    clips.set(2, {
+      sourceKeyPc: 0,
+      events: [note(0, 36, 90, 1), note(2, 43, 80, 1)],
+    })
+    const result = arrange({
+      style: buildFixtureStyle(),
+      progression,
+      keyPc: 0,
+      tempo: 100,
+      clips,
+      includeSectionFills: false,
+    })
+    const bass = result.parts.find((part) => part.part === "bass")!
+    expect(bass.events[0].note % 12).toBe(4)
+    expect(bass.events[1].note % 12).toBe(7)
+  })
+
+  it("uses a curated fill family only for its matching variation", () => {
+    const style = buildFixtureStyle()
+    style.parts.drums!.fills!.variationPools = [[12]]
+    const base = {
+      style,
+      progression: buildFixtureProgression(),
+      keyPc: 0,
+      tempo: 100,
+      clips: buildFixtureClips(),
+    }
+    const a = arrange({ ...base, variation: 0 })
+    const b = arrange({ ...base, variation: 1 })
+    const chorusA = a.parts
+      .find((p) => p.part === "drums")!
+      .events.filter((e) => e.beat >= 60 && e.beat < 64)
+    const chorusB = b.parts
+      .find((p) => p.part === "drums")!
+      .events.filter((e) => e.beat >= 60 && e.beat < 64)
+    expect(chorusA.map((event) => event.note)).toEqual([57])
+    expect(chorusB.map((event) => event.note)).toEqual([49, 49])
+  })
+
   it("degrades gracefully when a referenced clip id is missing", () => {
     // Deliberately NOT a throw. A missing clip means one part is silent, not
     // that the arrangement is invalid -- throwing here blanked the entire
@@ -428,6 +572,176 @@ describe("arrange", () => {
 })
 
 describe("arrange — variations", () => {
+  it("uses the saved desktop Main A-D assignment for generic sections", () => {
+    const style: BandStyle = {
+      id: "main-assignment",
+      name: "Main assignment",
+      tempoDefault: 100,
+      tempoMin: 60,
+      tempoMax: 180,
+      parts: {
+        drums: {
+          instrument: "kit",
+          gain: 1,
+          harmonic: false,
+          slots: { intro: 101, verse: 102, pre_chorus: 103, chorus: 104 },
+        },
+      },
+    }
+    const clips = new Map([
+      [101, { sourceKeyPc: 0, events: [note(0, 51, 90, 1)] }],
+      [102, { sourceKeyPc: 0, events: [note(0, 52, 90, 1)] }],
+      [103, { sourceKeyPc: 0, events: [note(0, 53, 90, 1)] }],
+      [104, { sourceKeyPc: 0, events: [note(0, 54, 90, 1)] }],
+    ])
+    const progression: Progression = {
+      id: "saved-mains",
+      name: "Saved mains",
+      keyPc: 0,
+      keyLabel: "C",
+      sections: [
+        {
+          role: "section",
+          label: "Generic section that uses Main A",
+          bars: 1,
+          styleVariation: "A",
+          chords: [chord(0, 4, 0, "C")],
+        },
+      ],
+    }
+
+    const out = arrange({ style, progression, keyPc: 0, tempo: 100, clips })
+    expect(out.parts[0].events[0].note).toBe(52) // Main A maps to verse material.
+    expect(out.sections[0].styleVariation).toBe("A")
+  })
+
+  it("uses matching drum-family roles for named song sections", () => {
+    const roles: SectionRole[] = [
+      "intro",
+      "verse",
+      "pre_chorus",
+      "chorus",
+      "bridge",
+      "outro",
+    ]
+    const roleIds = Object.fromEntries(
+      roles.map((role, index) => [role, 200 + index]),
+    ) as Record<SectionRole, number>
+    const variationIds = Object.fromEntries(
+      roles.map((role, index) => [role, [200 + index, 300 + index]]),
+    ) as Record<SectionRole, number[]>
+    const style: BandStyle = {
+      id: "named-drum-sections",
+      name: "Named drum sections",
+      tempoDefault: 100,
+      tempoMin: 60,
+      tempoMax: 180,
+      parts: {
+        drums: {
+          instrument: "kit",
+          gain: 1,
+          harmonic: false,
+          slots: roleIds,
+          variations: variationIds,
+        },
+      },
+    }
+    const clips = new Map<number, { sourceKeyPc: number; events: NoteEvent[] }>()
+    roles.forEach((_, index) => {
+      clips.set(200 + index, {
+        sourceKeyPc: 0,
+        events: [note(0, 36 + index, 90, 0.25)],
+      })
+      clips.set(300 + index, {
+        sourceKeyPc: 0,
+        events: [note(0, 42 + index, 90, 0.25)],
+      })
+    })
+    const progression: Progression = {
+      id: "named-sections",
+      name: "Named sections",
+      keyPc: 0,
+      keyLabel: "C",
+      sections: roles.map((role, index) => ({
+        role,
+        label: role,
+        bars: 1,
+        // Deliberately unrelated to the role: drums must ignore it here.
+        styleVariation: (["D", "A", "B", "C"] as const)[index % 4],
+        chords: [chord(0, 4, 0, "C")],
+      })),
+    }
+
+    const out = arrange({
+      style,
+      progression,
+      keyPc: 0,
+      tempo: 100,
+      clips,
+      variation: 1,
+    })
+    const drums = out.parts.find((part) => part.part === "drums")!
+    roles.forEach((_, index) => {
+      const sectionStart = index * BEATS_PER_BAR
+      const first = drums.events.find(
+        (event) => event.beat >= sectionStart - EPS_TEST,
+      )
+      expect(first?.note, roles[index]).toBe(42 + index)
+    })
+  })
+
+  it("plays a one-bar drum ending once, after the selected family's groove", () => {
+    const style: BandStyle = {
+      id: "dedicated-ending",
+      name: "Dedicated ending",
+      tempoDefault: 100,
+      tempoMin: 60,
+      tempoMax: 180,
+      parts: {
+        drums: {
+          instrument: "kit",
+          gain: 1,
+          harmonic: false,
+          slots: { chorus: 401, outro: 402 },
+          variations: { chorus: [401, 411], outro: [402, 412] },
+        },
+      },
+    }
+    const clips = new Map([
+      [401, { sourceKeyPc: 0, events: [note(0, 36, 90, 0.25)] }],
+      [402, { sourceKeyPc: 0, events: [note(0, 49, 90, 0.25)] }],
+      [411, { sourceKeyPc: 0, events: [note(0, 38, 90, 0.25)] }],
+      [412, { sourceKeyPc: 0, events: [note(0, 57, 90, 0.25)] }],
+    ])
+    const progression: Progression = {
+      id: "outro",
+      name: "Outro",
+      keyPc: 0,
+      keyLabel: "C",
+      sections: [
+        {
+          role: "outro",
+          label: "Outro",
+          bars: 3,
+          styleVariation: "A",
+          chords: [chord(0, 12, 0, "C")],
+        },
+      ],
+    }
+
+    const out = arrange({
+      style,
+      progression,
+      keyPc: 0,
+      tempo: 100,
+      clips,
+      variation: 1,
+    })
+    const notes = out.parts.find((part) => part.part === "drums")!.events
+    expect(notes.filter((event) => event.beat < 8).map((event) => event.note)).toEqual([38, 38])
+    expect(notes.filter((event) => event.beat >= 8).map((event) => event.note)).toEqual([57])
+  })
+
   it("variation 0 is identical to using slots directly", () => {
     const base = {
       style: buildFixtureStyle(),

@@ -1,5 +1,5 @@
 /**
- * The guitar octave shift must apply only where named (rock, funk).
+ * The guitar octave shift must apply only where named (rock, R&B).
  *
  * It was written as a bare global constant and applied to every style, which
  * dropped all eight non-rock guitars an octave below where they belong. Third
@@ -90,13 +90,13 @@ describe("guitar octave shift", () => {
   it("defaults to no shift", () => {
     expect(guitarOctaveShift("anything-not-listed")).toBe(0)
     expect(Object.keys(GUITAR_OCTAVE_SHIFT_BY_STYLE).sort()).toEqual(
-      ["funk", "rnb", "rock"].sort(),
+      ["rnb", "rock"].sort(),
     )
   })
 
-  it("leaves every style except rock, funk and rnb where its clips sit", () => {
+  it("leaves every style except rock and rnb where its clips sit", () => {
     for (const style of stylesWithGuitar) {
-      if (style.id === "rock" || style.id === "funk" || style.id === "rnb") continue
+      if (style.id === "rock" || style.id === "rnb") continue
       const src = sourceGuitar(style)
       const got = arrangedGuitar(style)
       if (!src.length || !got.length) continue
@@ -117,48 +117,25 @@ describe("guitar octave shift", () => {
     expect(shift).toBeLessThanOrEqual(16)
   })
 
-  it("drops funk Variation A/C stroke-register notes an octave (leaves true FX)", () => {
-    // Funk A/C is almost entirely MegaVoice stroke keys 89–95 (no pitched
-    // notes in the source). Those must octave-drop into Emily's fretted
-    // range or the part is all scratch. True FX (≥96) is stripped for the
-    // web mix (muted/pickrest one-shots rattle against the band).
-    // After the first −12 they still sit at 77–83 (above the funk pocket),
-    // so they drop a second octave into ≈65–71.
+  it("keeps Classic Funk Core Variation A in a playable guitar register", () => {
+    // Funk A is now the hand-picked desktop-generated Core 01 performance,
+    // not the old FunkPopRock stroke-only style. It contains real fretted
+    // pitches and must survive chord adaptation without falling below low E
+    // or leaking MegaVoice noise keys into the web mix.
     const funk = catalog.styles.find((s) => s.id === "funk")!
     const srcId = funk.parts.guitar!.variations?.verse?.[0]
     expect(typeof srcId).toBe("number")
     const src = clips.get(srcId as number)?.events ?? []
-    const srcStroke = src
-      .map((e) => e.note)
-      .filter((n) => n > FX_PITCH_MIN && n < GUITAR_NOISE_KEY_MIN)
-    const srcNoise = src
-      .map((e) => e.note)
-      .filter((n) => n >= GUITAR_NOISE_KEY_MIN)
-    expect(srcStroke.length).toBeGreaterThan(0)
-    expect(srcNoise.length).toBeGreaterThan(0)
+    expect(src.length).toBeGreaterThan(0)
+    expect(src.every((event) => event.note < GUITAR_NOISE_KEY_MIN)).toBe(true)
 
-    for (const variation of [0, 2]) {
-      const out = arrange({
-        style: funk,
-        progression: catalog.progressions[0],
-        keyPc: catalog.progressions[0].keyPc,
-        tempo: funk.tempoDefault,
-        clips,
-        variation,
-      })
-      const notes = (
-        out.parts.find((p) => p.part === "guitar")?.events ?? []
-      ).map((e) => e.note)
-      for (const n of srcStroke) {
-        expect(notes).toContain(n - 24)
-        expect(notes).not.toContain(n)
-        expect(notes).not.toContain(n - 12)
-      }
-      for (const n of srcNoise) expect(notes).not.toContain(n)
-    }
+    const notes = arrangedGuitar(funk, 0)
+    expect(notes.length).toBeGreaterThan(0)
+    expect(Math.min(...notes)).toBeGreaterThanOrEqual(40)
+    expect(Math.max(...notes)).toBeLessThan(GUITAR_NOISE_KEY_MIN)
   })
 
-  it("drops funk pitched guitar by one octave (Variation B)", () => {
+  it("keeps funk pitched guitar at its written octave (Variation B)", () => {
     const funk = catalog.styles.find((s) => s.id === "funk")!
     const def = funk.parts.guitar!
     const takes = def.variations?.verse ?? []
@@ -170,16 +147,15 @@ describe("guitar octave shift", () => {
     const got = arrangedGuitar(funk, 1)
     expect(src.length).toBeGreaterThan(0)
     expect(got.length).toBeGreaterThan(0)
-    const shift = median(src) - median(got)
-    expect(shift).toBeGreaterThanOrEqual(8)
-    expect(shift).toBeLessThanOrEqual(16)
+    expect(Math.abs(median(got) - median(src))).toBeLessThan(7)
   })
 
-  it("leaves funk Variation B FX keys unshifted", () => {
+  it("strips funk Variation C FX keys from the web mix", () => {
     // Noise-lane FX is stripped for the web mix; this test now asserts the
-    // pitched Variation B material still drops an octave and no FX remains.
+    // selected Jazzrock performance keeps its pitched material while no
+    // MegaVoice trigger keys leak into playback.
     const funk = catalog.styles.find((s) => s.id === "funk")!
-    const id = funk.parts.guitar!.variations?.verse?.[1]
+    const id = funk.parts.guitar!.variations?.verse?.[2]
     expect(typeof id).toBe("number")
     const srcFx = (clips.get(id as number)?.events ?? []).filter(
       (e) => e.note >= GUITAR_NOISE_KEY_MIN,
@@ -191,7 +167,7 @@ describe("guitar octave shift", () => {
       keyPc: catalog.progressions[0].keyPc,
       tempo: funk.tempoDefault,
       clips,
-      variation: 1,
+      variation: 2,
     })
     const g = out.parts.find((p) => p.part === "guitar")?.events ?? []
     expect(g.some((e) => e.note >= GUITAR_NOISE_KEY_MIN)).toBe(false)

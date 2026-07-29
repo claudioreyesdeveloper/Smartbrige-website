@@ -2,12 +2,12 @@
  * Free-tier catalogue limits for Jam Player.
  *
  * Launch free pack: all four ear-checked styles (funk / pop / rock / ballad)
- * plus a short progression slice, all practice features, no saved state.
- * Paid unlocks the full progression list + practice memory + Web MIDI out.
+ * plus the complete song catalogue, all practice features, no saved state.
+ * Paid unlocks practice memory + Web MIDI out.
  *
  * (Product plan §5 originally said "1 style"; for this first public cut we
- * ship the full launch style set free and gate on breadth of progressions
- * and memory instead.)
+ * ship the full launch style set and full song database; memory and MIDI
+ * remain the paid features.)
  *
  * Styles still pass through the launch filter first (see practice-screen);
  * free further narrows that set if the launch list ever grows.
@@ -19,8 +19,6 @@ export const JAM_PLAYER_FREE_STYLE_IDS = [
   "rock",
   "ballad",
 ] as const
-
-export const JAM_PLAYER_FREE_PROGRESSION_COUNT = 6
 
 export type CatalogSlice<TStyle extends { id: string }, TProg> = {
   styles: TStyle[]
@@ -36,6 +34,6 @@ export function applyJamPlayerFreeTier<TStyle extends { id: string }, TProg>(
   const freeIds = new Set<string>(JAM_PLAYER_FREE_STYLE_IDS)
   return {
     styles: catalog.styles.filter((s) => freeIds.has(s.id)),
-    progressions: catalog.progressions.slice(0, JAM_PLAYER_FREE_PROGRESSION_COUNT),
+    progressions: catalog.progressions,
   }
 }

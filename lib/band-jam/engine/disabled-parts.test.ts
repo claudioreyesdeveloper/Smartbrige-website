@@ -19,6 +19,7 @@ import path from "node:path"
 import { describe, expect, it } from "vitest"
 
 import { arrange } from "@/lib/band-jam/engine/arrange"
+import { isPartDisabledByDefault } from "@/lib/band-jam/engine/style-arranger"
 import type {
   BandPart,
   BandStyle,
@@ -39,13 +40,9 @@ for (const [id, v] of Object.entries(rawClips)) {
   clips.set(Number(id), { events: v.events, sourceKeyPc: v.sourceKeyPc })
 }
 
-/**
- * Mirror of DISABLED_PARTS_BY_STYLE in practice-screen.tsx. Kept in step by
- * the "matches the screen" assertion below rather than by hope.
- */
 const DISABLED: Record<string, BandPart[]> = { rock: ["keys"] }
 
-function partsFor(styleId: string): BandPart[] {
+function partsFor(styleId: string, variation = 0): BandPart[] {
   const style = catalog.styles.find((s) => s.id === styleId)
   if (!style) throw new Error(`no style ${styleId}`)
   const progression = catalog.progressions[0]
@@ -55,10 +52,11 @@ function partsFor(styleId: string): BandPart[] {
     keyPc: progression.keyPc,
     tempo: style.tempoDefault,
     clips,
-    variation: 0,
+    variation,
   })
-  const disabled = new Set(DISABLED[styleId] ?? [])
-  return out.parts.filter((p) => !disabled.has(p.part)).map((p) => p.part)
+  return out.parts
+    .filter((part) => !isPartDisabledByDefault(style, variation, part.part))
+    .map((part) => part.part)
 }
 
 describe("disabled parts", () => {
@@ -68,10 +66,17 @@ describe("disabled parts", () => {
 
   it("keeps keys in every other style that has them", () => {
     const others = catalog.styles.map((s) => s.id).filter((id) => id !== "rock")
-    const withKeys = others.filter((id) => partsFor(id).includes("keys"))
+    const withKeys = others.filter((id) =>
+      partsFor(id, id === "pop" ? 1 : 0).includes("keys"),
+    )
     // Not every style necessarily carries a keys part, but most must — if this
     // hits zero the global-Set bug is back.
     expect(withKeys.length).toBeGreaterThan(others.length / 2)
+  })
+
+  it("silences Pop keys in A and restores them in B", () => {
+    expect(partsFor("pop", 0)).not.toContain("keys")
+    expect(partsFor("pop", 1)).toContain("keys")
   })
 
   it("is not affected by which style was loaded first", () => {
@@ -84,27 +89,20 @@ describe("disabled parts", () => {
     expect(rockAfterFunk).not.toContain("keys")
   })
 
-  it("matches the table the practice screen actually uses", () => {
-    // Guards this file drifting from practice-screen.tsx.
-    const src = readFileSync(
-      path.join(ROOT, "components/band-jam/practice-screen.tsx"),
-      "utf8",
-    )
-    const block = src.slice(
-      src.indexOf("const DISABLED_PARTS_BY_STYLE"),
-      src.indexOf("function isPartDisabled"),
-    )
+  it("matches the shared defaults used by the player and arranger", () => {
     for (const [styleId, parts] of Object.entries(DISABLED)) {
-      expect(block).toContain(styleId)
-      for (const p of parts) expect(block).toContain(`"${p}"`)
+      const style = catalog.styles.find((candidate) => candidate.id === styleId)
+      expect(style).toBeDefined()
+      for (const part of parts) {
+        expect(isPartDisabledByDefault(style!, 0, part)).toBe(true)
+      }
     }
-    // Only rock should appear; another style id here means the tables diverged.
-    const styleIds = catalog.styles.map((s) => s.id)
-    for (const id of styleIds) {
-      if (id in DISABLED) continue
-      expect(block, `${id} disabled on screen but not in this test`).not.toContain(
-        `${id}:`,
-      )
+    for (const style of catalog.styles) {
+      if (style.id in DISABLED) continue
+      expect(
+        isPartDisabledByDefault(style, 1, "keys"),
+        `${style.id} unexpectedly disables keys by default`,
+      ).toBe(false)
     }
   })
 })

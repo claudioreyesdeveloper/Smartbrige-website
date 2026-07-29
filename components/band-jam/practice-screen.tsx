@@ -2,12 +2,13 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import Link from "next/link"
-import { ArrowLeft, Settings2, SlidersHorizontal, X } from "lucide-react"
+import { ArrowLeft, ListMusic, Settings2, SlidersHorizontal, X } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { ArrangerPanel } from "@/components/band-jam/arranger-panel"
 import { ChordChart } from "@/components/band-jam/chord-chart"
 import { MixerPanel } from "@/components/band-jam/mixer-panel"
 import { TransportBar } from "@/components/band-jam/transport-bar"
-import { ProgressionPicker } from "@/components/band-jam/progression-picker"
+import { SongBrowser } from "@/components/band-jam/song-browser"
 import { MidiScheduler, useMidiOut } from "@/lib/band-jam/engine/web-midi"
 import { MidiOutControl } from "@/components/band-jam/midi-out-control"
 import { VariationPicker } from "@/components/band-jam/variation-picker"
@@ -23,19 +24,44 @@ import {
   type PracticeStore,
 } from "@/lib/band-jam/engine/practice-store"
 import { arrange } from "@/lib/band-jam/engine/arrange"
+import {
+  applyReharmonization,
+  ORIGINAL_REHARM_STYLE,
+} from "@/lib/band-jam/engine/reharmonization"
 import { applyJamPlayerFreeTier } from "@/lib/band-jam/free-tier"
 import { BandPlayer } from "@/lib/band-jam/engine/player"
 import {
   EffectsRack,
   type PartEffectSettings,
+  type UserEqSettings,
 } from "@/lib/band-jam/engine/effects"
 import {
   presetForStyle,
   resolveChannelEffects,
 } from "@/lib/band-jam/engine/effects-presets"
 import {
+  clearStyleMix,
+  loadStyleMixer,
+  saveStyleMixer,
+  type StyleMixerState,
+} from "@/lib/band-jam/engine/style-mix-store"
+import {
+  applySectionPartPlan,
+  buildDefaultStyleArranger,
+  isPartDisabledByDefault,
+  type SectionPartPlan,
+  type StyleArrangerState,
+} from "@/lib/band-jam/engine/style-arranger"
+import {
+  clearStyleArranger,
+  loadStyleArranger,
+  saveStyleArranger,
+} from "@/lib/band-jam/engine/style-arranger-store"
+import {
   instrumentForRole,
+  loadInstrument,
   loadInstrumentsForRoles,
+  ROCK_GUITAR_LAYERS,
 } from "@/lib/band-jam/engine/instruments"
 import type {
   Arrangement,
@@ -46,6 +72,7 @@ import type {
   NoteEvent,
   PartMixState,
   Progression,
+  SectionRole,
   TransportStatus,
 } from "@/lib/band-jam/engine/types"
 
@@ -54,26 +81,71 @@ type CatalogJson = { progressions: Progression[]; styles: BandStyle[] }
 
 const ALL_PARTS: BandPart[] = ["drums", "bass", "guitar", "keys", "solo"]
 
-/**
- * Parts held back from playback, PER STYLE.
- *
- * This is deliberately keyed by style rather than global. It was global once,
- * and silencing keys while the rock guitars were being judged took the Rhodes
- * and the grand out of all eight styles as collateral — the clips and samples
- * were fine, nothing was ever going to play them.
- *
- * Rock's curated Genos templates carry their harmony on the guitars; a keys
- * part on top fights them. Every other style wants its keys.
- */
-const DISABLED_PARTS_BY_STYLE: Record<string, ReadonlySet<BandPart>> = {
-  rock: new Set<BandPart>(["keys"]),
-}
-
 /** Styles ear-checked for the first public Jam Player cut. */
 const JAM_PLAYER_LAUNCH_STYLE_IDS = ["funk", "rock", "pop", "ballad"] as const
 
-function isPartDisabled(part: BandPart, styleId: string): boolean {
-  return DISABLED_PARTS_BY_STYLE[styleId]?.has(part) ?? false
+function isPartDisabled(
+  part: BandPart,
+  styleId: string,
+  variation?: number,
+  style?: BandStyle | null,
+): boolean {
+  if (!style || style.id !== styleId || variation === undefined) return false
+  return isPartDisabledByDefault(style, variation, part)
+}
+
+/**
+ * Build the exact arrangement the audio and MIDI transports should play.
+ *
+ * Keeping this outside React's memo lets a variation button build and install
+ * its new clip set during the click itself. Previously the button changed the
+ * visible A/B/C/D state first and an effect delivered the new arrangement
+ * later, leaving a short but audible window in which a section click could
+ * start the previous variation.
+ */
+function buildPlayableArrangement({
+  style,
+  progression,
+  clips,
+  keyPc,
+  tempo,
+  variation,
+  styleId,
+  partPlan,
+  includeSectionFills = true,
+}: {
+  style: BandStyle | null
+  progression: Progression | null
+  clips: Map<number, { events: NoteEvent[]; sourceKeyPc: number }> | null
+  keyPc: number
+  tempo: number
+  variation: number
+  styleId: string
+  partPlan?: SectionPartPlan | null
+  includeSectionFills?: boolean
+}): Arrangement | null {
+  if (!style || !progression || !clips) return null
+  try {
+    const out = arrange({
+      style,
+      progression,
+      keyPc,
+      tempo,
+      clips,
+      variation,
+      includeSectionFills,
+    })
+    if (partPlan) return applySectionPartPlan(out, partPlan)
+    return {
+      ...out,
+      parts: out.parts.filter(
+        (part) => !isPartDisabled(part.part, styleId, variation, style),
+      ),
+    }
+  } catch (err) {
+    console.error("arrange failed", err)
+    return null
+  }
 }
 
 const emptyMix = (): Record<BandPart, PartMixState> => ({
@@ -84,14 +156,40 @@ const emptyMix = (): Record<BandPart, PartMixState> => ({
   solo: { volume: 0.8, muted: true },
 })
 
+const flatEq = (): Record<BandPart, UserEqSettings> =>
+  Object.fromEntries(
+    ALL_PARTS.map((part) => [part, { low: 0, mid: 0, high: 0 }]),
+  ) as Record<BandPart, UserEqSettings>
+
+const defaultStyleMixer = (styleId: string): StyleMixerState => {
+  const sends = {} as Record<BandPart, number>
+  const pan = {} as Record<BandPart, number>
+  for (const part of ALL_PARTS) {
+    const settings = resolveChannelEffects(
+      part,
+      instrumentForRole(part, styleId),
+      styleId,
+    )
+    sends[part] = settings.reverbSend ?? 0
+    pan[part] = settings.pan ?? 0
+  }
+  return {
+    mix: emptyMix(),
+    eq: flatEq(),
+    sends,
+    pan,
+    room: presetForStyle(styleId).reverb.wet,
+  }
+}
+
 export type PracticeScreenProps = {
   /**
    * From lib/billing/entitlements.ts getJamPlayerEntitlement(), computed
    * server-side in app/jam-player/app/page.tsx.
    *
-   * Free (`false`): all four launch styles + 6 progressions, all practice
+   * Free (`false`): all four launch styles + complete song catalogue, all practice
    * features, no practice-history persistence, no Web MIDI out.
-   * Paid (`true`): full progression catalogue + memory + MIDI.
+   * Paid (`true`): practice memory + MIDI.
    * See docs/jam-player-product-plan.md §5 (launch: styles free, breadth gated).
    */
   hasFullAccess?: boolean
@@ -117,13 +215,26 @@ export function PracticeScreen({ hasFullAccess = false }: PracticeScreenProps = 
   /** Position within the current bar, 0-1. Drives the intra-bar playhead. */
   const [barPhase, setBarPhase] = useState(0)
   const [standMode, setStandMode] = useState(false)
-  const [mobilePanel, setMobilePanel] = useState<"setup" | "mix" | null>(null)
+  const [mobilePanel, setMobilePanel] = useState<"setup" | "mix" | "arrange" | null>(null)
   const [soloed, setSoloed] = useState<BandPart | null>(null)
   const [fxBypassed, setFxBypassed] = useState(false)
   const [reverbWet, setReverbWet] = useState(0.22)
-  const [sends, setSends] = useState<Partial<Record<BandPart, number>>>({})
+  const [sends, setSends] = useState<Record<BandPart, number>>(
+    () => Object.fromEntries(ALL_PARTS.map((part) => [part, 0])) as Record<BandPart, number>,
+  )
+  const [channelEq, setChannelEq] = useState<Record<BandPart, UserEqSettings>>(flatEq)
+  const [channelPan, setChannelPan] = useState<Record<BandPart, number>>(
+    () => Object.fromEntries(ALL_PARTS.map((part) => [part, 0])) as Record<BandPart, number>,
+  )
+  const [mixDirty, setMixDirty] = useState(false)
+  const [mixJustSaved, setMixJustSaved] = useState(false)
+  const [arrangerState, setArrangerState] = useState<StyleArrangerState | null>(null)
+  const [arrangerStyleId, setArrangerStyleId] = useState("")
+  const [arrangerDirty, setArrangerDirty] = useState(false)
+  const [arrangerJustSaved, setArrangerJustSaved] = useState(false)
   const [targetTempo, setTargetTempo] = useState<number | null>(null)
   const [variation, setVariation] = useState(0)
+  const [reharmStyle, setReharmStyle] = useState(ORIGINAL_REHARM_STYLE)
   const [rampOn, setRampOn] = useState(false)
 
   const practiceRef = useRef<PracticeStore>({})
@@ -135,7 +246,23 @@ export function PracticeScreen({ hasFullAccess = false }: PracticeScreenProps = 
   const playerRef = useRef<BandPlayer | null>(null)
   const midiSchedRef = useRef<MidiScheduler | null>(null)
   const effectsRef = useRef<EffectsRack | null>(null)
+  const mixRef = useRef(mix)
+  const eqRef = useRef(channelEq)
+  const sendsRef = useRef(sends)
+  const panRef = useRef(channelPan)
+  const roomRef = useRef(reverbWet)
+  const arrangerRef = useRef<StyleArrangerState | null>(null)
   const ctxRef = useRef<AudioContext | null>(null)
+  /** Latest playable data, including a variation installed during its click. */
+  const arrangementRef = useRef<Arrangement | null>(null)
+  /** Fill-free counterpart used only while a chart section is being auditioned. */
+  const sectionArrangementRef = useRef<Arrangement | null>(null)
+  const sectionAuditionActiveRef = useRef(false)
+  /** Live transport controls read by the single atomic playback transaction. */
+  const loopRef = useRef(loop)
+  const tempoRef = useRef(tempo)
+  const countInRef = useRef(countIn)
+  const metronomeRef = useRef(metronome)
   const readyRef = useRef(false)
   /** Which style's instrument set is currently loaded into the player. */
   const loadedStyleRef = useRef<string | null>(null)
@@ -150,16 +277,56 @@ export function PracticeScreen({ hasFullAccess = false }: PracticeScreenProps = 
    * arrangement it had before.
    */
   const instrumentsStaleRef = useRef(false)
+  /** Invalidates any asynchronous instrument load started by an older style. */
+  const instrumentLoadRevisionRef = useRef(0)
+  const styleIdRef = useRef(styleId)
+  styleIdRef.current = styleId
+  loopRef.current = loop
+  tempoRef.current = tempo
+  countInRef.current = countIn
+  metronomeRef.current = metronome
 
   useEffect(() => {
     // Free tier: all practice features, no saved state (product plan §5).
     practiceRef.current = hasFullAccess ? loadPracticeStore() : {}
   }, [hasFullAccess])
 
+  // Mixer settings belong to one STYLE + VARIATION. A-D can therefore carry
+  // genuinely different balances without overwriting one another.
+  useEffect(() => {
+    if (!styleId) return
+    const next = loadStyleMixer(styleId, variation, defaultStyleMixer(styleId))
+    setMix(next.mix)
+    setChannelEq(next.eq)
+    setSends(next.sends)
+    setChannelPan(next.pan)
+    setReverbWet(next.room)
+    mixRef.current = next.mix
+    eqRef.current = next.eq
+    sendsRef.current = next.sends
+    panRef.current = next.pan
+    roomRef.current = next.room
+    setMixDirty(false)
+    setMixJustSaved(false)
+    setSoloed(null)
+    setUserPart(null)
+    const player = playerRef.current
+    for (const part of ALL_PARTS) {
+      player?.setMuted(part, next.mix[part].muted)
+      player?.setVolume(part, next.mix[part].volume)
+      effectsRef.current?.setPartUserEq(part, next.eq[part])
+      effectsRef.current?.setPartPan(part, next.pan[part])
+      effectsRef.current?.setReverbSend(part, next.sends[part])
+    }
+    effectsRef.current?.setReverbWet(next.room)
+  }, [styleId, variation])
+
   // Web MIDI is the same event stream sent to a real keyboard instead of the
   // browser sampler. Access must be requested from a user gesture. Paid only.
   const midi = useMidiOut()
   const midiLive = hasFullAccess && midi.enabled
+  const midiLiveRef = useRef(midiLive)
+  midiLiveRef.current = midiLive
 
   // Catalogue + clips are code-split so they stay out of the initial bundle.
   useEffect(() => {
@@ -231,42 +398,71 @@ export function PracticeScreen({ hasFullAccess = false }: PracticeScreenProps = 
     () => catalog?.progressions.find((p) => p.id === progressionId) ?? null,
     [catalog, progressionId],
   )
+  const activeProgression = useMemo(
+    () =>
+      progression
+        ? applyReharmonization(progression, reharmStyle)
+        : null,
+    [progression, reharmStyle],
+  )
+
+  const defaultArranger = useMemo(
+    () => (style ? buildDefaultStyleArranger(style, 4) : null),
+    [style],
+  )
+  const effectiveArranger =
+    arrangerStyleId === styleId && arrangerState
+      ? arrangerState
+      : defaultArranger
+
+  // Arrangements belong to a style and are remembered only after the user
+  // presses the dedicated Save button, matching the full mixer.
+  useEffect(() => {
+    if (!style || !defaultArranger) return
+    const next = loadStyleArranger(style.id, defaultArranger)
+    arrangerRef.current = next
+    setArrangerState(next)
+    setArrangerStyleId(style.id)
+    setArrangerDirty(false)
+    setArrangerJustSaved(false)
+  }, [style, defaultArranger])
 
   const arrangement: Arrangement | null = useMemo(() => {
-    if (!style || !progression || !clips) return null
-    try {
-      // Tempo is stamped on the arrangement for consumers that read it, but it
-      // must NOT be a useMemo dependency: every tempo tick (slider / ramp)
-      // rebuilt this object, and setArrangement used to stop()+play() from
-      // bar 0 with a fresh count-in — the mid-song "jump back to count-in".
-      const out = arrange({ style, progression, keyPc, tempo, clips, variation })
-      // Disabled parts are stripped HERE, from the arrangement itself, because
-      // this is the one place every consumer reads: the scheduler, the Web MIDI
-      // sink, the band strip and activeParts all derive from it.
-      //
-      // Filtering only at instrument-load time was not enough. The player keeps
-      // its `sources` and `partGains` maps across a style change, so a keys
-      // voice registered while funk was loaded stayed registered, and rock's
-      // keys events — still present in the arrangement — happily played through
-      // it. Rock was silent on a fresh load and grew a piano the moment you
-      // arrived from another style.
-      return {
-        ...out,
-        parts: out.parts.filter((p) => !isPartDisabled(p.part, styleId)),
-      }
-    } catch (err) {
-      console.error("arrange failed", err)
-      return null
-    }
+    // Tempo is stamped on the arrangement for consumers that read it, but it
+    // must NOT be a useMemo dependency: every tempo tick (slider / ramp)
+    // rebuilt this object and disturbed live playback.
+    return buildPlayableArrangement({
+      style,
+      progression: activeProgression,
+      clips,
+      keyPc,
+      tempo,
+      variation,
+      styleId,
+      partPlan: effectiveArranger?.[variation],
+    })
     // eslint-disable-next-line react-hooks/exhaustive-deps -- tempo is live via setTempo
-  }, [style, progression, clips, keyPc, variation, styleId])
+  }, [style, activeProgression, clips, keyPc, variation, styleId, effectiveArranger])
 
-  // Chart section / bar loops update React state; push them into the live
-  // sinks so a mid-play click actually takes effect (clear already did).
-  useEffect(() => {
-    playerRef.current?.setLoop(loop)
-    midiSchedRef.current?.setLoop(loop)
-  }, [loop])
+  const sectionArrangement: Arrangement | null = useMemo(() => {
+    return buildPlayableArrangement({
+      style,
+      progression: activeProgression,
+      clips,
+      keyPc,
+      tempo,
+      variation,
+      styleId,
+      partPlan: effectiveArranger?.[variation],
+      includeSectionFills: false,
+    })
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- tempo is live via setTempo
+  }, [style, activeProgression, clips, keyPc, variation, styleId, effectiveArranger])
+
+  // Event handlers must always see the arrangement represented by the current
+  // screen, even before passive effects have run.
+  arrangementRef.current = arrangement
+  sectionArrangementRef.current = sectionArrangement
 
   // Resume where the last session left off, and carry the ramp target with it.
   useEffect(() => {
@@ -283,14 +479,17 @@ export function PracticeScreen({ hasFullAccess = false }: PracticeScreenProps = 
   useEffect(() => {
     if (!styleId) return
     const preset = presetForStyle(styleId)
-    setReverbWet(preset.reverb.wet)
-    setSends(
-      Object.fromEntries(
-        Object.entries(preset.parts).map(([p, s]) => [p, s?.reverbSend ?? 0]),
-      ),
-    )
     const rack = effectsRef.current
-    if (rack && readyRef.current) void rack.applyPreset(preset)
+    if (rack && readyRef.current) {
+      void rack.applyPreset(preset).then(() => {
+        rack.setReverbWet(roomRef.current)
+        for (const part of ALL_PARTS) {
+          rack.setPartUserEq(part, eqRef.current[part])
+          rack.setPartPan(part, panRef.current[part])
+          rack.setReverbSend(part, sendsRef.current[part])
+        }
+      })
+    }
   }, [styleId])
 
   const variationCount = useMemo(() => {
@@ -307,16 +506,26 @@ export function PracticeScreen({ hasFullAccess = false }: PracticeScreenProps = 
   const activeParts = useMemo(
     () =>
       ALL_PARTS.filter(
-        (p) =>
-          !isPartDisabled(p, styleId) &&
-          arrangement?.parts.some((x) => x.part === p),
+        (p) => arrangement?.parts.some((x) => x.part === p),
       ),
-    [arrangement, styleId],
+    [arrangement],
   )
 
-  /** Audio starts only on a user gesture — required on iOS. */
+  /**
+   * Audio starts only on a user gesture — required on iOS.
+   *
+   * Instrument loading is deliberately completed BEFORE publishing a player
+   * into the refs. Older versions published half-built players first, so a
+   * slower request for the previous style could finish last and overwrite the
+   * newly selected variation with the wrong samples.
+   */
   const ensurePlayer = useCallback(async (): Promise<BandPlayer | null> => {
-    if (playerRef.current && readyRef.current && !instrumentsStaleRef.current)
+    if (
+      playerRef.current &&
+      readyRef.current &&
+      !instrumentsStaleRef.current &&
+      loadedStyleRef.current === styleId
+    )
       return playerRef.current
     if (!arrangement) return null
 
@@ -325,29 +534,49 @@ export function PracticeScreen({ hasFullAccess = false }: PracticeScreenProps = 
       const ctx = ctxRef.current ?? new AudioContext()
       ctxRef.current = ctx
 
-      // Mix bus: reverb and compression are BUS effects and cannot be baked
-      // into samples — a tail per note does not sum, and a compressor that
-      // sees one isolated hit cannot duck the kit. See effects.ts.
-      const rack = effectsRef.current ?? new EffectsRack(ctx)
-      effectsRef.current = rack
+      const requestedStyleId = styleId
+      const loadRevision = instrumentLoadRevisionRef.current
 
-      const player =
-        playerRef.current ??
-        new BandPlayer(ctx, { onStatus: setStatus, effects: rack })
-      playerRef.current = player
-
-      const roles = arrangement.parts
-        .map((p) => p.part)
-        .filter((p) => !isPartDisabled(p, styleId))
+      // Load every instrument the style offers, even when the current
+      // section plan starts with that part silent. The Arranger can bring it
+      // in live later; waiting until then would leave the newly enabled notes
+      // without a registered sound source.
+      const roles = ALL_PARTS.filter((part) => Boolean(style?.parts[part]))
       const loaded = await loadInstrumentsForRoles(ctx, roles, {
-        styleId,
+        styleId: requestedStyleId,
         onProgress: (id, done, total) =>
           setProgress({
             label: id,
             pct: total ? Math.round((done / total) * 100) : 0,
           }),
       })
-      const preset = presetForStyle(styleId)
+
+      // Rock gets a real double-track rather than a chorus imitation. Load
+      // SolidGuitar2 alongside the normal Emily source; both later receive
+      // the same notes through independent amp/cabinet chains.
+      const rockSolidGuitar =
+        requestedStyleId === "rock" && loaded.has("guitar")
+          ? await loadInstrument(ctx, ROCK_GUITAR_LAYERS[1].id, {
+              onProgress: (done, total) =>
+                setProgress({
+                  label: ROCK_GUITAR_LAYERS[1].id,
+                  pct: total ? Math.round((done / total) * 100) : 0,
+                }),
+            })
+          : null
+      if (
+        loadRevision !== instrumentLoadRevisionRef.current ||
+        requestedStyleId !== styleIdRef.current
+      ) {
+        return null
+      }
+
+      // Publish only a fully resolved generation. This makes style + samples
+      // + effects one unanimous pass, rather than three independently racing
+      // updates.
+      const rack = new EffectsRack(ctx)
+      const player = new BandPlayer(ctx, { onStatus: setStatus, effects: rack })
+      const preset = presetForStyle(requestedStyleId)
 
       // Effects are resolved per CHANNEL, not per part slot: what a channel
       // needs depends on which instrument is loaded into it (an acoustic
@@ -359,16 +588,29 @@ export function PracticeScreen({ hasFullAccess = false }: PracticeScreenProps = 
           role as BandPart,
           resolveChannelEffects(
             role as BandPart,
-            instrumentForRole(role, styleId),
-            styleId,
+            instrumentForRole(role, requestedStyleId),
+            requestedStyleId,
           ),
         )
       }
+      const rockSolidSettings = rockSolidGuitar
+        ? {
+            ...resolveChannelEffects(
+              "guitar",
+              ROCK_GUITAR_LAYERS[1].id,
+              requestedStyleId,
+            ),
+            trim: ROCK_GUITAR_LAYERS[1].trim,
+          }
+        : undefined
 
       // Cabinet IRs and amp models must both be cached BEFORE the part chains
       // are built, because createPartChain reads them synchronously and
       // silently falls back when one is missing.
-      const settingsList = [...channelSettings.values()]
+      const settingsList = [
+        ...channelSettings.values(),
+        ...(rockSolidSettings ? [rockSolidSettings] : []),
+      ]
       await Promise.all([
         ...[...new Set(
           settingsList
@@ -383,20 +625,59 @@ export function PracticeScreen({ hasFullAccess = false }: PracticeScreenProps = 
       ])
 
       for (const [role, inst] of loaded) {
-        player.registerPart(
-          role as BandPart,
-          { selector: inst.selector, bank: inst.bank },
-          channelSettings.get(role as BandPart),
-        )
-        // Offline EBU R128 level match; piano was ~6 dB down on the others.
-        player.setInstrumentGain(role as BandPart, inst.instrumentGain)
+        const part = role as BandPart
+        if (part === "guitar" && rockSolidGuitar && rockSolidSettings) {
+          const emilyLayer = ROCK_GUITAR_LAYERS[0]
+          const solidLayer = ROCK_GUITAR_LAYERS[1]
+          player.registerPartLayer(
+            part,
+            emilyLayer.layerId,
+            { selector: inst.selector, bank: inst.bank },
+            {
+              settings: {
+                ...channelSettings.get(part),
+                trim: emilyLayer.trim,
+              },
+              pan: emilyLayer.pan,
+              instrumentGain: inst.instrumentGain,
+            },
+          )
+          player.registerPartLayer(
+            part,
+            solidLayer.layerId,
+            { selector: rockSolidGuitar.selector, bank: rockSolidGuitar.bank },
+            {
+              settings: rockSolidSettings,
+              pan: solidLayer.pan,
+              instrumentGain: rockSolidGuitar.instrumentGain,
+            },
+          )
+        } else {
+          player.registerPart(
+            part,
+            { selector: inst.selector, bank: inst.bank },
+            channelSettings.get(part),
+          )
+          // Offline EBU R128 level match; piano was ~6 dB down on the others.
+          player.setInstrumentGain(part, inst.instrumentGain)
+        }
+        rack.setPartUserEq(part, eqRef.current[part])
+        rack.setPartPan(part, panRef.current[part])
+        rack.setReverbSend(part, sendsRef.current[part])
       }
+      playerRef.current = player
+      effectsRef.current = rack
       // A failed IR fetch leaves the dry path untouched, so this never blocks.
-      void rack.applyPreset(preset)
+      void rack.applyPreset(preset).then(() => {
+        rack.setReverbWet(roomRef.current)
+        for (const part of ALL_PARTS) {
+          rack.setReverbSend(part, sendsRef.current[part])
+        }
+      })
       setProgress(null)
       readyRef.current = true
       instrumentsStaleRef.current = false
-      loadedStyleRef.current = styleId
+      loadedStyleRef.current = requestedStyleId
 
       // Same event stream, second sink. Built lazily so users who never touch
       // MIDI pay nothing for it.
@@ -413,17 +694,84 @@ export function PracticeScreen({ hasFullAccess = false }: PracticeScreenProps = 
       setProgress(null)
       return null
     }
-  }, [arrangement, styleId, midiLive, midi.midiOut])
+  }, [arrangement, styleId, style, midiLive, midi.midiOut])
 
+  /**
+   * Commit one complete playback pass to both audio and MIDI.
+   *
+   * No caller may update arrangement, loop, seek and resume independently.
+   * Keeping these operations together prevents a previous variation's async
+   * work from landing between the seek and play calls of the current one.
+   */
+  const installPlaybackPass = useCallback((
+    playable: Arrangement,
+    options: { startBar?: number; resume: boolean; range: LoopRange | null },
+  ) => {
+    const player = playerRef.current
+    if (!player) return
+
+    const liveTempo = tempoRef.current
+    const liveCountIn = countInRef.current
+    const liveMetronome = metronomeRef.current
+    const liveMidi = midiLiveRef.current
+
+    player.pause()
+    midiSchedRef.current?.pause()
+    player.setArrangement(playable)
+    player.setTempo(liveTempo)
+    effectsRef.current?.setTempo(liveTempo)
+    player.setLoop(options.range)
+    player.setCountInBars(liveCountIn ? 1 : 0)
+    player.setMetronome(liveMetronome)
+    for (const part of ALL_PARTS) {
+      player.setMuted(part, mixRef.current[part].muted)
+      player.setVolume(part, mixRef.current[part].volume)
+    }
+    if (options.startBar !== undefined) player.seekToBar(options.startBar)
+
+    const ms = midiSchedRef.current
+    if (ms && liveMidi) {
+      ms.setArrangement(playable)
+      ms.setTempo(liveTempo)
+      ms.setLoop(options.range)
+      ms.setCountInBars(liveCountIn ? 1 : 0)
+      for (const part of ALL_PARTS) {
+        ms.setPartEnabled(part, !mixRef.current[part].muted)
+      }
+      if (options.startBar !== undefined) ms.seekToBar(options.startBar)
+      if (options.resume) void ms.play()
+    }
+    if (options.resume) void player.play()
+  }, [])
+
+  // Song/key/reharmonization/Arranger/variation changes all arrive here and
+  // nowhere else. Restart at the beginning of the active section, matching
+  // the desktop Jam Player instead of preserving a random beat in its middle.
   useEffect(() => {
     const player = playerRef.current
-    // Deliberately NOT gated on instrument-load state: setArrangement only
-    // swaps note data, and a part whose instrument is still loading simply
-    // stays silent until it arrives.
     if (!player || !arrangement) return
-    player.setArrangement(arrangement)
-    if (midiLive) midiSchedRef.current?.setArrangement(arrangement)
-  }, [arrangement, midiLive])
+    const playable = sectionAuditionActiveRef.current
+      ? (sectionArrangement ?? arrangement)
+      : arrangement
+    const wasPlaying = player.getStatus() === "playing"
+    const oldBar = player.getCurrentBar()
+    const currentSection = playable.sections.find(
+      (section) => oldBar >= section.startBar && oldBar <= section.endBar,
+    )
+    const activeLoop = loopRef.current
+    const startBar = activeLoop?.startBar ?? currentSection?.startBar ?? 1
+    installPlaybackPass(playable, {
+      startBar,
+      resume: wasPlaying,
+      range: activeLoop,
+    })
+  }, [arrangement, sectionArrangement, installPlaybackPass])
+
+  /** A/B/C/D is state only; the single playback-pass effect installs it. */
+  const handleVariationChange = (nextVariation: number) => {
+    if (nextVariation === variation) return
+    setVariation(nextVariation)
+  }
 
   useEffect(() => {
     let raf = 0
@@ -477,33 +825,21 @@ export function PracticeScreen({ hasFullAccess = false }: PracticeScreenProps = 
 
   const handlePlayPause = async () => {
     const player = await ensurePlayer()
-    if (!player || !arrangement) return
+    const playableArrangement =
+      (sectionAuditionActiveRef.current
+        ? sectionArrangementRef.current
+        : arrangementRef.current) ?? arrangement
+    if (!player || !playableArrangement) return
     if (player.getStatus() === "playing") {
       player.pause()
       midiSchedRef.current?.pause()
       commitSpan()
       return
     }
-    player.setArrangement(arrangement)
-    player.setTempo(tempo)
-    effectsRef.current?.setTempo(tempo)
-    player.setLoop(loop)
-    player.setCountInBars(countIn ? 1 : 0)
-    player.setMetronome(metronome)
-    for (const part of ALL_PARTS) {
-      player.setMuted(part, mix[part].muted)
-      player.setVolume(part, mix[part].volume)
-    }
-    const ms = midiSchedRef.current
-    if (ms && midiLive) {
-      ms.setArrangement(arrangement)
-      ms.setTempo(tempo)
-      ms.setLoop(loop)
-      ms.setCountInBars(countIn ? 1 : 0)
-      for (const part of ALL_PARTS) ms.setPartEnabled(part, !mix[part].muted)
-      ms.play()
-    }
-    await player.play()
+    installPlaybackPass(playableArrangement, {
+      resume: true,
+      range: loopRef.current,
+    })
   }
 
   /** Click a chart section → loop only that span and play it from the top. */
@@ -513,42 +849,51 @@ export function PracticeScreen({ hasFullAccess = false }: PracticeScreenProps = 
       endBar: section.endBar,
     }
     setLoop(range)
+    sectionAuditionActiveRef.current = true
 
     const player = await ensurePlayer()
-    if (!player || !arrangement) return
+    const playableArrangement =
+      sectionArrangementRef.current ?? sectionArrangement ?? arrangement
+    if (!player || !playableArrangement) return
+    installPlaybackPass(playableArrangement, {
+      startBar: section.startBar,
+      resume: true,
+      range,
+    })
+  }
 
-    const wasPlaying = player.getStatus() === "playing"
-    player.setArrangement(arrangement)
-    player.setTempo(tempo)
-    effectsRef.current?.setTempo(tempo)
-    player.setLoop(range)
-    player.setCountInBars(countIn ? 1 : 0)
-    player.setMetronome(metronome)
-    for (const part of ALL_PARTS) {
-      player.setMuted(part, mix[part].muted)
-      player.setVolume(part, mix[part].volume)
-    }
-    // Always start the section from bar 1 of that span — setLoop alone only
-    // seeks when the playhead is already outside the range.
-    player.seekToBar(section.startBar)
-
-    const ms = midiSchedRef.current
-    if (ms && midiLive) {
-      ms.setArrangement(arrangement)
-      ms.setTempo(tempo)
-      ms.setLoop(range)
-      ms.setCountInBars(countIn ? 1 : 0)
-      for (const part of ALL_PARTS) ms.setPartEnabled(part, !mix[part].muted)
-      ms.seekToBar(section.startBar)
-      if (!wasPlaying) void ms.play()
-    }
-    if (!wasPlaying) await player.play()
+  /** Drag/select a bar range → the same atomic pass as a named section. */
+  const handleLoopBars = async (range: LoopRange) => {
+    setLoop(range)
+    sectionAuditionActiveRef.current = true
+    const player = await ensurePlayer()
+    const playableArrangement =
+      sectionArrangementRef.current ?? sectionArrangement ?? arrangement
+    if (!player || !playableArrangement) return
+    installPlaybackPass(playableArrangement, {
+      startBar: range.startBar,
+      resume: player.getStatus() === "playing",
+      range,
+    })
   }
 
   const handleClearLoop = () => {
+    sectionAuditionActiveRef.current = false
     setLoop(null)
-    playerRef.current?.setLoop(null)
-    midiSchedRef.current?.setLoop(null)
+    const fullArrangement = arrangementRef.current ?? arrangement
+    const player = playerRef.current
+    if (fullArrangement && player) {
+      const wasPlaying = player.getStatus() === "playing"
+      const oldBar = player.getCurrentBar()
+      const currentSection = fullArrangement.sections.find(
+        (section) => oldBar >= section.startBar && oldBar <= section.endBar,
+      )
+      installPlaybackPass(fullArrangement, {
+        startBar: currentSection?.startBar ?? 1,
+        resume: wasPlaying,
+        range: null,
+      })
+    }
   }
 
   const commitSpan = useCallback(
@@ -582,53 +927,31 @@ export function PracticeScreen({ hasFullAccess = false }: PracticeScreenProps = 
   // style change therefore tears the warm session down; the next ensurePlayer
   // rebuilds instruments and every part chain from scratch.
   useEffect(() => {
+    instrumentLoadRevisionRef.current += 1
     const prev = loadedStyleRef.current
     if (!styleId || !prev || prev === styleId) return
     instrumentsStaleRef.current = true
     const player = playerRef.current
-    const wasPlaying = player?.getStatus() === "playing"
-    if (player && wasPlaying) {
-      player.pause()
-      midiSchedRef.current?.pause()
-      commitSpan()
-    }
-    if (!wasPlaying || !arrangement) return
-    let cancelled = false
-    void (async () => {
-      const p = await ensurePlayer()
-      if (cancelled || !p || !arrangement) return
-      p.setArrangement(arrangement)
-      p.setTempo(tempo)
-      effectsRef.current?.setTempo(tempo)
-      p.setLoop(loop)
-      p.setCountInBars(countIn ? 1 : 0)
-      p.setMetronome(metronome)
-      for (const part of ALL_PARTS) {
-        p.setMuted(part, mix[part].muted)
-        p.setVolume(part, mix[part].volume)
-      }
-      const ms = midiSchedRef.current
-      if (ms && midiLive) {
-        ms.setArrangement(arrangement)
-        ms.setTempo(tempo)
-        ms.setLoop(loop)
-        ms.setCountInBars(countIn ? 1 : 0)
-        for (const part of ALL_PARTS) ms.setPartEnabled(part, !mix[part].muted)
-        void ms.play()
-      }
-      await p.play()
-    })()
-    return () => {
-      cancelled = true
-    }
-    // Only styleId should retrigger: arrangement/ensurePlayer from this render
-    // already belong to the new style. Listing them re-fires on every tempo
-    // tweak without changing style.
+    if (player?.getStatus() === "playing") commitSpan()
+    player?.dispose()
+    effectsRef.current?.dispose()
+    midiSchedRef.current?.stop()
+    playerRef.current = null
+    effectsRef.current = null
+    midiSchedRef.current = null
+    readyRef.current = false
+    loadedStyleRef.current = null
+    setProgress(null)
+    setStatus("idle")
+    // A style is a new desktop-style playback session. It deliberately waits
+    // for the next Play gesture rather than auto-starting through whatever
+    // samples happen to finish loading first.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [styleId])
 
   const applyMix = (next: Record<BandPart, PartMixState>) => {
     setMix(next)
+    mixRef.current = next
     const player = playerRef.current
     if (!player) return
     for (const part of ALL_PARTS) {
@@ -714,11 +1037,7 @@ export function PracticeScreen({ hasFullAccess = false }: PracticeScreenProps = 
         return !v
       })
     },
-    onClearLoop: () => {
-      setLoop(null)
-      playerRef.current?.setLoop(null)
-      midiSchedRef.current?.setLoop(null)
-    },
+    onClearLoop: handleClearLoop,
     rampOn,
     onToggleRamp: () => {
       setRampOn((v) => {
@@ -739,6 +1058,99 @@ export function PracticeScreen({ hasFullAccess = false }: PracticeScreenProps = 
     barPhase,
   }
 
+  const markMixDirty = () => {
+    setMixDirty(true)
+    setMixJustSaved(false)
+  }
+
+  const changeSend = (part: BandPart, value: number) => {
+    const next = { ...sendsRef.current, [part]: value }
+    sendsRef.current = next
+    setSends(next)
+    effectsRef.current?.setReverbSend(part, value)
+    markMixDirty()
+  }
+
+  const arrangerParts = ALL_PARTS.filter((part) => Boolean(style.parts[part]))
+
+  const updateArranger = (
+    updater: (state: StyleArrangerState) => StyleArrangerState,
+  ) => {
+    if (!effectiveArranger) return
+    const next = updater(effectiveArranger)
+    arrangerRef.current = next
+    setArrangerState(next)
+    setArrangerStyleId(styleId)
+    setArrangerDirty(true)
+    setArrangerJustSaved(false)
+  }
+
+  const arrangerProps = effectiveArranger
+    ? {
+        styleLabel: style.name,
+        parts: arrangerParts,
+        variationCount,
+        variation,
+        state: effectiveArranger,
+        onVariation: handleVariationChange,
+        onToggle: (
+          targetVariation: number,
+          role: SectionRole,
+          part: BandPart,
+        ) =>
+          updateArranger((current) =>
+            current.map((plan, index) =>
+              index !== targetVariation
+                ? plan
+                : {
+                    ...plan,
+                    [role]: {
+                      ...plan[role],
+                      [part]: !plan[role][part],
+                    },
+                  },
+            ),
+          ),
+        onSection: (
+          targetVariation: number,
+          role: SectionRole,
+          enabled: boolean,
+        ) =>
+          updateArranger((current) =>
+            current.map((plan, index) =>
+              index !== targetVariation
+                ? plan
+                : {
+                    ...plan,
+                    [role]: {
+                      ...plan[role],
+                      ...Object.fromEntries(
+                        arrangerParts.map((part) => [part, enabled]),
+                      ),
+                    },
+                  },
+            ),
+          ),
+        onSave: () => {
+          saveStyleArranger(styleId, arrangerRef.current ?? effectiveArranger)
+          setArrangerDirty(false)
+          setArrangerJustSaved(true)
+          window.setTimeout(() => setArrangerJustSaved(false), 1800)
+        },
+        onReset: () => {
+          clearStyleArranger(styleId)
+          if (!defaultArranger) return
+          arrangerRef.current = defaultArranger
+          setArrangerState(defaultArranger)
+          setArrangerStyleId(styleId)
+          setArrangerDirty(false)
+          setArrangerJustSaved(false)
+        },
+        isDirty: arrangerDirty,
+        justSaved: arrangerJustSaved,
+      }
+    : null
+
   const mixerProps = {
     parts: activeParts,
     mix,
@@ -750,15 +1162,94 @@ export function PracticeScreen({ hasFullAccess = false }: PracticeScreenProps = 
       if (soloed) applySolo(null)
       applyMix({ ...mix, [part]: { ...mix[part], muted: !mix[part].muted } })
     },
-    onVolume: (part: BandPart, volume: number) =>
-      applyMix({ ...mix, [part]: { ...mix[part], volume } }),
+    onVolume: (part: BandPart, volume: number) => {
+      const next = { ...mix, [part]: { ...mix[part], volume } }
+      applyMix(next)
+      markMixDirty()
+    },
+    eq: channelEq,
+    onEq: (part: BandPart, band: keyof UserEqSettings, value: number) => {
+      const next = {
+        ...eqRef.current,
+        [part]: { ...eqRef.current[part], [band]: value },
+      }
+      eqRef.current = next
+      setChannelEq(next)
+      effectsRef.current?.setPartUserEq(part, next[part])
+      markMixDirty()
+    },
+    sends,
+    onSend: changeSend,
+    pan: channelPan,
+    onPan: (part: BandPart, value: number) => {
+      const next = { ...panRef.current, [part]: value }
+      panRef.current = next
+      setChannelPan(next)
+      effectsRef.current?.setPartPan(part, value)
+      markMixDirty()
+    },
+    room: reverbWet,
+    onRoom: (value: number) => {
+      roomRef.current = value
+      setReverbWet(value)
+      effectsRef.current?.setReverbWet(value)
+      markMixDirty()
+    },
+    styleLabel: `${style.name} · Variation ${String.fromCharCode(65 + variation)}`,
+    isDirty: mixDirty,
+    justSaved: mixJustSaved,
+    onSave: () => {
+      saveStyleMixer(styleId, variation, {
+        mix: mixRef.current,
+        eq: eqRef.current,
+        sends: sendsRef.current,
+        pan: panRef.current,
+        room: roomRef.current,
+      })
+      setMixDirty(false)
+      setMixJustSaved(true)
+      window.setTimeout(() => setMixJustSaved(false), 1800)
+    },
+    onReset: () => {
+      clearStyleMix(styleId, variation)
+      const next = defaultStyleMixer(styleId)
+      applyMix(next.mix)
+      eqRef.current = next.eq
+      sendsRef.current = next.sends
+      panRef.current = next.pan
+      roomRef.current = next.room
+      setChannelEq(next.eq)
+      setSends(next.sends)
+      setChannelPan(next.pan)
+      setReverbWet(next.room)
+      for (const part of ALL_PARTS) {
+        effectsRef.current?.setPartUserEq(part, next.eq[part])
+        effectsRef.current?.setPartPan(part, next.pan[part])
+        effectsRef.current?.setReverbSend(part, next.sends[part])
+      }
+      effectsRef.current?.setReverbWet(next.room)
+      setMixDirty(false)
+      setMixJustSaved(false)
+    },
+  }
+
+  const selectProgression = (selectedProgression: Progression) => {
+    setProgressionId(selectedProgression.id)
+    setKeyPc(selectedProgression.keyPc)
+    setReharmStyle(ORIGINAL_REHARM_STYLE)
   }
 
   const setupControls = (
     <div className="space-y-3">
+      <SongBrowser
+        progressions={catalog.progressions}
+        selectedId={progressionId}
+        onSelect={selectProgression}
+      />
+      <div className="my-4 h-px bg-white/8" />
       <label className="block">
         <span className="mb-1.5 block text-[10px] tracking-[0.16em] text-white/35 uppercase">
-          Style
+          Band Style
         </span>
         <select
           value={styleId}
@@ -777,20 +1268,29 @@ export function PracticeScreen({ hasFullAccess = false }: PracticeScreenProps = 
           ))}
         </select>
       </label>
-      <div>
-        <span className="mb-1.5 block text-[10px] tracking-[0.16em] text-white/35 uppercase">
-          Progression
-        </span>
-        <ProgressionPicker
-          progressions={catalog.progressions}
-          selectedId={progressionId}
-          onSelect={(selectedProgression) => {
-            setProgressionId(selectedProgression.id)
-            setKeyPc(selectedProgression.keyPc)
-          }}
-          className="w-full"
-        />
-      </div>
+      {progression?.reharmStyles?.length ? (
+        <label className="block">
+          <span className="mb-1.5 block text-[10px] tracking-[0.16em] text-white/35 uppercase">
+            Reharmonization
+          </span>
+          <select
+            value={reharmStyle}
+            onChange={(event) => setReharmStyle(event.target.value)}
+            className="min-h-11 w-full rounded-xl border border-white/10 bg-[#111] px-3 text-sm text-white outline-none focus:border-orange-400/45"
+            aria-label="Reharmonization"
+          >
+            <option value={ORIGINAL_REHARM_STYLE}>Original</option>
+            {progression.reharmStyles.map((name) => (
+              <option key={name} value={name}>
+                {name}
+              </option>
+            ))}
+          </select>
+          <span className="mt-1.5 block text-[10px] leading-relaxed text-white/30">
+            Changes the chords only. The selected A–D performance stays the same.
+          </span>
+        </label>
+      ) : null}
     </div>
   )
 
@@ -811,14 +1311,14 @@ export function PracticeScreen({ hasFullAccess = false }: PracticeScreenProps = 
               </Link>
               {!hasFullAccess ? (
                 <p className="mb-4 rounded-xl border border-orange-400/20 bg-orange-400/5 px-3 py-2 text-[11px] leading-relaxed text-orange-100/70">
-                  Free pack: funk, pop, rock, ballad · 6 progressions.{" "}
+                  Free pack: funk, pop, rock, ballad · full song catalogue.{" "}
                   <Link
                     href="/sign-in?redirect_url=/jam-player/app"
                     className="text-orange-300 underline-offset-2 hover:underline"
                   >
                     Sign in
                   </Link>{" "}
-                  for the full progression catalogue, practice memory, and MIDI out.
+                  for practice memory and MIDI out.
                 </p>
               ) : null}
               {setupControls}
@@ -835,15 +1335,14 @@ export function PracticeScreen({ hasFullAccess = false }: PracticeScreenProps = 
                 }}
                 reverbWet={reverbWet}
                 onReverbWet={(value) => {
+                  roomRef.current = value
                   setReverbWet(value)
                   effectsRef.current?.setReverbWet(value)
+                  markMixDirty()
                 }}
                 parts={activeParts}
                 sends={sends}
-                onSend={(part, value) => {
-                  setSends((current) => ({ ...current, [part]: value }))
-                  effectsRef.current?.setReverbSend(part, value)
-                }}
+                onSend={changeSend}
                 className="w-full"
               />
               {hasFullAccess ? (
@@ -872,25 +1371,33 @@ export function PracticeScreen({ hasFullAccess = false }: PracticeScreenProps = 
                 Loading {progress.label} · {progress.pct}%
               </span>
             ) : null}
-            <div className="ml-auto flex items-center gap-2 lg:hidden">
+            <div className="ml-auto flex items-center gap-2">
               <button
                 type="button"
                 onClick={() => setMobilePanel("setup")}
-                className="flex size-10 items-center justify-center rounded-xl border border-white/10 text-white/55"
+                className="flex size-10 items-center justify-center rounded-xl border border-white/10 text-white/55 lg:hidden"
                 aria-label="Setup"
               >
                 <Settings2 className="size-4" />
               </button>
-              {!standMode ? (
-                <button
-                  type="button"
-                  onClick={() => setMobilePanel("mix")}
-                  className="flex size-10 items-center justify-center rounded-xl border border-white/10 text-white/55"
-                  aria-label="Band mixer"
-                >
-                  <SlidersHorizontal className="size-4" />
-                </button>
-              ) : null}
+              <button
+                type="button"
+                onClick={() => setMobilePanel("arrange")}
+                className="flex h-10 items-center justify-center gap-2 rounded-xl border border-sky-300/20 bg-sky-400/[0.05] px-3 text-white/65 transition hover:bg-sky-400/10 hover:text-white"
+                aria-label="Open full arranger"
+              >
+                <ListMusic className="size-4" />
+                <span className="hidden text-xs lg:inline">Arranger</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setMobilePanel("mix")}
+                className="flex h-10 items-center justify-center gap-2 rounded-xl border border-orange-300/25 bg-orange-400/[0.06] px-3 text-white/65 transition hover:bg-orange-400/10 hover:text-white"
+                aria-label="Open full mixer"
+              >
+                <SlidersHorizontal className="size-4" />
+                <span className="hidden text-xs lg:inline">Mixer</span>
+              </button>
             </div>
           </header>
 
@@ -907,11 +1414,7 @@ export function PracticeScreen({ hasFullAccess = false }: PracticeScreenProps = 
                     handleClearLoop()
                     return
                   }
-                  setLoop(range)
-                  playerRef.current?.setLoop(range)
-                  playerRef.current?.seekToBar(range.startBar)
-                  midiSchedRef.current?.setLoop(range)
-                  midiSchedRef.current?.seekToBar(range.startBar)
+                  void handleLoopBars(range)
                 }}
               />
             </div>
@@ -923,7 +1426,7 @@ export function PracticeScreen({ hasFullAccess = false }: PracticeScreenProps = 
                 <VariationPicker
                   count={variationCount}
                   value={variation}
-                  onChange={setVariation}
+                  onChange={handleVariationChange}
                   variant="dock"
                 />
                 <MixerPanel {...mixerProps} variant="compact" />
@@ -944,7 +1447,7 @@ export function PracticeScreen({ hasFullAccess = false }: PracticeScreenProps = 
               <VariationPicker
                 count={variationCount}
                 value={variation}
-                onChange={setVariation}
+                onChange={handleVariationChange}
                 variant="dock"
                 className="mt-2"
               />
@@ -954,17 +1457,21 @@ export function PracticeScreen({ hasFullAccess = false }: PracticeScreenProps = 
       </div>
 
       {mobilePanel ? (
-        <div className="absolute inset-0 z-50 flex items-end bg-black/65 backdrop-blur-sm lg:hidden">
+        <div className="absolute inset-0 z-50 flex items-end bg-black/65 backdrop-blur-sm lg:items-center lg:justify-center lg:p-6">
           <button
             type="button"
             className="absolute inset-0"
             onClick={() => setMobilePanel(null)}
             aria-label="Close panel"
           />
-          <section className="relative z-10 max-h-[82vh] w-full overflow-y-auto rounded-t-3xl border-t border-white/15 bg-[#101010] p-4 shadow-2xl">
+          <section className="relative z-10 max-h-[88vh] w-full overflow-y-auto rounded-t-3xl border-t border-white/15 bg-[#101010] p-4 shadow-2xl lg:max-w-6xl lg:rounded-3xl lg:border">
             <div className="mb-4 flex items-center justify-between">
               <h2 className="text-sm font-medium">
-                {mobilePanel === "setup" ? "Player setup" : "Band mixer"}
+                {mobilePanel === "setup"
+                  ? "Player setup"
+                  : mobilePanel === "arrange"
+                    ? "Full arranger"
+                    : "Full mixer"}
               </h2>
               <button
                 type="button"
@@ -979,14 +1486,14 @@ export function PracticeScreen({ hasFullAccess = false }: PracticeScreenProps = 
               <div className="space-y-4">
                 {!hasFullAccess ? (
                   <p className="rounded-xl border border-orange-400/20 bg-orange-400/5 px-3 py-2 text-[11px] leading-relaxed text-orange-100/70">
-                    Free pack: funk, pop, rock, ballad · 6 progressions.{" "}
+                    Free pack: funk, pop, rock, ballad · full song catalogue.{" "}
                     <Link
                       href="/sign-in?redirect_url=/jam-player/app"
                       className="text-orange-300 underline-offset-2 hover:underline"
                     >
                       Sign in
                     </Link>{" "}
-                    for the full catalogue.
+                    for practice memory and MIDI out.
                   </p>
                 ) : null}
                 {setupControls}
@@ -999,15 +1506,14 @@ export function PracticeScreen({ hasFullAccess = false }: PracticeScreenProps = 
                   }}
                   reverbWet={reverbWet}
                   onReverbWet={(value) => {
+                    roomRef.current = value
                     setReverbWet(value)
                     effectsRef.current?.setReverbWet(value)
+                    markMixDirty()
                   }}
                   parts={activeParts}
                   sends={sends}
-                  onSend={(part, value) => {
-                    setSends((current) => ({ ...current, [part]: value }))
-                    effectsRef.current?.setReverbSend(part, value)
-                  }}
+                  onSend={changeSend}
                 />
                 {hasFullAccess ? (
                   <MidiOutControl midi={midi} />
@@ -1017,8 +1523,10 @@ export function PracticeScreen({ hasFullAccess = false }: PracticeScreenProps = 
                   </p>
                 )}
               </div>
+            ) : mobilePanel === "arrange" ? (
+              arrangerProps ? <ArrangerPanel {...arrangerProps} /> : null
             ) : (
-              <MixerPanel {...mixerProps} variant="compact" className="overflow-x-auto" />
+              <MixerPanel {...mixerProps} variant="full" />
             )}
           </section>
         </div>

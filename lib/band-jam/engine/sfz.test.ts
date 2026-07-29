@@ -1,7 +1,39 @@
 import { describe, expect, it } from "vitest"
 import { readFileSync } from "node:fs"
 import path from "node:path"
-import { buildRegionIndex, parseSfz, playbackRateFor, regionGain, selectRegion } from "./sfz"
+import {
+  buildRegionIndex,
+  createRoundRobinSelector,
+  parseSfz,
+  playbackRateFor,
+  regionGain,
+  selectRegion,
+} from "./sfz"
+
+describe("SFZ round robin", () => {
+  const instrument = parseSfz(
+    `<group>\n<region> sample=snare-a.wav key=38 lovel=1 hivel=127 seq_position=1 seq_length=2\n<region> sample=snare-b.wav key=38 lovel=1 hivel=127 seq_position=2 seq_length=2\n<region> sample=kick-a.wav key=36 lovel=1 hivel=127 seq_position=1 seq_length=2\n<region> sample=kick-b.wav key=36 lovel=1 hivel=127 seq_position=2 seq_length=2`,
+    "/samples",
+    "rr-kit",
+    "Round-robin kit",
+  )
+  const index = buildRegionIndex(instrument)
+
+  it("parses and directly addresses every sequence position", () => {
+    expect(selectRegion(index, 38, 100, 0)?.sample).toBe("snare-a.wav")
+    expect(selectRegion(index, 38, 100, 1)?.sample).toBe("snare-b.wav")
+    expect(selectRegion(index, 38, 100, 2)?.sample).toBe("snare-a.wav")
+  })
+
+  it("cycles independently for each MIDI drum note", () => {
+    const choose = createRoundRobinSelector(index)
+    expect(choose(38, 100)?.sample).toBe("snare-a.wav")
+    expect(choose(38, 100)?.sample).toBe("snare-b.wav")
+    expect(choose(36, 100)?.sample).toBe("kick-a.wav")
+    expect(choose(38, 100)?.sample).toBe("snare-a.wav")
+    expect(choose(36, 100)?.sample).toBe("kick-b.wav")
+  })
+})
 
 // Real converted SFZ files (ground truth for the format). See
 // docs/jam-player-voice-engine.md §3.1-3.3.
@@ -14,6 +46,28 @@ function loadSfz(filename: string) {
 const GUITAR_FILE = "077_SolidGuitar1 MegaVoice.sfz"
 const BASS_FILE = "024_ElectricBass MegaVoice.sfz"
 const DRUMS_FILE = "014_StandardKit1_gm.sfz"
+const WEB_POWER2_FILE = path.resolve(
+  process.cwd(),
+  "public/jam-player/instruments/drums-power2/drums-power2.sfz",
+)
+
+describe("web PowerKit2 native snare layers", () => {
+  const instrument = parseSfz(
+    readFileSync(WEB_POWER2_FILE, "utf-8"),
+    "/jam-player/instruments/drums-power2/samples",
+    "drums-power2",
+    "Power Kit 2",
+  )
+
+  it("keeps all five velocity layers on both Yamaha snare articulations", () => {
+    for (const note of [38, 40]) {
+      const regions = instrument.regions.filter((region) => region.loKey === note)
+      expect(regions).toHaveLength(5)
+      expect(regions.map((region) => region.hiVel)).toEqual([45, 59, 79, 100, 127])
+      expect(regions.map((region) => region.loVel)).toEqual([1, 46, 60, 80, 101])
+    }
+  })
+})
 
 describe("parseSfz — SolidGuitar1 MegaVoice", () => {
   const text = loadSfz(GUITAR_FILE)

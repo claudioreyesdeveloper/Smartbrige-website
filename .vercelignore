@@ -1,0 +1,25 @@
+# Local Next.js build output and retained comparison builds. Vercel creates a
+# fresh production build, and its 100 MB source-file limit rejects webpack's
+# local cache packs if these directories are uploaded.
+.next
+.next-*
+
+# Local-only development and test state.
+node_modules
+test-results
+playwright-report
+*.tsbuildinfo
+.DS_Store
+.claude
+
+# Deployment linkage and secrets stay local; Vercel supplies project settings
+# and environment variables from the linked project.
+.vercel
+.env*
+!.env.local.example
+
+# Local audition/render output is reproducible and not requested by the app.
+public/jam-player/stems
+public/jam-player/_audition
+public/jam-player/_audition_pk1
+public/jam-player/_clips

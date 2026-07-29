@@ -117,8 +117,9 @@
     "078_SolidGuitar2_MegaVoice-98-127.ogg": 48000,
     "078_SolidGuitar2_MegaVoice-99-127.ogg": 48000
   },
-  "totalBytes": 10758747,
+  "totalBytes": 10682823,
   "regionCount": 112,
   "sampleCount": 112,
+  "renderGainDb": -6.0,
   "instrumentGain": 1.0056477077989068
 }

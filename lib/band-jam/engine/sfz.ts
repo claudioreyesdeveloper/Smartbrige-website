@@ -5,7 +5,8 @@
  * SFZ files (see docs/jam-player-voice-engine.md §3.1):
  *
  *   sample, offset, end, loop_mode, lokey, hikey, key, pitch_keycenter,
- *   lovel, hivel, volume, amp_veltrack, ampeg_release, ampeg_sustain, transpose
+ *   lovel, hivel, volume, amp_veltrack, ampeg_release, ampeg_sustain, transpose,
+ *   seq_position, seq_length
  *
  * Everything else (`global_label`, `group_label`, and any other opcode that
  * shows up in future conversions) is tokenized but silently discarded —
@@ -145,6 +146,8 @@ function toRegion(raw: Opcodes): SfzRegion | null {
   const ampegRelease = numOpt(raw.ampeg_release) ?? 0
   const ampegSustain = numOpt(raw.ampeg_sustain) ?? 100
   const transpose = numOpt(raw.transpose) ?? 0
+  const seqPosition = Math.max(1, Math.floor(numOpt(raw.seq_position) ?? 1))
+  const seqLength = Math.max(seqPosition, Math.floor(numOpt(raw.seq_length) ?? 1))
 
   return {
     sample,
@@ -161,6 +164,8 @@ function toRegion(raw: Opcodes): SfzRegion | null {
     ampegRelease,
     ampegSustain,
     transpose,
+    seqPosition,
+    seqLength,
   }
 }
 
@@ -204,29 +209,63 @@ export function buildRegionIndex(instrument: SfzInstrument): SfzRegionIndex {
 
 /**
  * Find the region for a note-on. Matches key range AND velocity band
- * exactly — velocity selects articulation on these instruments, so there is
- * no nearest-velocity fallback. Among regions that match (normally exactly
- * one, since key/velocity zones don't overlap in these files), the one
- * whose `pitchKeycenter` is nearest `note` wins. Returns null rather than
- * throwing when nothing matches.
+ * exactly — velocity selects articulation/layer, so there is no nearest-
+ * velocity fallback. Multiple equally close regions may represent round-
+ * robin takes of that exact layer; `roundRobinIndex` selects one. Returns null
+ * rather than throwing when nothing matches.
  */
-export function selectRegion(index: SfzRegionIndex, note: number, velocity: number): SfzRegion | null {
+export function selectRegion(
+  index: SfzRegionIndex,
+  note: number,
+  velocity: number,
+  roundRobinIndex = 0,
+): SfzRegion | null {
   if (!Number.isFinite(note) || note < 0 || note >= MIDI_KEY_COUNT) return null
 
   const candidates = index.byKey[note]
   if (!candidates || candidates.length === 0) return null
 
-  let best: SfzRegion | null = null
   let bestDist = Infinity
+  const nearest: SfzRegion[] = []
   for (const region of candidates) {
     if (velocity < region.loVel || velocity > region.hiVel) continue
     const dist = Math.abs(region.pitchKeycenter - note)
     if (dist < bestDist) {
-      best = region
       bestDist = dist
+      nearest.length = 0
+      nearest.push(region)
+    } else if (dist === bestDist) {
+      nearest.push(region)
     }
   }
-  return best
+  if (nearest.length === 0) return null
+
+  const sequenceLength = Math.max(
+    ...nearest.map((region) => region.seqLength ?? 1),
+  )
+  if (sequenceLength > 1) {
+    const target = (Math.max(0, Math.floor(roundRobinIndex)) % sequenceLength) + 1
+    return (
+      nearest.find((region) => (region.seqPosition ?? 1) === target) ??
+      nearest[roundRobinIndex % nearest.length]
+    )
+  }
+  return nearest[0]
+}
+
+/**
+ * Stateful selector for live playback. Each MIDI drum note owns its own
+ * deterministic round-robin counter, so kick repetition cannot advance the
+ * snare or hi-hat sequence and transport playback is reproducible.
+ */
+export function createRoundRobinSelector(index: SfzRegionIndex) {
+  const counters = new Map<number, number>()
+  return (note: number, velocity: number): SfzRegion | null => {
+    const counter = counters.get(note) ?? 0
+    const region = selectRegion(index, note, velocity, counter)
+    if (region && (region.seqLength ?? 1) > 1) counters.set(note, counter + 1)
+    return region
+  }
 }
 
 // ---------------------------------------------------------------------------

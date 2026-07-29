@@ -36,6 +36,7 @@ import type {
   PartEvents,
   Progression,
   ProgressionSection,
+  SectionRole,
 } from "./types"
 
 /** Tolerance used throughout for beat-boundary comparisons (mirrors the Python 1e-6). */
@@ -48,6 +49,47 @@ const EPS = 1e-6
 /** Positive-safe modulo (JS `%` can return negative values; Python's can't). */
 function mod12(x: number): number {
   return ((x % 12) + 12) % 12
+}
+
+/**
+ * Expand only Funk's accented snare range into the harder SM Drums layers.
+ * Ghost notes (<=59) remain byte-identical; medium strokes move only a few
+ * steps, while clear backbeats gain 8-12 velocity points. This changes sample
+ * choice, not just gain, which is the correct way to make a multi-layer snare
+ * speak more firmly without turning every ghost into a backbeat.
+ */
+export function shapeFunkSnareVelocity(note: number, velocity: number): number {
+  const v = Math.max(1, Math.min(127, Math.round(velocity)))
+  if (note !== 38 || v <= 59) return v
+  if (v < 90) return Math.min(127, v + Math.round((v - 59) / 10))
+  return Math.min(127, v + 8 + Math.round((v - 90) * 0.35))
+}
+
+/**
+ * Select the PowerKit2 E1 snare for modern Pop/Funk.
+ *
+ * This is intentionally a sample-choice operation, not a volume effect:
+ *  - kick accents reach the harder beater recordings;
+ *  - every ordinary D1/38 snare moves to E1/40 as requested;
+ *  - quiet ghost strokes keep their velocity and therefore use E1's soft
+ *    native layers, while clear backbeats move higher within the same family.
+ */
+export function shapeModernDrumAccent(
+  note: number,
+  velocity: number,
+): { note: number; velocity: number } {
+  const v = Math.max(1, Math.min(127, Math.round(velocity)))
+  if (note === 36) {
+    if (v <= 54) return { note, velocity: v }
+    return { note, velocity: Math.min(127, v + (v < 80 ? 12 : 18)) }
+  }
+  if (note === 38) {
+    return {
+      note: 40,
+      velocity: v >= 72 ? Math.min(127, v + 14) : v,
+    }
+  }
+  return { note, velocity: v }
 }
 
 /**
@@ -172,6 +214,55 @@ export function adaptHarmonic(
   return out
 }
 
+/**
+ * Make an already chord-adapted bass line honour slash-chord inversions.
+ *
+ * The chord root still drives the phrase adaptation: C/E is C harmony, not an
+ * E chord. Only notes that would state C as the bass root are redirected to E;
+ * passing tones, thirds, fifths, rhythm, velocity, and articulation survive.
+ * This mirrors the desktop adapter's root-bucket intent without shifting the
+ * whole riff into the slash bass's key.
+ */
+export function applyBassInversions(
+  events: NoteEvent[],
+  chords: ChordEvent[],
+  register: [number, number],
+): NoteEvent[] {
+  const [lo, hi] = register
+  return events.map((event) => {
+    if (event.note > FX_PITCH_MIN) return event
+
+    let active: ChordEvent | undefined
+    for (const chord of chords) {
+      if (
+        chord.startBeat - EPS <= event.beat &&
+        event.beat < chord.startBeat + chord.durationBeats
+      ) {
+        active = chord
+        break
+      }
+    }
+    active ??= chords[0]
+    if (
+      !active ||
+      active.bassRoot === undefined ||
+      mod12(active.bassRoot) === mod12(active.root) ||
+      mod12(event.note) !== mod12(active.root)
+    ) {
+      return event
+    }
+
+    return {
+      ...event,
+      note: foldToRegister(
+        event.note + shiftForRoot(active.root, active.bassRoot),
+        lo,
+        hi,
+      ),
+    }
+  })
+}
+
 // ---------------------------------------------------------------------------
 // Chord-symbol transposition — parse root [+ /bass], shift, re-render
 // ---------------------------------------------------------------------------
@@ -288,9 +379,11 @@ export type ArrangeClipData = {
 /**
  * Semitones the guitar drops after chord adaptation, PER STYLE.
  *
- * Rock and funk both drop an octave by ear: their source clips sit high in
- * the MegaVoice register and want to sit lower against the band. Everything
- * else stays at written pitch.
+ * Rock and R&B drop an octave by ear: their source clips sit high in the
+ * MegaVoice register and want to sit lower against the band. Funk stays at
+ * written pitch; listening to the curated A-D set showed that its previous
+ * drop put the rhythm guitar a full octave below its useful comping register.
+ * Everything else also stays at written pitch.
  *
  * IT IS NOT DERIVABLE, so do not try to infer it again. Yamaha style guitar
  * parts are written in a reference register and placed by the keyboard's
@@ -309,19 +402,8 @@ export type ArrangeClipData = {
  */
 export const GUITAR_OCTAVE_SHIFT_BY_STYLE: Record<string, number> = {
   rock: 12,
-  funk: 12,
-  // Pitched funk comps (Smokin'Soul) sit high; drop one octave. Stroke notes
-  // in 84–95 (FunkPopRock A/C) also drop — our SFZ plays that band as frets.
-  // True one-shot noise keys (≥96) stay put.
   rnb: 12,
 }
-
-/**
- * After the style octave drop, funk open/high fretted notes still above this
- * stay an octave too high against the band (stroke 89–95 → 77–83). Pull them
- * into the same pocket as Smokin'Soul pitched comps (≈53–71).
- */
-export const GUITAR_FUNK_POCKET_TOP = 71
 
 /** Styles whose guitar is acoustic steel (see STYLE_ROLE_INSTRUMENTS). */
 const STEEL_GUITAR_STYLES = new Set(["ballad", "country"])
@@ -388,6 +470,12 @@ export const GUITAR_NOISE_KEY_MIN = 96
 export type ArrangeInput = {
   /** Variation index (0 = A). Out-of-range values wrap per role. */
   variation?: number
+  /**
+   * Insert the selected drum family's transition fill into the final bar of
+   * qualifying sections. Section audition turns this off so clicking Verse or
+   * Chorus plays that exact groove rather than a transition into the next one.
+   */
+  includeSectionFills?: boolean
   style: BandStyle
   progression: Progression
   keyPc: number
@@ -408,6 +496,7 @@ export type ArrangeInput = {
 export function arrange(input: ArrangeInput): Arrangement {
   const { style, progression, keyPc, tempo, clips } = input
   const variation = Math.max(0, Math.floor(input.variation ?? 0))
+  const includeSectionFills = input.includeSectionFills ?? true
   // Feeds resolveAutoFromCategory, which is the desktop's "Auto" behaviour:
   // the voicing follows the style's genre unless a part pins it explicitly.
   const voicingCategory = style.category ?? style.name ?? style.id
@@ -426,6 +515,20 @@ export function arrange(input: ArrangeInput): Arrangement {
   for (let sIdx = 0; sIdx < progression.sections.length; sIdx++) {
     const section = progression.sections[sIdx]
     const sectionBeats = section.bars * BEATS_PER_BAR
+    // Desktop JamPlayer stores Main A-D per section. The web catalogue's role
+    // slots are built from those same arranger mains (A=verse, B=intro,
+    // C=pre-chorus, D=chorus), so choose performance material from the saved
+    // Main assignment while keeping the section's real role/label for display.
+    const savedMainRole: SectionRole =
+      section.styleVariation === "A"
+        ? "verse"
+        : section.styleVariation === "B"
+          ? "intro"
+          : section.styleVariation === "C"
+            ? "pre_chorus"
+            : section.styleVariation === "D"
+              ? "chorus"
+              : section.role
 
     const transposedChords: ChordEvent[] = section.chords.map((ch) => ({
       startBeat: ch.startBeat,
@@ -440,6 +543,16 @@ export function arrange(input: ArrangeInput): Arrangement {
       const part = style.parts[partName]
       if (!part) continue
 
+      // A song's named drum sections must use the matching member of the
+      // selected drum family. Previously every part followed the saved Main
+      // A-D assignment, so a real Verse labelled Main B pulled the Intro clip
+      // and a real Intro labelled Main A pulled the Verse clip. Harmonic parts
+      // retain the desktop Main behaviour; generic "Section A-D" blocks do too.
+      const performanceRole: SectionRole =
+        partName === "drums" && section.role !== "section"
+          ? section.role
+          : savedMainRole
+
       // reuseClipId always wins over the per-role slot (matches render_stems.py:
       // `clip_id = reuse if reuse is not None else slot`), even for section
       // roles the part has no slot entry for at all.
@@ -450,11 +563,11 @@ export function arrange(input: ArrangeInput): Arrangement {
       // than falling silent when a role has fewer takes than requested — a
       // style with 2 variations on one role and 4 on another should still play
       // when the user selects D.
-      const takes = part.variations?.[section.role]
+      const takes = part.variations?.[performanceRole]
       const slot =
         takes && takes.length > 0
           ? takes[variation % takes.length]
-          : part.slots[section.role]
+          : part.slots[performanceRole]
       const clipId = reuse !== undefined ? reuse : slot
       if (clipId === undefined) {
         // Part isn't active on this section (e.g. solo only slotted on chorus).
@@ -471,9 +584,59 @@ export function arrange(input: ArrangeInput): Arrangement {
         continue
       }
 
-      let events = tileEvents(clipData.events, sectionBeats)
+      let usedDedicatedEnding = false
+      let events: NoteEvent[]
+
+      // Funky Feel supplies a one-bar Ending rather than an eight-bar Outro.
+      // Looping that clip made the whole outro sound like continuous fill-ins.
+      // Play the selected family's chorus bed, then splice the ending once into
+      // the final bar. Styles with a full-length outro are left untouched.
+      const clipExtent = clipData.events.reduce(
+        (max, event) => Math.max(max, event.beat + event.durationBeats),
+        0,
+      )
+      if (
+        partName === "drums" &&
+        performanceRole === "outro" &&
+        sectionBeats > BEATS_PER_BAR + EPS &&
+        clipExtent <= BEATS_PER_BAR + EPS
+      ) {
+        const bedTakes = part.variations?.chorus
+        const bedId =
+          bedTakes && bedTakes.length > 0
+            ? bedTakes[variation % bedTakes.length]
+            : part.slots.chorus
+        const bed = bedId === undefined ? undefined : clips.get(bedId)
+        if (bed) {
+          const endingStart = sectionBeats - BEATS_PER_BAR
+          events = tileEvents(bed.events, sectionBeats).filter(
+            (event) => event.beat < endingStart - EPS,
+          )
+          for (const event of tileEvents(clipData.events, BEATS_PER_BAR)) {
+            events.push({ ...event, beat: endingStart + event.beat })
+          }
+          usedDedicatedEnding = true
+        } else {
+          if (bedId !== undefined) missing.push(bedId)
+          events = tileEvents(clipData.events, sectionBeats)
+        }
+      } else {
+        events = tileEvents(clipData.events, sectionBeats)
+      }
       if (part.harmonic) {
-        events = adaptHarmonic(events, clipData.sourceKeyPc, transposedChords, part.register ?? [28, 72])
+        events = adaptHarmonic(
+          events,
+          clipData.sourceKeyPc,
+          transposedChords,
+          part.register ?? [28, 72],
+        )
+        if (partName === "bass") {
+          events = applyBassInversions(
+            events,
+            transposedChords,
+            part.register ?? [28, 72],
+          )
+        }
 
         // Genre-aware re-voicing, ported from the desktop
         // GuitarVoicingTransform. Runs AFTER the chord adaptation, exactly as
@@ -499,17 +662,6 @@ export function arrange(input: ArrangeInput): Arrangement {
             // a whole octave under an open low E, which is boomy nonsense.
             // Fold back up rather than clamping, so the pitch class survives.
             while (n < GUITAR_LOW_E) n += 12
-            // Funk open notes: stroke-register material (89–95) only drops to
-            // 77–83 after one octave — still above the rhythm pocket. Drop
-            // again so they sit with Smokin'Soul comps, not on the high E.
-            if (
-              style.id === "funk" &&
-              n > GUITAR_FUNK_POCKET_TOP &&
-              n < GUITAR_NOISE_KEY_MIN
-            ) {
-              n -= 12
-              while (n < GUITAR_LOW_E) n += 12
-            }
             return { ...e, note: n }
           })
         }
@@ -574,38 +726,65 @@ export function arrange(input: ArrangeInput): Arrangement {
       }
 
       const fills = part.fills
-      if (fills && fills.atSectionEnd && section.bars >= fills.minSectionBars) {
-        const fillId = fills.pool[sIdx % fills.pool.length]
-        const fillClipData = clips.get(fillId)
-        if (!fillClipData) {
-          // Same reasoning as above: lose the fill, not the arrangement.
-          missing.push(fillId)
-          continue
+      if (
+        includeSectionFills &&
+        !usedDedicatedEnding &&
+        fills &&
+        fills.atSectionEnd &&
+        section.bars >= fills.minSectionBars
+      ) {
+        const curatedFillPool = fills.variationPools?.[variation]
+        const fillPool =
+          curatedFillPool && curatedFillPool.length > 0
+            ? curatedFillPool
+            : fills.pool
+        if (fillPool.length > 0) {
+          const fillId = fillPool[sIdx % fillPool.length]
+          const fillClipData = clips.get(fillId)
+          if (!fillClipData) {
+            // Lose only the fill; retain the already-arranged groove events.
+            missing.push(fillId)
+          } else {
+            const fillStart = sectionBeats - BEATS_PER_BAR
+            events = events.filter((e) => e.beat < fillStart - EPS)
+            // Fills must follow the chords too. Today only drums carry fills,
+            // and drums are harmonic:false so this is a no-op — but if keys
+            // or guitar ever get a fill pool, adapt it as well.
+            let fillEvents = tileEvents(fillClipData.events, BEATS_PER_BAR)
+            if (part.harmonic) {
+              fillEvents = adaptHarmonic(
+                fillEvents,
+                fillClipData.sourceKeyPc,
+                transposedChords,
+                part.register ?? [28, 72],
+              )
+              if (partName === "bass") {
+                fillEvents = applyBassInversions(
+                  fillEvents,
+                  transposedChords,
+                  part.register ?? [28, 72],
+                )
+              }
+            }
+            for (const e of fillEvents) {
+              events.push({
+                beat: fillStart + e.beat,
+                note: e.note,
+                velocity: e.velocity,
+                durationBeats: e.durationBeats,
+              })
+            }
+          }
         }
-        const fillStart = sectionBeats - BEATS_PER_BAR
-        events = events.filter((e) => e.beat < fillStart - EPS)
-        // Fills must follow the chords too. Today only drums carry fills, and
-        // drums are harmonic:false so this is a no-op — but if keys or guitar
-        // ever get a fill pool, an unadapted fill would play in the clip's
-        // recorded key over a transposed section. Guard it here rather than
-        // discover it by ear later. (The Python original has the same gap.)
-        let fillEvents = tileEvents(fillClipData.events, BEATS_PER_BAR)
-        if (part.harmonic) {
-          fillEvents = adaptHarmonic(
-            fillEvents,
-            fillClipData.sourceKeyPc,
-            transposedChords,
-            part.register ?? [28, 72],
-          )
-        }
-        for (const e of fillEvents) {
-          events.push({
-            beat: fillStart + e.beat,
-            note: e.note,
-            velocity: e.velocity,
-            durationBeats: e.durationBeats,
-          })
-        }
+      }
+
+      if (partName === "drums" && (style.id === "funk" || style.id === "pop")) {
+        events = events.map((event) => {
+          const velocity = style.id === "funk"
+            ? shapeFunkSnareVelocity(event.note, event.velocity)
+            : event.velocity
+          return { ...event, ...shapeModernDrumAccent(event.note, velocity) }
+        })
       }
 
       const target = partEventsMap[partName]!
@@ -622,6 +801,7 @@ export function arrange(input: ArrangeInput): Arrangement {
     sections.push({
       role: section.role,
       label: section.label,
+      styleVariation: section.styleVariation,
       startBar: barCursor,
       endBar: barCursor + section.bars - 1,
       bars: buildSectionBars(section, transposedChords, barCursor),

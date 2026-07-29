@@ -65,8 +65,9 @@
     "003_SuitcaseEP-96-66.ogg": 48000,
     "003_SuitcaseEP-96-87.ogg": 48000
   },
-  "totalBytes": 7881732,
+  "totalBytes": 7868685,
   "regionCount": 60,
   "sampleCount": 60,
+  "renderGainDb": -3.0,
   "instrumentGain": 1.3249158780927088
 }

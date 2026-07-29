@@ -166,10 +166,9 @@ export function ChordChart({
   const [anchorBar, setAnchorBar] = useState<number | null>(null)
 
   const handleSectionClick = (section: ArrangementSection) => {
-    if (isSectionLoopActive(section, loop)) {
-      onLoopBars(null)
-      return
-    }
+    // A section header is always a play-from-here command. Toggling an active
+    // section off used to let playback continue into the following fill or
+    // section, even though the control says "Play section".
     onLoopSection(section)
   }
 
@@ -230,11 +229,7 @@ function SectionBlock({
         type="button"
         onClick={() => onSectionClick(section)}
         aria-pressed={active}
-        aria-label={
-          active
-            ? `${section.label}: looping, click to clear loop`
-            : `Play section ${section.label}`
-        }
+        aria-label={`Play section ${section.label} from the beginning`}
         className={cn(
           "flex min-h-10 w-full items-center gap-2 border-b px-1 py-2 text-left text-[11px] font-bold tracking-[0.16em] uppercase transition",
           active ? roleStyle.bandActive : roleStyle.band,
@@ -242,6 +237,11 @@ function SectionBlock({
       >
         <span className={cn("size-2 shrink-0 rounded-full", roleStyle.dot)} />
         <span className="truncate">{section.label}</span>
+        {section.styleVariation ? (
+          <span className="shrink-0 rounded-md bg-black/20 px-1.5 py-0.5 text-[9px] tracking-[0.12em] opacity-70">
+            Main {section.styleVariation}
+          </span>
+        ) : null}
         <Repeat
           className={cn(
             "ml-auto size-3.5 shrink-0",

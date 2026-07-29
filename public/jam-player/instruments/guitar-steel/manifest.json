@@ -114,8 +114,9 @@
     "074_SteelGuitar_MegaVoice-98-127.ogg": 48000,
     "074_SteelGuitar_MegaVoice-99-127.ogg": 48000
   },
-  "totalBytes": 6316806,
+  "totalBytes": 6288137,
   "regionCount": 109,
   "sampleCount": 109,
+  "renderGainDb": -6.0,
   "instrumentGain": 2.803249395495421
 }
