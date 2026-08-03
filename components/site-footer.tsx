@@ -2,6 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
+import { ArrowUpRight } from "lucide-react"
 import { SITE } from "@/lib/site"
 
 export function SiteFooter() {
@@ -12,66 +13,35 @@ export function SiteFooter() {
     <footer className="site-footer">
       <div className="site-footer-inner">
         <div className="site-footer-grid">
-          <div>
-            <p className="ux-section-label">SmartBridge</p>
-            <p
-              className="section-title"
-              style={{ fontSize: "1.25rem", marginTop: "0.75rem" }}
-            >
-              From phrase to arrangement
-            </p>
-            <p
-              className="prose-muted"
-              style={{ maxWidth: "20rem", fontSize: "0.9rem", marginTop: "0.75rem" }}
-            >
-              An independent project by Claudio Reyes. Build, audition, and transfer
-              styles to your Yamaha arranger.
-            </p>
+          <div className="site-footer-brand">
+            <Link href="/" className="site-logo site-logo-footer"><span>SB</span><strong>SmartBridge</strong></Link>
+            <p>One connected creative workflow for Yamaha keyboards, song building, and production.</p>
           </div>
           <div>
-            <p className="ux-section-label" style={{ marginBottom: "0.85rem" }}>
-              Product
-            </p>
+            <p className="site-footer-heading">Products</p>
             <ul className="site-footer-links">
-              <li>
-                <Link href="/style-maker">Try Style Maker</Link>
-              </li>
-              <li>
-                <Link href="/demo">Live demo</Link>
-              </li>
-              <li>
-                <Link href="/features">Features</Link>
-              </li>
-              <li>
-                <a href={SITE.setupUrl} target="_blank" rel="noopener noreferrer">
-                  Download Setup
-                </a>
-              </li>
-              <li>
-                <Link href="/beta">Desktop beta access</Link>
-              </li>
+              <li><Link href="/features">SmartBridge Desktop</Link></li>
+              <li><Link href="/style-maker">Style Maker</Link></li>
+              <li><Link href="/jam-player">Jam Player</Link></li>
             </ul>
           </div>
           <div>
-            <p className="ux-section-label" style={{ marginBottom: "0.85rem" }}>
-              Contact
-            </p>
+            <p className="site-footer-heading">Company</p>
             <ul className="site-footer-links">
-              <li>
-                <a href={`mailto:${SITE.email}`}>{SITE.email}</a>
-              </li>
-              <li>
-                <Link href="/about">About the creator</Link>
-              </li>
+              <li><Link href="/about">About Claudio</Link></li>
+              <li><a href={`mailto:${SITE.email}`}>Contact</a></li>
+              <li><Link href="/beta">Beta program <ArrowUpRight size={13} /></Link></li>
             </ul>
+          </div>
+          <div className="site-footer-cta">
+            <p className="site-footer-heading">SmartBridge Desktop</p>
+            <p>Explore the complete keyboard-to-production workflow or request beta access.</p>
+            <Link href="/features" className="m-button m-button-primary">Explore Desktop <ArrowUpRight size={15} /></Link>
           </div>
         </div>
         <div className="site-footer-bottom">
-          <span>
-            © {new Date().getFullYear()} SmartBridge. Not affiliated with Yamaha
-            Corporation.
-          </span>
-          <span>Tyros · Genos · PSR-SX · Motif</span>
+          <span>© {new Date().getFullYear()} SmartBridge by Claudio Reyes.</span>
+          <span>Independent software · Not affiliated with Yamaha Corporation.</span>
         </div>
       </div>
     </footer>

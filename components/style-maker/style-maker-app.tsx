@@ -4202,16 +4202,16 @@ export function StyleMakerApp() {
                           <span className="sm-clip-name" title={clip.clipName || undefined}>
                             {formatClipTitle(clip.clipName, clip.id)}
                           </span>
-                          <span>{clip.categoryName || "—"}</span>
-                          <span>{clip.sectionType || "—"}</span>
-                          <span>{clip.feelMode || clip.feelName || "—"}</span>
-                          <span className="sm-clip-num">
+                          <span data-label="Genre">{clip.categoryName || "—"}</span>
+                          <span data-label="Section">{clip.sectionType || "—"}</span>
+                          <span data-label="Feel">{clip.feelMode || clip.feelName || "—"}</span>
+                          <span className="sm-clip-num" data-label="BPM">
                             {clip.bpm ? Math.round(clip.bpm) : "—"}
                           </span>
-                          <span className="sm-clip-num">
+                          <span className="sm-clip-num" data-label="Bars">
                             {clip.bars != null ? clip.bars : "—"}
                           </span>
-                          <span className="sm-clip-num">{clip.noteCount}</span>
+                          <span className="sm-clip-num" data-label="Notes">{clip.noteCount}</span>
                           <span className="sm-meter" aria-hidden="true">
                             {Array.from({ length: 5 }, (_, i) => (
                               <i key={i} className={i < level ? "is-on" : ""} />

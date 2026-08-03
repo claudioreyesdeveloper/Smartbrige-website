@@ -81,7 +81,7 @@ export function MixerPanel({
               onClick={() => setAuditionMode("listen")}
               aria-pressed={auditionMode === "listen"}
               className={cn(
-                "rounded-md px-2.5 py-1 text-[9px] font-semibold tracking-wide uppercase transition",
+                "rounded-md px-2.5 py-2 text-[9px] font-semibold tracking-wide uppercase transition",
                 auditionMode === "listen" ? "bg-orange-400 text-black" : "text-white/40 hover:text-white/70",
               )}
             >
@@ -92,7 +92,7 @@ export function MixerPanel({
               onClick={() => setAuditionMode("exclude")}
               aria-pressed={auditionMode === "exclude"}
               className={cn(
-                "rounded-md px-2.5 py-1 text-[9px] font-semibold tracking-wide uppercase transition",
+                "rounded-md px-2.5 py-2 text-[9px] font-semibold tracking-wide uppercase transition",
                 auditionMode === "exclude" ? "bg-rose-400 text-black" : "text-white/40 hover:text-white/70",
               )}
             >
@@ -120,7 +120,9 @@ export function MixerPanel({
             </button>
           ) : null}
         </div>
-        <div className="grid gap-2" style={{ gridTemplateColumns: `repeat(${parts.length}, minmax(86px, 1fr))` }}>
+        {/* auto-fit, not `repeat(parts.length, …)`: five parts need 462px and the
+            compact dock column can be narrower than that, so let them wrap. */}
+        <div className="grid gap-2" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(86px, 1fr))" }}>
           {parts.map((part) => {
             const meta = PART_META[part]
             const Figure = BAND_FIGURES[part]

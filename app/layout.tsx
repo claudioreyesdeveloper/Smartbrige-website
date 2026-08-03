@@ -28,19 +28,33 @@ const instrumentSerif = Instrument_Serif({
 export const metadata: Metadata = {
   metadataBase: new URL(SITE.url),
   title: {
-    default: "SmartBridge — Songwriting workflow for Yamaha keyboards",
+    default: "SmartBridge — Desktop and Style Maker for Yamaha musicians",
     template: "%s · SmartBridge",
   },
   description:
-    "From MIDI phrase to full arrangement. SmartBridge connects your Yamaha keyboard to chord-aware phrases, vocals, lyrics, and DAW production.",
+    "Connect your Yamaha keyboard to song building, performance libraries, vocals, solos, harmony, Cubase, Synthesizer V, and native style creation.",
   openGraph: {
-    title: "SmartBridge — From phrase to full arrangement",
+    title: "SmartBridge — Your whole musical workflow from one screen",
     description:
-      "Arrangement workflow for Yamaha Tyros, Genos, PSR-SX, and Motif — phrases, vocals, lyrics, and Cubase integration.",
+      "SmartBridge Desktop and Style Maker connect Yamaha keyboards, song building, musical parts, and production.",
     url: SITE.url,
     siteName: "SmartBridge",
     locale: "en_US",
     type: "website",
+    images: [
+      {
+        url: `${SITE.url}/og-desktop.png`,
+        width: 1200,
+        height: 630,
+        alt: "SmartBridge — Your whole musical workflow from one screen",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "SmartBridge — Your whole musical workflow from one screen",
+    description: "Desktop and browser tools for Yamaha musicians.",
+    images: [`${SITE.url}/og-desktop.png`],
   },
 }
 

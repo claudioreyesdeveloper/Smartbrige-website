@@ -1329,7 +1329,7 @@ export function PracticeScreen({ hasFullAccess = false }: PracticeScreenProps = 
             <div className="min-h-0 flex-1 overflow-y-auto p-5">
               <Link
                 href="/jam-player"
-                className="mb-6 flex items-center gap-2 text-xs text-white/35 transition hover:text-white/70"
+                className="mb-4 flex items-center gap-2 py-2 text-xs text-white/35 transition hover:text-white/70"
               >
                 <ArrowLeft className="size-3.5" />
                 Library
@@ -1457,7 +1457,7 @@ export function PracticeScreen({ hasFullAccess = false }: PracticeScreenProps = 
 
           {!standMode ? (
             <div className="hidden shrink-0 border-t border-white/10 bg-[#090909]/95 px-4 py-3 backdrop-blur lg:block">
-              <div className="mx-auto grid max-w-6xl grid-cols-[minmax(280px,0.85fr)_minmax(430px,1.4fr)] gap-3">
+              <div className="mx-auto grid max-w-6xl grid-cols-[minmax(240px,0.85fr)_minmax(0,1.4fr)] gap-3">
                 <VariationPicker
                   count={variationCount}
                   value={variation}

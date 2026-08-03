@@ -2145,3 +2145,445 @@ body.sm-dragging-clip .sm-lane {
   gap: 6px;
 }
 
+
+/* ==========================================================================
+   Responsive layer — tablet and phone
+   --------------------------------------------------------------------------
+   Everything above targets the fixed 1:1 desktop shell: a viewport-height flex
+   column whose inner panels (lanes / library / clip list) scroll independently
+   while the document itself never does.
+
+   That model needs width. Two tiers step it down:
+     1100–1279px  compact desktop — same two-column workspace, tighter columns.
+     below 1100px  the lane rail and library can no longer share a row, so the
+                   shell flips to a single stacked column that scrolls as one
+                   ordinary document, and the dense grids (clip table, mixer
+                   rows) reflow into cards.
+   ========================================================================== */
+
+/* Compact desktop — small laptops and landscape tablets.
+   The stock column mins (a 400px lane rail plus a 744px clip grid, before gaps)
+   need roughly 1230px before they collide. Tightening both keeps a real
+   two-column workspace instead of dropping a 1100px laptop to the phone stack. */
+@media (min-width: 1100px) and (max-width: 1279px) {
+  .sm-body {
+    grid-template-columns: minmax(300px, 26vw) minmax(0, 1fr);
+  }
+
+  .sm-body.is-minor-lanes {
+    grid-template-columns: minmax(380px, 32vw) minmax(0, 1fr);
+  }
+
+  .sm-clip-head,
+  .sm-clip {
+    grid-template-columns:
+      minmax(150px, 2.4fr)
+      minmax(84px, 1fr)
+      minmax(66px, 0.8fr)
+      minmax(84px, 1fr)
+      54px
+      46px
+      54px
+      64px;
+    gap: 6px;
+    padding: 0 10px;
+  }
+
+  .sm-clip-list {
+    padding: 6px 10px 10px;
+  }
+
+  .sm-lanes {
+    padding: 18px 16px 20px;
+  }
+}
+
+@media (max-width: 1099px) {
+  /* Release the viewport-locked shell so the page scrolls normally. */
+  html:has(.sm-desktop-shell),
+  body:has(.sm-desktop-shell),
+  html:has(.sm-desktop),
+  body:has(.sm-desktop) {
+    height: auto;
+    overflow: visible;
+  }
+
+  .sm-desktop-shell {
+    width: 100%;
+    height: auto;
+    min-height: 100dvh;
+    overflow: visible;
+    display: block;
+  }
+
+  .sm-desktop {
+    width: 100%;
+    height: auto;
+    min-height: 100dvh;
+    max-height: none;
+    overflow: visible;
+  }
+
+  /* The top-bar size presets are a desktop-window simulation; at these widths
+     the real viewport is the only sensible canvas. */
+  .sm-desktop:not([data-layout="fit"]) {
+    width: 100%;
+    min-width: 0;
+    height: auto;
+    zoom: 1;
+    box-shadow: none;
+  }
+
+  .sm-layout-select {
+    display: none;
+  }
+
+  /* —— Chrome —— */
+  /* Not sticky: once it wraps it is several rows tall and would eat the
+     viewport. Build/Mixer below is the control worth pinning. */
+  .sm-topbar {
+    height: auto;
+    min-height: 52px;
+    flex: 0 0 auto;
+    flex-wrap: wrap;
+    gap: 8px 12px;
+    padding: 8px 12px;
+  }
+
+  .sm-topbar-brand {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
+  .sm-topbar-brand span {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .sm-topbar-right {
+    flex: 1 1 100%;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .sm-topbar-right .sm-model-select {
+    flex: 1 1 150px;
+    min-width: 0;
+    max-width: none;
+    height: 40px;
+    font-size: 13px;
+  }
+
+  .sm-topbar-right .sm-btn {
+    flex: 1 1 140px;
+    padding: 0 14px;
+  }
+
+  .sm-topbar-status {
+    flex: 1 1 100%;
+    max-width: none;
+  }
+
+  /* Pinned so Build/Mixer stays reachable anywhere down the stacked page. */
+  .sm-mode-tabs {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    background: #0d1524;
+    border-bottom: 1px solid var(--sm-border);
+  }
+
+  /* —— Body: two columns become one scrolling stack —— */
+  .sm-body,
+  .sm-body.is-minor-lanes {
+    display: flex;
+    flex-direction: column;
+    overflow: visible;
+    min-height: 0;
+  }
+
+  .sm-lanes {
+    border-right: 0;
+    border-bottom: 1px solid var(--sm-border);
+    overflow: visible;
+    padding: 16px 14px 20px;
+  }
+
+  .sm-library {
+    height: auto;
+    overflow: visible;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .sm-lib-workspace,
+  .sm-clip-panel {
+    overflow: visible;
+    min-height: 0;
+  }
+
+  .sm-clip-panel {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .sm-clip-list {
+    overflow: visible;
+    padding: 8px 12px 12px;
+  }
+
+  .sm-lib-stage {
+    padding: 14px 14px 16px;
+  }
+
+  .sm-lib-stage-head strong {
+    max-width: none;
+  }
+
+  .sm-lib-tabs {
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .sm-lib-tabs::-webkit-scrollbar {
+    display: none;
+  }
+
+  .sm-lib-tabs button {
+    white-space: nowrap;
+  }
+
+  .sm-lib-search {
+    grid-column: auto;
+    min-width: 0;
+  }
+
+  .sm-lib-filters label,
+  .sm-lib-stage-grid label {
+    min-width: 0;
+  }
+
+  .sm-toolbar select,
+  .sm-toolbar input[type="text"],
+  .sm-field,
+  .sm-lib-stage select,
+  .sm-lib-stage input,
+  .sm-lib-filters select,
+  .sm-lib-filters input {
+    min-width: 0;
+    width: 100%;
+  }
+
+  .sm-lib-stage-grid > label,
+  .sm-lib-stage-voice {
+    flex: 1 1 220px;
+    max-width: none;
+    min-width: 0;
+  }
+
+  /* —— Clip table becomes a card list —— */
+  .sm-clip-head {
+    display: none;
+  }
+
+  .sm-clip {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 8px 10px;
+    padding: 10px 12px;
+    min-height: 0;
+  }
+
+  .sm-clip > .sm-clip-name {
+    grid-column: 1 / -1;
+    font-size: 14px;
+    font-weight: 650;
+  }
+
+  .sm-clip > span[data-label] {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .sm-clip > span[data-label]::before {
+    content: attr(data-label);
+    display: block;
+    color: var(--sm-muted);
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  .sm-clip > .sm-meter {
+    align-self: center;
+  }
+
+  /* —— Mixer rows become stacked cards —— */
+  .sm-mix-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px 14px;
+    min-height: 0;
+    padding: 14px 16px;
+  }
+
+  .sm-mix-row > .sm-mix-ch {
+    flex: 0 0 auto;
+  }
+
+  .sm-mix-row > .sm-mix-meta {
+    flex: 1 1 160px;
+    min-width: 0;
+  }
+
+  .sm-mix-row > .sm-mix-action {
+    flex: 0 0 auto;
+    margin-left: auto;
+  }
+
+  .sm-mix-row > .sm-mix-vol {
+    flex: 1 1 100%;
+    min-width: 0;
+  }
+
+  .sm-mix-row > .sm-knob {
+    flex: 1 1 0;
+    min-width: 64px;
+  }
+
+  /* —— Footer —— */
+  .sm-bottom {
+    flex: 0 0 auto;
+    flex-wrap: wrap;
+    gap: 10px;
+    padding: 12px 14px;
+  }
+
+  .sm-bottom .sm-status {
+    margin-left: 0;
+    flex: 1 1 100%;
+    max-width: none;
+    white-space: normal;
+  }
+
+  /* —— Overlays —— */
+  .sm-pianoroll-modal {
+    width: calc(100vw - 16px);
+    height: calc(100dvh - 16px);
+  }
+
+  .sm-voice-modal {
+    max-height: min(94dvh, 900px);
+  }
+
+  .sm-voice-filters {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* —— Phone —— */
+@media (max-width: 639px) {
+  .sm-desktop {
+    font-size: 14px;
+  }
+
+  .sm-topbar-brand {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1px;
+    font-size: 14px;
+  }
+
+  .sm-lanes {
+    padding: 14px 12px 18px;
+    gap: 10px;
+  }
+
+  .sm-lane {
+    padding: 14px 14px;
+    min-height: 0;
+    gap: 10px 12px;
+  }
+
+  .sm-lane-name {
+    font-size: 15px;
+  }
+
+  .sm-lane-sub {
+    font-size: 13px;
+  }
+
+  .sm-lane-actions {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .sm-lib-stage,
+  .sm-clip-list {
+    padding-left: 10px;
+    padding-right: 10px;
+  }
+
+  .sm-lib-filters {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .sm-clip {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  /* Decorative density meter — it only restates the Notes count, and at three
+     columns it would strand itself on a row of its own. */
+  .sm-clip > .sm-meter {
+    display: none;
+  }
+
+  .sm-transport {
+    width: 100%;
+  }
+
+  .sm-transport .sm-btn {
+    flex: 1 1 0;
+    min-width: 0;
+    padding: 0 12px;
+  }
+
+  .sm-mix-row > .sm-knob {
+    min-width: 56px;
+  }
+
+  .sm-export {
+    padding: 16px 12px;
+  }
+}
+
+/* Touch input: give the small desktop-density controls real hit areas. */
+@media (pointer: coarse) {
+  .sm-desktop input[type="checkbox"],
+  .sm-desktop input[type="radio"] {
+    width: 20px;
+    height: 20px;
+  }
+
+  /* The box itself stays small; the label is the hit area. */
+  .sm-desktop .sm-check {
+    min-height: 44px;
+  }
+
+  .sm-desktop .sm-model-select {
+    height: 40px;
+  }
+
+  .sm-lane-actions button {
+    min-height: 44px;
+  }
+
+  .sm-clip {
+    min-height: 44px;
+  }
+}

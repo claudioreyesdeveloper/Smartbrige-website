@@ -1,124 +1,72 @@
 import type { Metadata } from "next"
 import Link from "next/link"
-import { Download, Mail, KeyRound, Monitor } from "lucide-react"
+import { ArrowRight, Download, FlaskConical, KeyRound, Mail, Monitor } from "lucide-react"
 import { SITE } from "@/lib/site"
 
 export const metadata: Metadata = {
-  title: "Beta access",
-  description:
-    "Request SmartBridge beta access or download Setup for Demo and Beta installers for macOS and Windows.",
+  title: "Get SmartBridge Desktop",
+  description: "Download SmartBridge Desktop Setup and request activation for the complete macOS and Windows workflow.",
 }
 
-const STEPS = [
-  {
-    icon: Download,
-    title: "Download SmartBridge Setup",
-    body: "Pick Demo (30-day trial) or Beta 0.1 (email + serial) for your platform.",
-    href: SITE.setupUrl,
-    external: true,
-  },
-  {
-    icon: Monitor,
-    title: "Install components",
-    body: "Setup installs the plugin, phrase library, Cubase scripts, SynthV side panel, and optional drivers.",
-    href: SITE.setupUrl,
-    external: true,
-  },
-  {
-    icon: KeyRound,
-    title: "Beta activation",
-    body: "Beta builds prompt for your email and serial on first install. Request access below if you need a serial.",
-    href: `mailto:${SITE.email}?subject=SmartBridge%20Beta%20Access%20Request`,
-    external: true,
-  },
+const steps = [
+  { icon: Mail, title: "Request an invitation", body: "Tell Claudio which Yamaha keyboard and DAW you use, and what you want SmartBridge to solve." },
+  { icon: Download, title: "Download Setup", body: "Invited testers receive the correct macOS or Windows installer and activation details." },
+  { icon: KeyRound, title: "Activate the beta", body: "Use your email and beta serial to activate the desktop suite on your studio computer." },
 ]
 
 export default function BetaPage() {
   return (
-    <div className="page-shell">
-      <div className="content-wrap">
-        <p className="ux-section-label">Beta program</p>
-        <h1 className="section-title mt-3">Get SmartBridge on your machine</h1>
-        <p className="mt-4 max-w-xl prose-muted" style={{ lineHeight: 1.55 }}>
-          Invitation-only beta for the full desktop SmartBridge suite. Setup downloads the
-          plugin, database, and integration scripts — then you activate and play.
-        </p>
-
-        <div className="mt-8 rounded-xl border border-sky-500/30 bg-sky-500/10 p-6">
-          <p className="font-medium text-stone-100">Want something available today?</p>
-          <p className="mt-2 prose-muted text-sm" style={{ lineHeight: 1.55 }}>
-            Style Maker is live now with a 14-day free trial — rebuild Yamaha styles in the
-            browser, independent of the desktop beta.
-          </p>
-          <Link href="/style-maker" className="btn-primary mt-4">
-            Start Style Maker free trial
-          </Link>
-        </div>
-
-        <div className="mt-12 grid gap-5 md:grid-cols-3">
-          {STEPS.map((step) => {
-            const Icon = step.icon
-            const className = "card-surface p-7 flex flex-col h-full min-h-[14rem]"
-            const inner = (
-              <>
-                <Icon size={22} className="text-[var(--color-accent)]" />
-                <h2 className="mt-4 font-semibold text-stone-100">{step.title}</h2>
-                <p className="mt-2 text-sm prose-muted flex-1">{step.body}</p>
-                <span className="mt-4 text-sm text-[var(--color-accent)]">Learn more →</span>
-              </>
-            )
-            return step.external ? (
-              <a
-                key={step.title}
-                href={step.href}
-                className={className}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                {inner}
+    <div className="marketing-page mp-page editorial-page">
+      <section className="beta-hero">
+        <div className="m-wrap beta-hero-grid">
+          <div>
+            <p className="m-eyebrow">SmartBridge desktop suite</p>
+            <h1>Put the complete SmartBridge workflow on your machine.</h1>
+            <p>
+              SmartBridge Desktop connects Yamaha keyboard control, chord-aware arranging,
+              performance libraries, vocals, lyrics, solos, harmony, and DAW production. Download
+              Setup for macOS or Windows, then request activation for the current beta release.
+            </p>
+            <div className="m-actions">
+              <a href={`mailto:${SITE.email}?subject=${encodeURIComponent("SmartBridge desktop beta request")}`} className="m-button m-button-primary">
+                Request beta access <ArrowRight size={17} />
               </a>
-            ) : (
-              <Link key={step.title} href={step.href} className={className}>
-                {inner}
-              </Link>
-            )
-          })}
-        </div>
-
-        <div className="mt-12 card-surface p-8 md:p-10">
-          <div className="flex items-start gap-4">
-            <Mail size={24} className="text-[var(--color-accent)] shrink-0 mt-1" />
-            <div>
-              <h2 className="text-xl font-semibold text-stone-50">Request beta access</h2>
-              <p className="mt-3 prose-muted max-w-2xl">
-                Email Claudio with your name, Yamaha keyboard model, and DAW. You&apos;ll receive
-                download instructions and a beta serial for the Setup installer.
-              </p>
-              <a href={`mailto:${SITE.email}?subject=SmartBridge%20Beta%20Access%20Request`} className="btn-primary mt-6">
-                Email {SITE.email}
-              </a>
+              <a href={SITE.setupUrl} className="m-button m-button-quiet" target="_blank" rel="noopener noreferrer">Download Setup</a>
             </div>
           </div>
+          <div className="beta-status-card">
+            <FlaskConical size={26} />
+            <span>SmartBridge Desktop</span>
+            <h2>For macOS Apple Silicon and Windows x64</h2>
+            <p>VST3 + standalone · Yamaha USB MIDI · Cubase and Synthesizer V integrations</p>
+          </div>
         </div>
+      </section>
 
-        <div className="mt-8 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-2)] p-6 text-sm text-stone-400">
-          <p className="font-medium text-stone-300">Flavors</p>
-          <ul className="mt-3 space-y-2">
-            <li>
-              <strong className="text-stone-200">Demo</strong> — 30-day timer from first launch.
-              No serial required.
-            </li>
-            <li>
-              <strong className="text-stone-200">Beta 0.1</strong> — Full access with email +
-              serial activation.
-            </li>
-          </ul>
-          <p className="mt-4">
-            Both flavors install side-by-side with distinct bundle identifiers. Pick the one that
-            matches how you were invited.
-          </p>
+      <section className="m-section">
+        <div className="m-wrap">
+          <div className="m-section-heading m-section-heading-split">
+            <div><p className="m-eyebrow">Desktop access</p><h2>Download, activate, and connect your rig.</h2></div>
+            <p>Desktop is a primary SmartBridge product. The current release uses invitation-based beta activation while the complete keyboard and production workflow is refined with musicians.</p>
+          </div>
+          <div className="m-step-grid">
+            {steps.map((step, index) => (
+              <article key={step.title} className="m-step-card">
+                <div className="m-step-top"><span>0{index + 1}</span><step.icon size={22} /></div>
+                <h3>{step.title}</h3><p>{step.body}</p>
+              </article>
+            ))}
+          </div>
         </div>
-      </div>
+      </section>
+
+      <section className="beta-available-now">
+        <div className="m-wrap beta-available-grid">
+          <Monitor size={28} />
+          <div><p className="m-eyebrow">Also available in the browser</p><h2>Style Maker is the focused style workflow.</h2><p>Build and transfer Yamaha arranger styles in the browser with a full 14-day trial.</p></div>
+          <Link href="/style-maker" className="m-button m-button-primary">Explore Style Maker <ArrowRight size={17} /></Link>
+        </div>
+      </section>
     </div>
   )
 }

@@ -2,9 +2,9 @@ import type { Metadata } from "next"
 import { StyleMakerLanding } from "@/components/style-maker/style-maker-landing"
 
 export const metadata: Metadata = {
-  title: "Style Maker",
+  title: "Style Maker for Yamaha arrangers",
   description:
-    "Standalone Style Maker for Yamaha keyboards — rebuild styles with SmartBridge bass, drums, and guitar libraries or your own MIDI.",
+    "Import, rebuild, mix, export, and transfer Yamaha arranger styles in your browser. 14-day free trial, then $14.99/month.",
 }
 
 export default function StyleMakerProductPage() {

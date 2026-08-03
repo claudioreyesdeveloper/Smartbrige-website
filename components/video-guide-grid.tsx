@@ -41,7 +41,12 @@ export function VideoGuideGrid() {
 
                 <div className="mt-5 flex flex-wrap items-start justify-between gap-3">
                   <div style={{ maxWidth: "36rem" }}>
-                    <h3 className="font-semibold text-stone-100">{guide.title}</h3>
+                    <div className="flex items-start justify-between gap-4">
+                      <h3 className="font-semibold text-stone-100">{guide.title}</h3>
+                      <span className="shrink-0 text-xs uppercase tracking-[0.16em] text-stone-500">
+                        {guide.video.duration}
+                      </span>
+                    </div>
                     <p className="mt-3 text-sm prose-muted">{guide.summary}</p>
                   </div>
                   <a
