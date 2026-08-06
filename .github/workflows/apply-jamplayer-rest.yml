@@ -6,10 +6,15 @@ on:
       - main
     paths:
       - scripts/apply-jamplayer-rest.py
+      - scripts/.jamplayer-rest/fix
       - .github/workflows/apply-jamplayer-rest.yml
 
 permissions:
   contents: write
+
+concurrency:
+  group: jamplayer-rest-main
+  cancel-in-progress: true
 
 jobs:
   apply-and-validate:
@@ -31,6 +36,7 @@ jobs:
           set +e
           set -o pipefail
           {
+            set -e
             python3 scripts/apply-jamplayer-rest.py
             npm ci
             npm run jam-player:build-shards
@@ -50,7 +56,7 @@ jobs:
             mkdir -p docs
             cp /tmp/jamplayer-validation.log docs/jamplayer-validation-failure.log
             git add docs/jamplayer-validation-failure.log
-            git commit -m "Record JamPlayer validation failure" -- docs/jamplayer-validation-failure.log
+            git diff --cached --quiet || git commit -m "Record JamPlayer validation failure" -- docs/jamplayer-validation-failure.log
             git push origin HEAD:main
             exit "$status"
           fi
