@@ -1,3 +1,4 @@
+import AxeBuilder from "@axe-core/playwright"
 import { expect, test, type Page } from "@playwright/test"
 
 const ascii = (value: string) => Array.from(new TextEncoder().encode(value))
@@ -201,5 +202,29 @@ test.describe("Launch smoke — Jam Player demo", () => {
         ({ data }) => data.slice(0, 11).join(",") === "240,67,115,1,81,5,0,3,4,0,0",
       ),
     ).toBe(true)
+  })
+})
+
+test.describe("Launch smoke — Jam Player app", () => {
+  test("public app renders and full panels behave as accessible dialogs", async ({ page }) => {
+    await page.goto("/jam-player/app")
+    await expect(page.getByRole("combobox", { name: "Style" })).toBeVisible({
+      timeout: 30000,
+    })
+    await expect(page.getByRole("button", { name: "Open full mixer" })).toBeVisible()
+
+    const opener = page.getByRole("button", { name: "Open full mixer" })
+    await opener.click()
+    const dialog = page.getByRole("dialog", { name: "Full mixer" })
+    await expect(dialog).toBeVisible()
+    await expect(dialog.getByRole("button", { name: "Close" })).toBeFocused()
+    const accessibility = await new AxeBuilder({ page })
+      .include('[role="dialog"]')
+      .analyze()
+    expect(accessibility.violations).toEqual([])
+
+    await page.keyboard.press("Escape")
+    await expect(dialog).toHaveCount(0)
+    await expect(opener).toBeFocused()
   })
 })

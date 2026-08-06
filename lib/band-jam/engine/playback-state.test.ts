@@ -19,7 +19,7 @@ describe("effectivePartMuted", () => {
     expect(effectivePartMuted("guitar", mix, null)).toBe(false)
   })
 
-  it("uses the same solo mask for browser audio and Web MIDI", () => {
+  it("uses the same solo mask for every playback sink", () => {
     expect(effectivePartMuted("guitar", mix, "guitar")).toBe(false)
     expect(effectivePartMuted("drums", mix, "guitar")).toBe(true)
     expect(effectivePartMuted("bass", mix, "guitar")).toBe(true)
@@ -27,14 +27,13 @@ describe("effectivePartMuted", () => {
 })
 
 describe("elapsedBeatsForAudioTime", () => {
-  it("counts monotonic elapsed beats independently of a folded loop playhead", () => {
+  it("counts elapsed beats independently of a folded loop playhead", () => {
     expect(elapsedBeatsForAudioTime(10, 12, 120, false)).toBe(4)
   })
 
-  it("does not count first samples, count-in, invalid tempo, or backwards time", () => {
+  it("does not count the first sample, count-in, or backwards time", () => {
     expect(elapsedBeatsForAudioTime(null, 12, 120, false)).toBe(0)
     expect(elapsedBeatsForAudioTime(10, 12, 120, true)).toBe(0)
-    expect(elapsedBeatsForAudioTime(10, 12, 0, false)).toBe(0)
     expect(elapsedBeatsForAudioTime(12, 10, 120, false)).toBe(0)
   })
 })

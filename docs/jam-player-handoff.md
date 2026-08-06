@@ -5,9 +5,9 @@ and — at least as importantly — **the mistakes made getting here**, because
 several of them were made more than once and the pattern matters more than any
 individual fix.
 
-Nothing in this work has been committed. `git status` shows the Jam Player as
-untracked (`lib/band-jam/`, `components/band-jam/`, `public/jam-player/`,
-`app/jam-player/`). Two repos are involved:
+The event-based Jam Player is the active implementation. The retired pre-rendered
+stem pilot is preserved only under `docs/archive/`; its source was removed after
+confirming that no active route imported it. Two repos remain involved:
 
 | repo | holds |
 |---|---|
@@ -18,11 +18,9 @@ untracked (`lib/band-jam/`, `components/band-jam/`, `public/jam-player/`,
 
 ## 1. State right now
 
-Green as of this handoff: `npx tsc --noEmit` clean, `npx vitest run` = 304
-passing. Two failures in the full suite (`tests/unit/style-maker-audition.test.ts`,
-`tests/unit/library-panel.test.ts`) are **pre-existing and unrelated** — one wants
-a `/tmp/sb-clip.mid` fixture that does not exist, the other queries local DB
-state. Neither file was touched.
+Validation is automated through `npm run jam-player:check`, focused engine tests,
+and the project TypeScript check. `npm run build` regenerates and validates the
+browser data shards before Next.js builds.
 
 Guitar register per style, measured after the last export:
 
@@ -59,6 +57,17 @@ Guitar register per style, measured after the last export:
   crunch, Soldano high-gain.
 - **`guitar-voicing.ts`** — 1:1 port of the desktop `GuitarVoicingTransform`,
   53 tests.
+- **`jam-player-controller.ts`** — owns browser audio, effects and Web MIDI as
+  one imperative playback transaction. React no longer coordinates each sink
+  independently.
+- **`instrument-repository.ts`** — AudioContext-scoped decoded instrument cache
+  with concurrent-load deduplication and bounded LRU retention across styles.
+- **`timeline-index.ts`** — shared, beat-sorted event windows and loop recurrence
+  for audio and MIDI. Both sinks now schedule indexed spans rather than scanning
+  every event on every scheduler tick.
+- **`catalog-loader.ts`** — loads a small searchable index, then only the selected
+  progression shard and style clip shard. Every shard carries a build id to
+  reject mixed catalogue generations.
 
 ### UI (`components/band-jam/`)
 
@@ -73,14 +82,20 @@ is pure CSS), custom vertical faders with the full slider ARIA contract.
 `export_clips.py` → `clips.generated.json`. `style_overrides.json` holds
 hand-curated per-style picks that beat the automatic selection.
 
-**To rebuild after any content change, both must run, in order:**
+**To rebuild after any content change:**
 
 ```bash
-python3 scripts/band_jam_pilot/export_catalog.py && python3 scripts/band_jam_pilot/export_clips.py
+python3 scripts/band_jam_pilot/export_catalog.py && \
+python3 scripts/band_jam_pilot/export_clips.py
+npm run jam-player:build-shards
+npm run jam-player:check
 ```
 
-Forgetting the second one leaves the catalogue referencing clip ids that are not
-in the clip file — the app then silently drops those parts.
+The source JSON remains the pipeline input. The browser reads
+`public/jam-player/data/index.json`, one progression shard, and one style clip
+shard. `npm run build` runs the shard build and integrity check automatically.
+Missing clips, empty progressions, stale build ids and mismatched shards now fail
+the build instead of silently dropping parts.
 
 ---
 
@@ -229,7 +244,9 @@ checking — `ch14` (1-based 15, PHR1) has 380 pitched notes.
   button implies two views; today the mixer is still stacked below the chart.
 - The Yamaha reference's left sidebar (Synchro Start, master Volume, Part
   filter) is not built.
-- Not checked at tablet breakpoint or with keyboard-only fader operation.
+- The full-panel modal now has dialog semantics, focus trapping, Escape close,
+  focus restoration and a route-level Axe check. The custom faders still need
+  a dedicated keyboard-only musical workflow review.
 
 ### 5.3 Rock bass variations B and D are the same clip
 
@@ -242,8 +259,6 @@ duplicate padding. Variation D needs a different clip chosen by ear.
 
 - Latin style still cannot build — all 1,385 Latin drum clips are flagged
   `usable_as_main=0`.
-- Free-tier content limiting: `hasFullAccess` reaches `PracticeScreen` and is
-  unused.
 - Billing migration `drizzle/0001_add_subscriptions_plan.sql` is generated but
   **not applied**.
 - `rnb` guitar has only 7 clips, so it yields 2 distinct variations out of 4;

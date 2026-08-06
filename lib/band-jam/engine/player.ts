@@ -5,6 +5,11 @@ import {
 } from "@/lib/band-jam/engine/sample-bank"
 import type { EffectsRack } from "@/lib/band-jam/engine/effects"
 import {
+  buildArrangementEventIndex,
+  scheduledEventsForSpan,
+  type IndexedPartEvents,
+} from "@/lib/band-jam/engine/timeline-index"
+import {
   BEATS_PER_BAR,
   type Arrangement,
   type BandPart,
@@ -92,6 +97,7 @@ export class BandPlayer {
   }[] = []
 
   private arrangement: Arrangement | null = null
+  private eventIndex: IndexedPartEvents[] = []
   private status: TransportStatus = "idle"
 
   private tempo = 100
@@ -265,6 +271,7 @@ export class BandPlayer {
     }
 
     this.arrangement = arrangement
+    this.eventIndex = buildArrangementEventIndex(arrangement)
 
     // Keep every registered voice alive. An arrangement can temporarily omit
     // a part because the live Arranger disabled it; deleting its source here
@@ -533,23 +540,35 @@ export class BandPlayer {
     const arr = this.arrangement
     if (!arr) return
 
-    for (const { part, events } of arr.parts) {
+    const noteFromBeat = Math.max(fromBeat, this.countInUntilBeat)
+    if (toBeat <= noteFromBeat) {
+      if (this.metronomeOn || this.isCountInSpan(fromBeat)) {
+        this.scheduleClicks(fromBeat, toBeat)
+      }
+      return
+    }
+
+    for (const { part, events } of this.eventIndex) {
       const src = this.sources.get(part)
       const gain = this.partGains.get(part)
       const layers = [...(this.layeredSources.get(part)?.values() ?? [])]
       if ((!src || !gain) && layers.length === 0) continue
-      for (const ev of events) {
-        const hits = this.playbackBeatsFor(ev.beat, fromBeat, toBeat)
+      const scheduled = scheduledEventsForSpan(
+        events,
+        noteFromBeat,
+        toBeat,
+        arr.totalBeats,
+        this.loop,
+      )
+      for (const { event, playbackBeat } of scheduled) {
         if (src && gain) {
           const destination =
-            this.partVoiceInputs.get(part)?.(ev.note, ev.velocity) ?? gain
-          for (const pb of hits) this.scheduleNote(src, destination, ev, pb)
+            this.partVoiceInputs.get(part)?.(event.note, event.velocity) ?? gain
+          this.scheduleNote(src, destination, event, playbackBeat)
         }
         for (const layer of layers) {
-          const destination = layer.inputForNote(ev.note, ev.velocity)
-          for (const pb of hits) {
-            this.scheduleNote(layer.source, destination, ev, pb)
-          }
+          const destination = layer.inputForNote(event.note, event.velocity)
+          this.scheduleNote(layer.source, destination, event, playbackBeat)
         }
       }
     }
@@ -561,36 +580,6 @@ export class BandPlayer {
 
   private isCountInSpan(fromBeat: number) {
     return fromBeat < this.countInUntilBeat
-  }
-
-  /**
-   * Map an arrangement beat to the playback beats inside [from, to).
-   * With a loop active the same event recurs once per pass.
-   */
-  private playbackBeatsFor(
-    eventBeat: number,
-    fromBeat: number,
-    toBeat: number,
-  ): number[] {
-    const arr = this.arrangement
-    if (!arr) return []
-    const lp = this.loopBeats()
-    const period = lp ? lp.end - lp.start : arr.totalBeats
-    if (period <= 0) return []
-
-    const base = lp ? lp.start : 0
-    if (lp && (eventBeat < lp.start || eventBeat >= lp.end)) return []
-
-    const out: number[] = []
-    const offsetInPeriod = eventBeat - base
-    const firstPass = Math.floor((fromBeat - base - offsetInPeriod) / period)
-    for (let k = firstPass; ; k += 1) {
-      const pb = base + offsetInPeriod + k * period
-      if (pb >= toBeat) break
-      if (pb >= fromBeat && pb >= 0) out.push(pb)
-      if (k > firstPass + 4) break
-    }
-    return out
   }
 
   private scheduleNote(
@@ -714,16 +703,9 @@ export class BandPlayer {
     this.partVoiceInputs.clear()
     this.sources.clear()
     this.layeredSources.clear()
+    this.eventIndex = []
     this.master.disconnect()
     this.setStatus("idle")
-  }
-}
-
-/** Convenience: bars -> beats for loop maths outside the player. */
-export function loopToBeats(loop: LoopRange): { start: number; end: number } {
-  return {
-    start: (loop.startBar - 1) * BEATS_PER_BAR,
-    end: loop.endBar * BEATS_PER_BAR,
   }
 }
 

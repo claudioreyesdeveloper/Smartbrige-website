@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { readFileSync } from "node:fs"
+import { existsSync, readFileSync } from "node:fs"
 import path from "node:path"
 import {
   buildRegionIndex,
@@ -40,7 +40,8 @@ describe("SFZ round robin", () => {
 const PROTOTYPE_DIR = "/Users/claudio/Developer/Smartbridge/prototype/converted"
 
 function loadSfz(filename: string) {
-  return readFileSync(path.join(PROTOTYPE_DIR, filename), "utf-8")
+  const filePath = path.join(PROTOTYPE_DIR, filename)
+  return existsSync(filePath) ? readFileSync(filePath, "utf-8") : ""
 }
 
 const GUITAR_FILE = "077_SolidGuitar1 MegaVoice.sfz"
@@ -50,6 +51,11 @@ const WEB_POWER2_FILE = path.resolve(
   process.cwd(),
   "public/jam-player/instruments/drums-power2/drums-power2.sfz",
 )
+
+const hasPrototypeFixtures = [GUITAR_FILE, BASS_FILE, DRUMS_FILE].every((filename) =>
+  existsSync(path.join(PROTOTYPE_DIR, filename)),
+)
+const describePrototype = hasPrototypeFixtures ? describe : describe.skip
 
 describe("web PowerKit2 native snare layers", () => {
   const instrument = parseSfz(
@@ -69,7 +75,7 @@ describe("web PowerKit2 native snare layers", () => {
   })
 })
 
-describe("parseSfz — SolidGuitar1 MegaVoice", () => {
+describePrototype("parseSfz — SolidGuitar1 MegaVoice", () => {
   const text = loadSfz(GUITAR_FILE)
   const instrument = parseSfz(text, "/samples/077_SolidGuitar1", "guitar-solid1", "Solid Guitar 1")
 
@@ -185,7 +191,7 @@ describe("parseSfz — SolidGuitar1 MegaVoice", () => {
   })
 })
 
-describe("parseSfz — ElectricBass MegaVoice", () => {
+describePrototype("parseSfz — ElectricBass MegaVoice", () => {
   const text = loadSfz(BASS_FILE)
   const instrument = parseSfz(text, "/samples/024_ElectricBass", "bass-electric", "Electric Bass")
 
@@ -232,7 +238,7 @@ describe("parseSfz — ElectricBass MegaVoice", () => {
   })
 })
 
-describe("parseSfz — StandardKit1 GM drums", () => {
+describePrototype("parseSfz — StandardKit1 GM drums", () => {
   const text = loadSfz(DRUMS_FILE)
   const instrument = parseSfz(text, "/samples/014_StandardKit1", "drums-standard1", "Standard Kit 1")
 

@@ -1,9 +1,0 @@
-Traceback (most recent call last):
-  File "/home/runner/work/Smartbrige-website/Smartbrige-website/scripts/apply-jamplayer-rest.py", line 50, in <module>
-    extract_payload(fix_file.read_text(encoding="utf-8").strip())
-  File "/home/runner/work/Smartbrige-website/Smartbrige-website/scripts/apply-jamplayer-rest.py", line 35, in extract_payload
-    archive_bytes = gzip.decompress(base64.b64decode(payload, validate=True))
-                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/usr/lib/python3.12/gzip.py", line 638, in decompress
-    raise BadGzipFile("CRC check failed")
-gzip.BadGzipFile: CRC check failed

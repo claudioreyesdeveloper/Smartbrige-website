@@ -34,10 +34,13 @@ import {
   type NoteEvent,
   type TransportStatus,
 } from "@/lib/band-jam/engine/types"
-// Reused, not reimplemented: the loop-range -> beat-range conversion is a
-// one-line pure function BandPlayer already exports, and both sinks must
-// agree on it exactly.
-import { loopToBeats } from "@/lib/band-jam/engine/player"
+// Shared loop and event-window math keeps both sinks aligned exactly.
+import {
+  buildArrangementEventIndex,
+  loopToBeats,
+  scheduledEventsForSpan,
+  type IndexedPartEvents,
+} from "@/lib/band-jam/engine/timeline-index"
 
 // ---------------------------------------------------------------------------
 // Raw MIDI bytes
@@ -250,14 +253,13 @@ const DEFAULT_START_LATENCY = 0.06
  * Look-ahead MIDI scheduler. Deliberately mirrors BandPlayer's transport
  * (play/pause/stop/setTempo/setLoop/seekToBar) and its beat<->ctxTime
  * formulas beat-for-beat, so a caller driving both sinks from the same UI
- * actions gets a MIDI stream that lines up with the audio. It does not
- * share a BandPlayer instance -- Web MIDI's clock is fundamentally
- * different (see the file header) and player.ts's scheduling internals are
- * private -- so the small amount of beat math is duplicated here rather
- * than factored out, to avoid touching player.ts.
+ * actions gets a MIDI stream that lines up with the audio. Event-window and
+ * loop recurrence logic is shared through timeline-index.ts; only the final
+ * AudioContext-time -> DOMHighResTimeStamp conversion remains MIDI-specific.
  */
 export class MidiScheduler {
   private arrangement: Arrangement | null = null
+  private eventIndex: IndexedPartEvents[] = []
   private status: TransportStatus = "idle"
 
   private tempo = 100
@@ -314,6 +316,7 @@ export class MidiScheduler {
     }
 
     this.arrangement = arrangement
+    this.eventIndex = buildArrangementEventIndex(arrangement)
     this.usedChannels.clear()
 
     const total = arrangement.totalBeats
@@ -458,6 +461,7 @@ export class MidiScheduler {
 
   dispose() {
     this.stop()
+    this.eventIndex = []
     this.setStatus("idle")
   }
 
@@ -594,46 +598,23 @@ export class MidiScheduler {
     const arr = this.arrangement
     if (!arr) return
 
-    for (const { part, events } of arr.parts) {
+    const noteFromBeat = Math.max(fromBeat, this.countInUntilBeat)
+    if (toBeat <= noteFromBeat) return
+
+    for (const { part, events } of this.eventIndex) {
       if (this.disabledParts.has(part)) continue
       const channel = this.channelFor(part)
-      for (const ev of events) {
-        const hits = this.playbackBeatsFor(ev.beat, fromBeat, toBeat)
-        for (const pb of hits) this.scheduleNote(channel, ev, pb)
+      const scheduled = scheduledEventsForSpan(
+        events,
+        noteFromBeat,
+        toBeat,
+        arr.totalBeats,
+        this.loop,
+      )
+      for (const { event, playbackBeat } of scheduled) {
+        this.scheduleNote(channel, event, playbackBeat)
       }
     }
-  }
-
-  /**
-   * Maps an arrangement beat to the playback beats inside [from, to).
-   * Identical algorithm to BandPlayer.playbackBeatsFor -- both sinks must
-   * agree exactly on which playback beats an event recurs at under a loop,
-   * so this is a deliberate duplication, not drift.
-   */
-  private playbackBeatsFor(
-    eventBeat: number,
-    fromBeat: number,
-    toBeat: number,
-  ): number[] {
-    const arr = this.arrangement
-    if (!arr) return []
-    const lp = this.loopBeatsRange()
-    const period = lp ? lp.end - lp.start : arr.totalBeats
-    if (period <= 0) return []
-
-    const base = lp ? lp.start : 0
-    if (lp && (eventBeat < lp.start || eventBeat >= lp.end)) return []
-
-    const out: number[] = []
-    const offsetInPeriod = eventBeat - base
-    const firstPass = Math.floor((fromBeat - base - offsetInPeriod) / period)
-    for (let k = firstPass; ; k += 1) {
-      const pb = base + offsetInPeriod + k * period
-      if (pb >= toBeat) break
-      if (pb >= fromBeat && pb >= 0) out.push(pb)
-      if (k > firstPass + 4) break
-    }
-    return out
   }
 
   /**
