@@ -1,0 +1,136 @@
+Applied reviewed JamPlayer source bundle
+npm warn deprecated @esbuild-kit/esm-loader@2.6.5: Merged into tsx: https://tsx.hirok.io
+npm warn deprecated @esbuild-kit/core-utils@3.3.2: Merged into tsx: https://tsx.hirok.io
+
+added 485 packages, and audited 486 packages in 17s
+
+147 packages are looking for funding
+  run `npm fund` for details
+
+15 vulnerabilities (8 moderate, 7 high)
+
+To address issues that do not require attention, run:
+  npm audit fix
+
+To address all issues (including breaking changes), run:
+  npm audit fix --force
+
+Run `npm audit` for details.
+
+> thesmartbridge-website@1.0.0 jam-player:build-shards
+> tsx scripts/build-jam-player-shards.ts
+
+node:internal/modules/run_main:123
+    triggerUncaughtException(
+    ^
+
+Error: Transform failed with 6 errors:
+/home/runner/work/Smartbrige-website/Smartbrige-website/scripts/build-jam-player-shards.ts:32:20: ERROR: Top-level await is currently not supported with the "cjs" output format
+/home/runner/work/Smartbrige-website/Smartbrige-website/scripts/build-jam-player-shards.ts:36:18: ERROR: Top-level await is currently not supported with the "cjs" output format
+/home/runner/work/Smartbrige-website/Smartbrige-website/scripts/build-jam-player-shards.ts:49:0: ERROR: Top-level await is currently not supported with the "cjs" output format
+/home/runner/work/Smartbrige-website/Smartbrige-website/scripts/build-jam-player-shards.ts:61:2: ERROR: Top-level await is currently not supported with the "cjs" output format
+/home/runner/work/Smartbrige-website/Smartbrige-website/scripts/build-jam-player-shards.ts:73:2: ERROR: Top-level await is currently not supported with the "cjs" output format
+...
+    at failureErrorWithLog (/home/runner/work/Smartbrige-website/Smartbrige-website/node_modules/esbuild/lib/main.js:1748:15)
+    at /home/runner/work/Smartbrige-website/Smartbrige-website/node_modules/esbuild/lib/main.js:1017:50
+    at responseCallbacks.<computed> (/home/runner/work/Smartbrige-website/Smartbrige-website/node_modules/esbuild/lib/main.js:884:9)
+    at handleIncomingPacket (/home/runner/work/Smartbrige-website/Smartbrige-website/node_modules/esbuild/lib/main.js:939:12)
+    at Socket.readFromStdout (/home/runner/work/Smartbrige-website/Smartbrige-website/node_modules/esbuild/lib/main.js:862:7)
+    at Socket.emit (node:events:519:28)
+    at addChunk (node:internal/streams/readable:561:12)
+    at readableAddChunkPushByteMode (node:internal/streams/readable:512:3)
+    at Readable.push (node:internal/streams/readable:392:5)
+    at Pipe.onStreamRead (node:internal/stream_base_commons:189:23) {
+  name: 'TransformError'
+}
+
+Node.js v22.23.1
+
+> thesmartbridge-website@1.0.0 jam-player:check
+> tsx scripts/check-jam-player-catalog.ts
+
+node:internal/modules/run_main:123
+    triggerUncaughtException(
+    ^
+
+Error: Transform failed with 3 errors:
+/home/runner/work/Smartbrige-website/Smartbrige-website/scripts/check-jam-player-catalog.ts:29:2: ERROR: Top-level await is currently not supported with the "cjs" output format
+/home/runner/work/Smartbrige-website/Smartbrige-website/scripts/check-jam-player-catalog.ts:47:4: ERROR: Top-level await is currently not supported with the "cjs" output format
+/home/runner/work/Smartbrige-website/Smartbrige-website/scripts/check-jam-player-catalog.ts:78:6: ERROR: Top-level await is currently not supported with the "cjs" output format
+    at failureErrorWithLog (/home/runner/work/Smartbrige-website/Smartbrige-website/node_modules/esbuild/lib/main.js:1748:15)
+    at /home/runner/work/Smartbrige-website/Smartbrige-website/node_modules/esbuild/lib/main.js:1017:50
+    at responseCallbacks.<computed> (/home/runner/work/Smartbrige-website/Smartbrige-website/node_modules/esbuild/lib/main.js:884:9)
+    at handleIncomingPacket (/home/runner/work/Smartbrige-website/Smartbrige-website/node_modules/esbuild/lib/main.js:939:12)
+    at Socket.readFromStdout (/home/runner/work/Smartbrige-website/Smartbrige-website/node_modules/esbuild/lib/main.js:862:7)
+    at Socket.emit (node:events:519:28)
+    at addChunk (node:internal/streams/readable:561:12)
+    at readableAddChunkPushByteMode (node:internal/streams/readable:512:3)
+    at Readable.push (node:internal/streams/readable:392:5)
+    at Pipe.onStreamRead (node:internal/stream_base_commons:189:23) {
+  name: 'TransformError'
+}
+
+Node.js v22.23.1
+
+[1m[30m[46m RUN [49m[39m[22m [36mv4.1.10 [39m[90m/home/runner/work/Smartbrige-website/Smartbrige-website[39m
+
+[90mstderr[2m | lib/band-jam/engine/arrange.test.ts[2m > [22m[2marrange[2m > [22m[2mdegrades gracefully when a referenced clip id is missing
+[22m[39marrange: 3 clip(s) missing from the clip map, those parts are silent. Re-run export_clips.py. ids: 2
+
+ [32m✓[39m lib/band-jam/engine/arrange.test.ts [2m([22m[2m47 tests[22m[2m)[22m[32m 35[2mms[22m[39m
+ [32m✓[39m lib/band-jam/engine/effects-presets.test.ts [2m([22m[2m28 tests[22m[2m)[22m[32m 71[2mms[22m[39m
+ [32m✓[39m lib/band-jam/engine/guitar-voicing.test.ts [2m([22m[2m53 tests[22m[2m)[22m[32m 43[2mms[22m[39m
+ [31m❯[39m lib/band-jam/engine/sfz.test.ts [2m([22m[2m0 test[22m[2m)[22m
+ [32m✓[39m lib/band-jam/engine/web-midi.test.ts [2m([22m[2m16 tests[22m[2m)[22m[32m 17[2mms[22m[39m
+ [32m✓[39m lib/band-jam/engine/curated-content.test.ts [2m([22m[2m31 tests[22m[2m)[22m[33m 2806[2mms[22m[39m
+     [33m[2m✓[22m[39m covers both halves of every eight-bar section in every Funk variation [33m 2775[2mms[22m[39m
+ [32m✓[39m lib/band-jam/engine/guitar-octave.test.ts [2m([22m[2m14 tests[22m[2m)[22m[33m 427[2mms[22m[39m
+ [32m✓[39m lib/band-jam/engine/style-mix-store.test.ts [2m([22m[2m9 tests[22m[2m)[22m[32m 12[2mms[22m[39m
+ [32m✓[39m lib/band-jam/engine/practice-store.test.ts [2m([22m[2m15 tests[22m[2m)[22m[32m 16[2mms[22m[39m
+ [32m✓[39m lib/band-jam/engine/disabled-parts.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 159[2mms[22m[39m
+ [32m✓[39m lib/band-jam/engine/style-arranger.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 7[2mms[22m[39m
+ [32m✓[39m lib/band-jam/engine/jam-player-controller.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 10[2mms[22m[39m
+ [32m✓[39m lib/band-jam/engine/style-arranger-store.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 7[2mms[22m[39m
+ [32m✓[39m lib/band-jam/catalog-loader.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 16[2mms[22m[39m
+ [32m✓[39m lib/band-jam/engine/reharmonization.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 7[2mms[22m[39m
+ [32m✓[39m lib/band-jam/engine/instrument-repository.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 9[2mms[22m[39m
+ [32m✓[39m lib/band-jam/engine/timeline-index.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 7[2mms[22m[39m
+ [32m✓[39m lib/band-jam/engine/playback-state.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 5[2mms[22m[39m
+ [32m✓[39m lib/band-jam/engine/catalog-integrity.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 5[2mms[22m[39m
+ [32m✓[39m components/band-jam/player-panel-dialog.test.tsx [2m([22m[2m2 tests[22m[2m)[22m[32m 3[2mms[22m[39m
+
+[31m⎯⎯⎯⎯⎯⎯[39m[1m[41m Failed Suites 1 [49m[22m[31m⎯⎯⎯⎯⎯⎯⎯[39m
+
+[41m[1m FAIL [22m[49m lib/band-jam/engine/sfz.test.ts[2m [ lib/band-jam/engine/sfz.test.ts ][22m
+[31m[1mError[22m: ENOENT: no such file or directory, open '/Users/claudio/Developer/Smartbridge/prototype/converted/077_SolidGuitar1 MegaVoice.sfz'[39m
+[36m [2m❯[22m loadSfz lib/band-jam/engine/sfz.test.ts:[2m43:10[22m[39m
+    [90m 41|[39m
+    [90m 42|[39m [35mfunction[39m [34mloadSfz[39m(filename[33m:[39m string) {
+    [90m 43|[39m   [35mreturn[39m [34mreadFileSync[39m(path[33m.[39m[34mjoin[39m([33mPROTOTYPE_DIR[39m[33m,[39m filename)[33m,[39m [32m"utf-8"[39m)
+    [90m   |[39m          [31m^[39m
+    [90m 44|[39m }
+    [90m 45|[39m
+[90m [2m❯[22m lib/band-jam/engine/sfz.test.ts:[2m73:16[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯[22m[39m
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[2m | [22m[1m[32m19 passed[39m[22m[90m (20)[39m
+[2m      Tests [22m [1m[32m250 passed[39m[22m[90m (250)[39m
+[2m   Start at [22m 13:48:09
+[2m   Duration [22m 10.39s[2m (transform 1.29s, setup 0ms, import 2.63s, tests 3.66s, environment 19.76s)[22m
+
+
+::error file=/home/runner/work/Smartbrige-website/Smartbrige-website/lib/band-jam/engine/sfz.test.ts,title=lib/band-jam/engine/sfz.test.ts,line=43,column=10::Error: ENOENT: no such file or directory, open '/Users/claudio/Developer/Smartbridge/prototype/converted/077_SolidGuitar1 MegaVoice.sfz'%0A ❯ loadSfz lib/band-jam/engine/sfz.test.ts:43:10%0A ❯ lib/band-jam/engine/sfz.test.ts:73:16%0A%0A⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯%0ASerialized Error: { errno: -2, code: 'ENOENT', syscall: 'open', path: '/Users/claudio/Developer/Smartbridge/prototype/converted/077_SolidGuitar1 MegaVoice.sfz' }%0A
+
+> thesmartbridge-website@1.0.0 lint
+> tsc --noEmit
+
+scripts/check-jam-player-catalog.ts(21,17): error TS2352: Conversion of type '{ progressions: ({ name: string; keyPc: number; keyLabel: string; sections: ({ role: string; label: string; bars: number; chords: ({ startBeat: number; durationBeats: number; root: number; name: string; bassRoot?: undefined; } | { ...; })[]; sourceClipId: number; clipOrder: number; styleVariation: string; sectionKey...' to type 'CatalogJson' may be a mistake because neither type sufficiently overlaps with the other. If this was intentional, convert the expression to 'unknown' first.
+  Types of property 'styles' are incompatible.
+    Type '({ id: string; name: string; category: string; feel: string; tempoDefault: number; tempoMin: number; tempoMax: number; parts: { drums: { instrument: string; gain: number; harmonic: boolean; slots: { intro: number; ... 4 more ...; outro: number; }; variations: { ...; }; fills: { ...; }; intensityLadder: number[]; coh...' is not comparable to type 'BandStyle[]'.
+      Type '{ id: string; name: string; category: string; feel: string; tempoDefault: number; tempoMin: number; tempoMax: number; parts: { drums: { instrument: string; gain: number; harmonic: boolean; slots: { intro: number; ... 4 more ...; outro: number; }; variations: { ...; }; fills: { ...; }; intensityLadder: number[]; cohe...' is not comparable to type 'BandStyle'.
+        Type '{ id: string; name: string; category: string; feel: string; tempoDefault: number; tempoMin: number; tempoMax: number; parts: { drums: { instrument: string; gain: number; harmonic: boolean; slots: { intro: number; ... 4 more ...; outro: number; }; variations: { ...; }; fills: { ...; }; intensityLadder: number[]; cohe...' is not comparable to type 'BandStyle'.
+          The types of 'parts.keys.register' are incompatible between these types.
+            Type 'number[]' is not comparable to type '[number, number]'.
+              Target requires 2 element(s) but source may have fewer.
