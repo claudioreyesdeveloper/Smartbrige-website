@@ -31,15 +31,23 @@ def safe_members(archive: tarfile.TarFile):
         yield member
 
 
+def extract_payload(payload: str) -> None:
+    archive_bytes = gzip.decompress(base64.b64decode(payload, validate=True))
+    with tarfile.open(fileobj=io.BytesIO(archive_bytes), mode="r:") as archive:
+        archive.extractall(ROOT, members=safe_members(archive))
+
+
 part_files = sorted(PARTS.glob("part-*"))
 if len(part_files) != 8:
     raise RuntimeError(f"Expected 8 bundle parts, found {len(part_files)}")
 
-payload = "".join(path.read_text(encoding="utf-8").strip() for path in part_files)
-archive_bytes = gzip.decompress(base64.b64decode(payload, validate=True))
+extract_payload(
+    "".join(path.read_text(encoding="utf-8").strip() for path in part_files),
+)
 
-with tarfile.open(fileobj=io.BytesIO(archive_bytes), mode="r:") as archive:
-    archive.extractall(ROOT, members=safe_members(archive))
+fix_file = PARTS / "fix"
+if fix_file.exists():
+    extract_payload(fix_file.read_text(encoding="utf-8").strip())
 
 for relative in DELETIONS:
     target = ROOT / relative
