@@ -15,7 +15,7 @@ export function SiteFooter() {
         <div className="site-footer-grid">
           <div className="site-footer-brand">
             <Link href="/" className="site-logo site-logo-footer"><span>SB</span><strong>SmartBridge</strong></Link>
-            <p>One chord-aware song context across Yamaha hardware, performed MIDI, Cubase, Synthesizer V, and native style production.</p>
+            <p>Keep one Yamaha song context connected through performed MIDI, Cubase, Synthesizer V, lyrics, solos, and harmony.</p>
           </div>
           <div>
             <p className="site-footer-heading">Products</p>
@@ -26,17 +26,18 @@ export function SiteFooter() {
             </ul>
           </div>
           <div>
-            <p className="site-footer-heading">Learn</p>
+            <p className="site-footer-heading">Resources</p>
             <ul className="site-footer-links">
               <li><Link href="/about">Why SmartBridge</Link></li>
+              <li><Link href="/manual">Desktop product manual</Link></li>
               <li><a href={`mailto:${SITE.email}`}>Contact Claudio</a></li>
               <li><Link href="/beta">Desktop beta <ArrowUpRight size={13} /></Link></li>
             </ul>
           </div>
           <div className="site-footer-cta">
             <p className="site-footer-heading">SmartBridge Desktop</p>
-            <p>Build the song once, then carry its musical intelligence into the complete production.</p>
-            <Link href="/features" className="m-button m-button-primary">Explore Desktop <ArrowUpRight size={15} /></Link>
+            <p>See how the Yamaha idea remains connected until the production is finished.</p>
+            <Link href="/features" className="m-button m-button-primary">See the workflow <ArrowUpRight size={15} /></Link>
           </div>
         </div>
         <div className="site-footer-bottom">
