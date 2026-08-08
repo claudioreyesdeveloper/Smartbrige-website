@@ -117,9 +117,9 @@ export default function FeaturesPage() {
         <div className="m-wrap">
           <div className={styles.sectionHeader}>
             <p className={styles.eyebrow}>The signature engines</p>
-            <h2 className={styles.sectionTitle}>The differentiation is in the connection.</h2>
+            <h2 className={styles.sectionTitle}>The power is in the connection.</h2>
             <p className={styles.sectionIntro}>
-              Other products can generate a phrase, suggest a chord, or create a harmony. SmartBridge
+              A phrase generator, chord tool, or harmonizer solves only one moment. SmartBridge
               connects the physical Yamaha, the complete song, expressive MIDI, Cubase, and vocal
               production in one continuous workflow.
             </p>
