@@ -9,9 +9,7 @@ import {
   Download,
   Layers3,
   Music2,
-  Repeat2,
   SlidersHorizontal,
-  WandSparkles,
 } from "lucide-react"
 import { SITE } from "@/lib/site"
 import styles from "@/components/marketing-redesign.module.css"
@@ -167,10 +165,11 @@ export default function FeaturesPage() {
         <div className="m-wrap">
           <div className={styles.sectionHeader}>
             <p className={styles.eyebrow}>Three connected systems</p>
-            <h2 className={styles.sectionTitle}>The important features are organised around the work they finish.</h2>
+            <h2 className={styles.sectionTitle}>Coordinate the rig. Develop the performance. Finish the melody.</h2>
             <p className={styles.sectionIntro}>
-              The detailed controls still exist, but the product is easier to understand as three
-              connected jobs: coordinate the real rig, develop performed MIDI, and finish the melody.
+              The capabilities are grouped around three jobs that carry the song forward: preserve
+              the real Yamaha setup, create musical and expressive sections, and complete the vocal
+              or instrumental arrangement.
             </p>
           </div>
 
@@ -239,12 +238,12 @@ export default function FeaturesPage() {
       <section className={styles.explorerSection}>
         <div className="content-wrap">
           <div className={styles.explorerIntro}>
-            <p className="ux-section-label">Subsidiary product reference</p>
+            <p className="ux-section-label">Product reference</p>
             <h2>Need every screen, control, and workflow detail?</h2>
             <p>
-              The full interactive Desktop manual is now separated from the marketing story. Use it
-              when you need exact information about keyboard control, songs, rhythm parts, vocals,
-              solos, harmony, Motif, Cubase handoff, Jam Session, or Yamaha style creation.
+              Open the interactive manual for exact information about keyboard control, songs,
+              rhythm parts, vocals, solos, harmony, Motif, Cubase handoff, Jam Session, and Yamaha
+              style creation.
             </p>
             <div className="m-actions" style={{ marginTop: "1.75rem" }}>
               <Link href="/manual" className="m-button m-button-primary">
