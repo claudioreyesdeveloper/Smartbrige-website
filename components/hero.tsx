@@ -5,10 +5,9 @@ import { SITE } from "@/lib/site"
 import styles from "@/components/marketing-redesign.module.css"
 
 const signals = [
-  "32 Cubase tracks named from the Yamaha voices",
-  "Editable performances already fitted to the chords",
-  "Lyrics written to the notes of the melody",
-  "Vocal, brass, and string parts from one song",
+  "Keep the Yamaha as the sound and performance centre",
+  "Turn performed MIDI into complete chord-aware sections",
+  "Send organised, editable material into Cubase and Synthesizer V",
 ]
 
 export function Hero() {
@@ -18,26 +17,26 @@ export function Hero() {
         <div className={styles.heroCopy}>
           <div className={styles.heroKicker}>
             <span className={styles.heroKickerDot} />
-            The chord-aware production system for Yamaha musicians
+            One song. Every part understands it.
           </div>
           <h1 className={styles.heroTitle}>
-            One song.
-            <span>Every part understands it.</span>
+            Turn your Yamaha idea into a finished production.
+            <span>Without rebuilding the song in every tool.</span>
           </h1>
           <p className={styles.heroLead}>
-            SmartBridge gives your Yamaha arranger, Cubase, Synthesizer V, performance
-            libraries, solos, lyrics, and harmonies the same chords, sections, key, and tempo.
-            Build the song once, then carry its musical intelligence through the entire production.
+            SmartBridge connects the Yamaha arranger, performed MIDI, Cubase, Synthesizer V,
+            lyrics, solos, and harmony to the same chords, sections, key, and tempo. The musical
+            context travels with the song from the keyboard to the final editable tracks.
           </p>
           <div className="m-actions" style={{ marginTop: "2.15rem" }}>
             <Link href="/features" className="m-button m-button-primary">
-              Explore SmartBridge Desktop <ArrowRight size={17} />
+              See the connected workflow <ArrowRight size={17} />
             </Link>
             <a href={SITE.setupUrl} target="_blank" rel="noopener noreferrer" className="m-button m-button-quiet">
-              Download Setup <Download size={17} />
+              Download Desktop Setup <Download size={17} />
             </a>
           </div>
-          <div className={styles.heroSignals} aria-label="SmartBridge signature capabilities">
+          <div className={styles.heroSignals} aria-label="SmartBridge customer outcomes">
             {signals.map((signal) => (
               <span className={styles.signal} key={signal}>
                 <CheckCircle2 size={15} /> {signal}
@@ -48,7 +47,7 @@ export function Hero() {
 
         <div className={styles.heroVisual} aria-label="SmartBridge connected song workflow">
           <div className={styles.heroGlow} />
-          <p className={styles.heroCaption}>JamPlayer inside Desktop is the shared musical context—not another isolated tool.</p>
+          <p className={styles.heroCaption}>The song remains the shared context from the Yamaha performance to the finished production.</p>
           <div className={styles.heroWindow}>
             <div className={styles.windowBar}>
               <i /><i /><i />
@@ -57,7 +56,7 @@ export function Hero() {
             <Image
               className={styles.heroImage}
               src="/images/desktop-v15/27_jam_player_song_chords.png"
-              alt="SmartBridge JamPlayer sharing a song and chord progression across the production workflow"
+              alt="SmartBridge Desktop sharing one song and chord progression across the production workflow"
               width={1280}
               height={853}
               priority
@@ -76,7 +75,7 @@ export function Hero() {
             <span className={styles.orbitValue}>Lyrics · Lead · Harmonies</span>
           </div>
           <div className={`${styles.orbitCard} ${styles.orbitLibrary}`}>
-            <span className={styles.orbitLabel}>Performance library</span>
+            <span className={styles.orbitLabel}>Performed MIDI</span>
             <span className={styles.orbitValue}>Bass · Drums · Guitar · Solos</span>
           </div>
         </div>
