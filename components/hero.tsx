@@ -48,7 +48,7 @@ export function Hero() {
 
         <div className={styles.heroVisual} aria-label="SmartBridge connected song workflow">
           <div className={styles.heroGlow} />
-          <p className={styles.heroCaption}>JamPlayer is the shared musical context—not another isolated tool.</p>
+          <p className={styles.heroCaption}>JamPlayer inside Desktop is the shared musical context—not another isolated tool.</p>
           <div className={styles.heroWindow}>
             <div className={styles.windowBar}>
               <i /><i /><i />
