@@ -9,6 +9,7 @@ import { isClerkPublishableEnabled } from "@/lib/billing/clerk-config"
 import { SITE } from "@/lib/site"
 import { cn } from "@/lib/utils"
 import "./globals.css"
+import "./site-header-tablet-fix.css"
 
 const geist = Geist({ subsets: ["latin"], variable: "--font-sans" })
 
