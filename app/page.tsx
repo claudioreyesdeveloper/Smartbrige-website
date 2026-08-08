@@ -99,7 +99,7 @@ const products = [
     name: "Jam Player",
     status: "Free",
     title: "Start with the song, not an empty timeline.",
-    body: "Choose the progression, key, tempo, and feel, mute the instrument you play, and practise with the band. The same song can continue into the SmartBridge workflow.",
+    body: "Choose the progression, key, tempo, and feel, mute the instrument you play, and practise with the band. It is the free, chord-first entry point to the SmartBridge approach.",
     image: "/images/desktop-v15/27_jam_player_song_chords.png",
     href: "/jam-player/app",
     cta: "Open Jam Player",
@@ -132,18 +132,19 @@ export default function HomePage() {
               <p className={styles.eyebrow}>The central idea</p>
               <h2 className={styles.sectionTitle}>The song is the system.</h2>
               <p className={styles.sectionIntro}>
-                JamPlayer is more than a chord grid. It is the shared musical context for the whole
-                product. Define the chords, sections, key, and tempo once; every SmartBridge engine
-                reads the same information. <strong>No chord re-entry. No disconnected generators.</strong>
+                Inside Desktop, JamPlayer is more than a chord grid. It is the shared musical context
+                for every creative engine. Define the chords, sections, key, and tempo once; the
+                performances, ornaments, lyrics, and harmonies read the same information while the
+                connected Yamaha and Cubase project stay aligned. <strong>No chord re-entry. No disconnected generators.</strong>
               </p>
             </div>
           </div>
 
           <div className={styles.contextDiagram} aria-label="JamPlayer connected song model">
             <div className={styles.contextCore}>
-              <span className={styles.coreLabel}>JamPlayer · Shared song context</span>
+              <span className={styles.coreLabel}>SmartBridge Desktop · JamPlayer context</span>
               <h3>Verse · 8 bars · Em · 96 BPM · Straight funk</h3>
-              <p>The same form and harmony follows every performance, voice, lyric, ornament, harmony part, and export.</p>
+              <p>The same form and harmony follows every performance, lyric, ornament, harmony part, and MIDI export.</p>
               <div className={styles.chordGrid}>
                 {["Em7", "A7", "Dmaj7", "B7"].map((chord) => <span key={chord} className={styles.chord}>{chord}</span>)}
               </div>
@@ -166,7 +167,7 @@ export default function HomePage() {
             <p className={styles.eyebrow}>Six signature systems</p>
             <h2 className={styles.sectionTitle}>Not six disconnected plug-ins.</h2>
             <p className={styles.sectionIntro}>
-              Each capability is useful on its own. The market advantage comes from their sharing
+              Each capability is useful on its own. SmartBridge becomes different because they share
               the same song, the same Yamaha rig, and the same production destination.
             </p>
           </div>
@@ -310,8 +311,8 @@ export default function HomePage() {
         <div className="m-wrap">
           <div className={styles.sectionHeader}>
             <p className={styles.eyebrow}>Choose the entry point</p>
-            <h2 className={styles.sectionTitle}>One musical system. Three ways in.</h2>
-            <p className={styles.sectionIntro}>Desktop is the complete environment. Style Maker focuses the native Yamaha style workflow. Jam Player lets anyone begin with the song for free.</p>
+            <h2 className={styles.sectionTitle}>Three ways to work with SmartBridge.</h2>
+            <p className={styles.sectionIntro}>Desktop is the complete connected environment. Style Maker focuses the native Yamaha style workflow. Browser Jam Player is the free chord-first practice experience.</p>
           </div>
 
           <div className={styles.productGrid}>
@@ -338,7 +339,7 @@ export default function HomePage() {
           <div className="m-jam-copy">
             <p className="m-eyebrow">Jam Player · Free in the browser</p>
             <h2>Start with a real song context.</h2>
-            <p>Choose the progression, key, tempo, and feel. Mute the instrument you play and practise with the rest of the band—the same musical model that powers SmartBridge Desktop.</p>
+            <p>Choose the progression, key, tempo, and feel. Mute the instrument you play and practise with the rest of the band in a free browser experience built around SmartBridge&apos;s chord-first approach.</p>
             <div className="m-mini-features">
               <span><VolumeX size={17} /> Mute your part</span>
               <span><Gauge size={17} /> Set the tempo</span>
