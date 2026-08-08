@@ -7,10 +7,10 @@ import { ArrowUpRight, Menu, X } from "lucide-react"
 import { SITE } from "@/lib/site"
 
 const NAV = [
-  { href: "/features", label: "SmartBridge Desktop" },
+  { href: "/features", label: "Desktop" },
   { href: "/style-maker", label: "Style Maker" },
   { href: "/jam-player", label: "Jam Player" },
-  { href: "/about", label: "About" },
+  { href: "/about", label: "Why SmartBridge" },
 ]
 
 export function SiteHeader() {
@@ -25,17 +25,13 @@ export function SiteHeader() {
     return (
       <header className="fixed inset-x-0 top-0 z-50 flex h-14 items-center border-b border-white/10 bg-[#0d0f0c]/95 px-4 backdrop-blur-xl">
         <Link href="/jam-player" className="flex items-center gap-3 text-sm text-white">
-          <span className="flex size-8 items-center justify-center rounded-full bg-[#c9f46a] text-xs font-black text-[#151712]">
-            SB
-          </span>
+          <span className="flex size-8 items-center justify-center rounded-full bg-[#c9f46a] text-xs font-black text-[#151712]">SB</span>
           <span>
             <span className="block text-[9px] leading-none tracking-[0.18em] text-white/40 uppercase">SmartBridge</span>
             <span className="mt-1 block leading-none font-medium">Jam Player</span>
           </span>
         </Link>
-        <Link href="/jam-player" className="ml-auto rounded-full border border-white/15 px-3 py-2 text-xs text-white/65 transition hover:text-white">
-          Exit player
-        </Link>
+        <Link href="/jam-player" className="ml-auto rounded-full border border-white/15 px-3 py-2 text-xs text-white/65 transition hover:text-white">Exit player</Link>
       </header>
     )
   }
@@ -58,7 +54,9 @@ export function SiteHeader() {
 
         <div className="site-header-actions">
           <Link href="/style-maker" className="site-sign-in">Try Style Maker</Link>
-          <a href={SITE.setupUrl} target="_blank" rel="noopener noreferrer" className="m-button m-button-primary m-button-nav">Download Desktop <ArrowUpRight size={15} /></a>
+          <a href={SITE.setupUrl} target="_blank" rel="noopener noreferrer" className="m-button m-button-primary m-button-nav">
+            Get SmartBridge Desktop <ArrowUpRight size={15} />
+          </a>
         </div>
 
         <button type="button" className="site-menu-btn" aria-label="Toggle menu" aria-expanded={open} onClick={() => setOpen(!open)}>
@@ -74,7 +72,9 @@ export function SiteHeader() {
             </Link>
           ))}
           <Link href="/style-maker" className="site-nav-link" onClick={() => setOpen(false)}>Try Style Maker</Link>
-          <a href={SITE.setupUrl} target="_blank" rel="noopener noreferrer" className="m-button m-button-primary" onClick={() => setOpen(false)}>Download Desktop <ArrowUpRight size={15} /></a>
+          <a href={SITE.setupUrl} target="_blank" rel="noopener noreferrer" className="m-button m-button-primary" onClick={() => setOpen(false)}>
+            Get Desktop <ArrowUpRight size={15} />
+          </a>
         </nav>
       )}
     </header>
