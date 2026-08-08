@@ -23,9 +23,8 @@ export default function ManualPage() {
               <span>Every connected tool in one reference.</span>
             </h1>
             <p className={styles.sectionIntro} style={{ marginTop: "1.65rem" }}>
-              This page is the detailed product layer. Browse exact descriptions, screenshots,
-              controls, workflows, and related demonstrations after the main Desktop page has
-              established what SmartBridge solves and how the connected system fits together.
+              Browse exact descriptions, screenshots, available actions, workflows, and related
+              demonstrations for every current SmartBridge Desktop product area.
             </p>
             <div className="m-actions" style={{ marginTop: "2rem" }}>
               <Link href="/features" className="m-button m-button-primary">
@@ -69,8 +68,8 @@ export default function ManualPage() {
 
       <section className="m-final-cta">
         <div className="m-wrap m-final-cta-inner">
-          <p className="m-eyebrow">Return to the product story</p>
-          <h2>See how the detailed tools combine into one continuous Yamaha-to-production workflow.</h2>
+          <p className="m-eyebrow">SmartBridge Desktop</p>
+          <h2>See how the individual tools combine into one continuous Yamaha-to-production workflow.</h2>
           <div className="m-actions">
             <Link href="/features" className="m-button m-button-primary">Desktop overview</Link>
             <Link href="/about" className="m-button m-button-outline-light">Why SmartBridge exists</Link>
