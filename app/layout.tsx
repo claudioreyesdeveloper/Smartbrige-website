@@ -29,24 +29,24 @@ const instrumentSerif = Instrument_Serif({
 export const metadata: Metadata = {
   metadataBase: new URL(SITE.url),
   title: {
-    default: "SmartBridge — One song. Every part understands it.",
+    default: "SmartBridge — Yamaha ideas to finished productions",
     template: "%s · SmartBridge",
   },
   description:
-    "The chord-aware performance and production system for Yamaha musicians. Connect the song, Yamaha hardware, curated MIDI performances, Cubase, lyrics, Synthesizer V, and four-part harmony.",
+    "Keep one Yamaha song connected through performed MIDI, Cubase, Synthesizer V, lyrics, solos, harmony, and native style production—from the first chord to the final editable tracks.",
   keywords: [
-    "Yamaha arranger software",
+    "Yamaha arranger production software",
     "Genos Cubase integration",
-    "Tyros style editor",
-    "chord aware MIDI",
+    "Tyros Cubase workflow",
+    "chord aware MIDI performances",
     "Yamaha style maker",
     "Synthesizer V lyrics",
     "MegaVoice MIDI",
   ],
   openGraph: {
-    title: "SmartBridge — One song. Every part understands it.",
+    title: "SmartBridge — Turn Yamaha ideas into finished productions",
     description:
-      "Build the song once, then carry its chords and musical context through Yamaha hardware, performed MIDI, Cubase, Synthesizer V, vocals, brass, and strings.",
+      "The Yamaha, performed MIDI, Cubase, Synthesizer V, lyrics, solos, and harmony share one chord-aware song context.",
     url: SITE.url,
     siteName: "SmartBridge",
     locale: "en_US",
@@ -56,14 +56,14 @@ export const metadata: Metadata = {
         url: `${SITE.url}/og-desktop.png`,
         width: 1200,
         height: 630,
-        alt: "SmartBridge chord-aware Yamaha production system",
+        alt: "SmartBridge Yamaha-to-production workflow",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "SmartBridge — One song. Every part understands it.",
-    description: "A connected Yamaha, Cubase, and Synthesizer V production workflow built around one chord-aware song.",
+    title: "SmartBridge — Yamaha ideas to finished productions",
+    description: "Keep the song connected from the Yamaha performance to the final editable production.",
     images: [`${SITE.url}/og-desktop.png`],
   },
 }

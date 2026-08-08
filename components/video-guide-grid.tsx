@@ -12,8 +12,7 @@ export function VideoGuideGrid() {
           </h2>
           <p className="prose-muted" style={{ marginTop: "1rem" }}>
             These are real SmartBridge walkthroughs from Claudio’s channel. Each card links straight
-            to the YouTube video and points back to the matching product areas, so visitors can go
-            from a feature explanation to the exact demo that shows it in use.
+            to the YouTube video and points to the matching area in the subsidiary product manual.
           </p>
         </div>
 
@@ -62,13 +61,13 @@ export function VideoGuideGrid() {
                 {related.length > 0 ? (
                   <div className="mt-5">
                     <p className="text-xs uppercase tracking-[0.24em] text-stone-500">
-                      Related product features
+                      Related manual entries
                     </p>
                     <div className="mt-3 flex flex-wrap gap-2">
                       {related.map((feature) => (
                         <Link
                           key={feature.id}
-                          href={`/features?feature=${feature.id}`}
+                          href={`/manual?feature=${feature.id}`}
                           className="feature-filter-btn"
                         >
                           {feature.name}
