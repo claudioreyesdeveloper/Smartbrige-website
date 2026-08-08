@@ -38,6 +38,7 @@ body .site-nav-mobile button {
 
   body .site-nav-mobile {
     display: flex;
+    max-height: calc(100vh - 4.75rem);
     max-height: calc(100dvh - 4.75rem);
     overflow-y: auto;
     overscroll-behavior: contain;
