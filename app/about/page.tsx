@@ -47,9 +47,9 @@ export default function AboutPage() {
               chords, sections, key, and tempo should be defined once and understood everywhere.
             </p>
             <p>
-              That shared song now drives a curated performance library, Cubase track naming, Riff
-              Extender, Solo Ornaments, melody-fitted lyrics, Synthesizer V transfer, and separate
-              vocal, brass, and string harmony engines.
+              That connected environment now combines a curated performance library, automatic Cubase
+              track naming, Riff Extender, Solo Ornaments, melody-fitted lyrics, Synthesizer V
+              transfer, and separate vocal, brass, and string harmony engines.
             </p>
           </div>
         </div>
