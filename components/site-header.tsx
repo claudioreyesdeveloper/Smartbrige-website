@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { ArrowUpRight, Menu, X } from "lucide-react"
 import { SITE } from "@/lib/site"
 
@@ -20,6 +20,21 @@ export function SiteHeader() {
 
   const isActive = (href: string) =>
     pathname === href || (href !== "/" && pathname.startsWith(`${href}/`))
+
+  useEffect(() => {
+    setOpen(false)
+  }, [pathname])
+
+  useEffect(() => {
+    if (!open) return
+
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setOpen(false)
+    }
+
+    window.addEventListener("keydown", closeOnEscape)
+    return () => window.removeEventListener("keydown", closeOnEscape)
+  }, [open])
 
   if (isJamPlayerApp) {
     return (
@@ -59,13 +74,20 @@ export function SiteHeader() {
           </a>
         </div>
 
-        <button type="button" className="site-menu-btn" aria-label="Toggle menu" aria-expanded={open} onClick={() => setOpen(!open)}>
+        <button
+          type="button"
+          className="site-menu-btn"
+          aria-label={open ? "Close navigation menu" : "Open navigation menu"}
+          aria-expanded={open}
+          aria-controls="site-mobile-navigation"
+          onClick={() => setOpen((current) => !current)}
+        >
           {open ? <X size={22} /> : <Menu size={22} />}
         </button>
       </div>
 
       {open && (
-        <nav className="site-nav-mobile" aria-label="Mobile navigation">
+        <nav id="site-mobile-navigation" className="site-nav-mobile" aria-label="Mobile navigation">
           {NAV.map((item) => (
             <Link key={item.href} href={item.href} className={`site-nav-link${isActive(item.href) ? " is-active" : ""}`} onClick={() => setOpen(false)}>
               {item.label}
