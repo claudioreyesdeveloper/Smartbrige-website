@@ -1,0 +1,65 @@
+/*
+ * Tablet navigation override.
+ *
+ * globals.css contains older 768px desktop-navigation rules that override the
+ * newer marketing breakpoint. Keep the compact menu through iPad landscape
+ * sizes and only show the full navigation when there is enough horizontal room.
+ */
+
+body .site-menu-btn,
+body .site-nav-mobile a,
+body .site-nav-mobile button {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+@media (max-width: 1099px) {
+  body .site-nav,
+  body .site-header-actions {
+    display: none;
+  }
+
+  body .site-menu-btn {
+    display: flex;
+    flex: none;
+    min-width: 2.75rem;
+    min-height: 2.75rem;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid rgba(21, 23, 18, 0.12);
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.42);
+    color: var(--m-ink);
+  }
+
+  body .site-menu-btn:active {
+    background: rgba(255, 255, 255, 0.82);
+  }
+
+  body .site-nav-mobile {
+    display: flex;
+    max-height: calc(100dvh - 4.75rem);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding-bottom: max(1.25rem, env(safe-area-inset-bottom));
+    -webkit-overflow-scrolling: touch;
+  }
+
+  body .site-nav-mobile .site-nav-link {
+    min-height: 2.85rem;
+    display: flex;
+    align-items: center;
+  }
+}
+
+@media (min-width: 1100px) {
+  body .site-nav,
+  body .site-header-actions {
+    display: flex;
+  }
+
+  body .site-menu-btn,
+  body .site-nav-mobile {
+    display: none;
+  }
+}
