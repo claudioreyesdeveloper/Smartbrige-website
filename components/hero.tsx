@@ -20,8 +20,8 @@ export function Hero() {
             One song. Every part understands it.
           </div>
           <h1 className={styles.heroTitle}>
-            Turn your Yamaha idea into a finished production.
-            <span>Without rebuilding the song in every tool.</span>
+            Turn Yamaha ideas into finished productions.
+            <span>Without rebuilding the song.</span>
           </h1>
           <p className={styles.heroLead}>
             SmartBridge connects the Yamaha arranger, performed MIDI, Cubase, Synthesizer V,
