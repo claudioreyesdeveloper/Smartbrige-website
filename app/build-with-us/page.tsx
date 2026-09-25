@@ -5,7 +5,7 @@ import { CommunityBoard } from "@/components/community/community-board"
 
 export const metadata: Metadata = {
   title: "Build with us",
-  description: "Public SmartBridge feature feedback, developer replies and development status. No account required.",
+  description: "Help direct SmartBridge development: tell me what matters, what is missing, and what should be improved next. No account required.",
 }
 
 export default function BuildWithUsPage() {
@@ -16,16 +16,18 @@ export default function BuildWithUsPage() {
           <div>
             <p className="m-eyebrow">Build with us</p>
             <h1 className="mt-4 max-w-4xl font-[family-name:var(--font-instrument-serif)] text-5xl leading-[.96] md:text-7xl">
-              SmartBridge development should be a conversation.
+              I want your direction to help me build a better SmartBridge.
             </h1>
           </div>
           <div className="max-w-xl lg:justify-self-end">
             <p className="text-lg leading-8 text-white/65">
-              Watch a feature, tell me what works or what is missing, and follow the response from
-              suggestion to development status. No account is required to comment or vote.
+              SmartBridge is still evolving, and I do not want to decide its direction in isolation.
+              I want musicians to tell me which problems are worth solving, which features are genuinely
+              useful, what feels too difficult, and what would make the product better. That input will
+              help me decide what to simplify, improve and build next. No account is required.
             </p>
             <Link href="/explore" className="m-button m-button-primary mt-6 inline-flex">
-              Choose a feature <ArrowRight size={16} />
+              Show me what matters to you <ArrowRight size={16} />
             </Link>
           </div>
         </div>
@@ -34,9 +36,9 @@ export default function BuildWithUsPage() {
       <section className="m-section bg-white">
         <div className="m-wrap grid gap-4 md:grid-cols-3">
           {[
-            [MessageSquareText, "Discuss the real feature", "Feedback lives on the same page as the current video and workflow, so the context is never lost."],
-            [Milestone, "See what happens next", "Suggestions carry a visible status: under review, planned, building, shipped or not planned."],
-            [Wrench, "Close the development loop", "Developer replies remain public and shipped changes stay linked to the original request."],
+            [MessageSquareText, "Tell me what matters", "Watch the real feature, then tell me what helps, what gets in your way, and what would make it more useful in your musical workflow."],
+            [Milestone, "Help set priorities", "Your input gives me evidence about what musicians actually need, so I can make better choices about what to simplify, improve or build next."],
+            [Wrench, "See what your input changes", "I can reply publicly and move useful ideas through under review, planned, building and shipped so the development response stays visible."],
           ].map(([Icon, title, body]) => {
             const Component = Icon as typeof MessageSquareText
             return (
@@ -55,7 +57,7 @@ export default function BuildWithUsPage() {
           <div className="mb-8 max-w-3xl">
             <p className="m-eyebrow">Public feedback</p>
             <h2 className="mt-3 font-[family-name:var(--font-instrument-serif)] text-4xl text-[#151712] md:text-5xl">
-              What musicians are asking for — and what SmartBridge is doing about it.
+              The direction musicians are asking for — and how SmartBridge is responding.
             </h2>
           </div>
           <CommunityBoard />
