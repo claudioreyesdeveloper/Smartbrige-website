@@ -68,7 +68,7 @@ export function SiteHeader() {
         </nav>
 
         <div className="site-header-actions">
-          <Link href="/build-with-us" className="site-sign-in">Give feedback</Link>
+          <Link href="/build-with-us" className="site-sign-in">Help shape SmartBridge</Link>
           <a href={SITE.setupUrl} target="_blank" rel="noopener noreferrer" className="m-button m-button-primary m-button-nav">
             Get SmartBridge Desktop <ArrowUpRight size={15} />
           </a>
@@ -98,7 +98,7 @@ export function SiteHeader() {
               {item.label}
             </Link>
           ))}
-          <Link href="/build-with-us" className="site-nav-link" onClick={() => setOpen(false)}>Give feedback</Link>
+          <Link href="/build-with-us" className="site-nav-link" onClick={() => setOpen(false)}>Help shape SmartBridge</Link>
           <a href={SITE.setupUrl} target="_blank" rel="noopener noreferrer" className="m-button m-button-primary" onClick={() => setOpen(false)}>
             Get Desktop <ArrowUpRight size={15} />
           </a>
