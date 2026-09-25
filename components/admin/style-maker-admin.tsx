@@ -1,6 +1,6 @@
 "use client"
 
-import { useCallback, useEffect, useState } from "react"
+import Link from "next/link"\nimport { useCallback, useEffect, useState } from "react"
 import { toast } from "sonner"
 import type { AdminUserRow } from "@/lib/style-maker/admin"
 import { Button } from "@/components/ui/button"
@@ -144,9 +144,14 @@ export function StyleMakerAdmin() {
             webhooks are not configured. Grant complimentary access or revoke it.
           </p>
         </div>
-        <Button type="button" variant="outline" onClick={() => void logout()}>
-          Lock
-        </Button>
+        <div className="flex gap-2">
+          <Link href="/admin/feedback">
+            <Button type="button" variant="outline">Feature feedback</Button>
+          </Link>
+          <Button type="button" variant="outline" onClick={() => void logout()}>
+            Lock
+          </Button>
+        </div>
       </div>
 
       <form
