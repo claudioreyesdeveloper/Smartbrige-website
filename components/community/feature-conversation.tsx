@@ -223,13 +223,18 @@ export function FeatureConversation({
       </div>
 
       <aside className="rounded-[1.6rem] border border-black/10 bg-white p-6 shadow-[0_20px_60px_rgba(20,24,18,.06)] md:p-8">
-        <p className="text-xs font-semibold uppercase tracking-[.18em] text-black/45">Help shape {featureTitle}</p>
+        <p className="text-xs font-semibold uppercase tracking-[.18em] text-black/45">I want your input on {featureTitle}</p>
         <h2 className="mt-3 font-[family-name:var(--font-instrument-serif)] text-3xl text-[#151712]">
-          What should I improve next?
+          Help me decide how this feature should develop.
         </h2>
+        <p className="mt-3 text-sm leading-6 text-black/50">
+          I am not looking only for a rating. Tell me whether this solves a real problem for you,
+          what feels difficult or unnecessary, what is missing, and what you would change. I will use
+          that input to help decide what to improve and build next.
+        </p>
 
         <div className="mt-6">
-          <p className="text-sm font-semibold text-black/70">Would you use this?</p>
+          <p className="text-sm font-semibold text-black/70">Does this solve something you would actually use?</p>
           <div className="mt-2 grid grid-cols-3 gap-2">
             {[
               ["yes", "Yes"],
@@ -253,7 +258,7 @@ export function FeatureConversation({
         </div>
 
         <div className="mt-5">
-          <p className="text-sm font-semibold text-black/70">What do you want to tell me?</p>
+          <p className="text-sm font-semibold text-black/70">What direction would make this better?</p>
           <div className="mt-2 flex flex-wrap gap-2">
             {[
               ["feedback", "Feedback"],
@@ -283,7 +288,7 @@ export function FeatureConversation({
             onChange={(event) => setComment(event.target.value)}
             maxLength={2000}
             rows={5}
-            placeholder="What would make this feature more useful to you?"
+            placeholder="What should I keep, simplify, change or add? What would make this genuinely useful in your workflow?"
             className="mt-2 w-full resize-y rounded-xl border border-black/10 bg-[#faf9f5] px-4 py-3 text-sm text-[#151712] outline-none transition placeholder:text-black/30 focus:border-black/35"
           />
         </label>
@@ -363,7 +368,7 @@ export function FeatureConversation({
           disabled={status === "sending" || (!pulse && !comment.trim())}
           className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[#151712] px-4 py-3 text-sm font-semibold text-white transition hover:bg-black disabled:cursor-not-allowed disabled:opacity-40"
         >
-          <Send size={15} /> {status === "sending" ? "Posting…" : "Post feedback"}
+          <Send size={15} /> {status === "sending" ? "Posting…" : "Send your input"}
         </button>
       </aside>
 
@@ -376,7 +381,7 @@ export function FeatureConversation({
             </h2>
           </div>
           <p className="max-w-xl text-sm leading-6 text-black/45">
-            Suggestions can be voted on without an account. Status changes and Claudio&apos;s replies stay attached to the original feature.
+            This discussion is intended to guide product decisions. Suggestions can be voted on without an account, and my replies and development status stay attached to the original feature.
           </p>
         </div>
 
@@ -387,7 +392,7 @@ export function FeatureConversation({
             <div className="rounded-2xl border border-dashed border-black/15 bg-white/60 p-8 text-center">
               <MessageSquareText className="mx-auto text-black/25" size={28} />
               <p className="mt-3 font-medium text-black/60">No public comments yet.</p>
-              <p className="mt-1 text-sm text-black/40">Be the first person to leave feedback on this feature.</p>
+              <p className="mt-1 text-sm text-black/40">Be the first person to tell me how this feature should develop.</p>
             </div>
           ) : (
             items
