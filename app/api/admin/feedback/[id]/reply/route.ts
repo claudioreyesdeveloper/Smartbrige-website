@@ -21,6 +21,7 @@ export async function POST(
   if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status })
 
   try {
+    await ensureFeatureFeedbackSchema()
     const { id } = await params
     const body = (await request.json()) as Record<string, unknown>
     const reply = clean(body.reply, 3000)
