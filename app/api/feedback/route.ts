@@ -8,6 +8,7 @@ import {
   featureFeedbackVotes,
 } from "@/lib/db/schema"
 import { attachFeedbackCookie, feedbackIdentity } from "@/lib/feedback-identity"
+import { ensureFeatureFeedbackSchema } from "@/lib/feature-feedback-schema"
 import { getFeatureStory } from "@/lib/feature-stories"
 
 export const runtime = "nodejs"
