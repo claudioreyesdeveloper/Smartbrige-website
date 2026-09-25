@@ -1,6 +1,7 @@
 "use client"
 
-import Link from "next/link"\nimport { useCallback, useEffect, useState } from "react"
+import Link from "next/link"
+import { useCallback, useEffect, useState } from "react"
 import { toast } from "sonner"
 import type { AdminUserRow } from "@/lib/style-maker/admin"
 import { Button } from "@/components/ui/button"
