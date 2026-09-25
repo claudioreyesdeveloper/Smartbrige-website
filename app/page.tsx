@@ -2,276 +2,219 @@ import Image from "next/image"
 import Link from "next/link"
 import {
   ArrowRight,
-  AudioLines,
   Cable,
   Layers3,
+  MessageSquareText,
   Music2,
-  Repeat2,
-  SlidersHorizontal,
+  PlayCircle,
   WandSparkles,
 } from "lucide-react"
-import { Hero } from "@/components/hero"
-import { SITE } from "@/lib/site"
-import styles from "@/components/marketing-redesign.module.css"
+import { CommunityPreview } from "@/components/community/community-preview"
+import { FEATURE_STORIES } from "@/lib/feature-stories"
+import { SITE, VIDEO_LIBRARY } from "@/lib/site"
 
-const marketProblems = [
+const doors = [
   {
-    icon: Cable,
-    label: "The disconnected rig",
-    title: "The Yamaha and the DAW stop understanding each other.",
-    body: "The idea begins on the keyboard, but voice names, channel assignments, effects, chord context, and arrangement decisions have to be reconstructed once the project reaches the computer.",
-  },
-  {
-    icon: Layers3,
-    label: "The generic-loop problem",
-    title: "Most MIDI content does not know the song it is entering.",
-    body: "A useful bass line, guitar riff, or solo phrase still needs to be searched, transposed, repaired, and reshaped for the actual verse or chorus before it becomes part of the arrangement.",
-  },
-  {
-    icon: AudioLines,
-    label: "The unfinished melody",
-    title: "Lyrics, backing voices, brass, and strings restart the same work.",
-    body: "The melody may already exist, but every finishing tool asks for the harmony, form, phrasing, and timing again. The musical context disappears between applications.",
-  },
-]
-
-const connectedOutputs = [
-  ["01", "Yamaha and Cubase", "The keyboard state, voices, channels, and editable DAW tracks remain connected."],
-  ["02", "Performed arrangement", "Bass, drums, guitar, riffs, ornaments, vocals, and solos follow the real section."],
-  ["03", "Finished production", "Lyrics, Synthesizer V voices, brass, and strings inherit the same song context."],
-]
-
-const valueSystems = [
-  {
-    icon: SlidersHorizontal,
-    title: "Keep the real Yamaha rig organised.",
-    body: "Choose a voice on the keyboard and the correct Cubase track names itself—even across all 32 Style and Song channels. Mixes, effects, Motif arpeggios, and native Yamaha styles remain part of the production workflow.",
-    outcome: "Less technical reconstruction between the keyboard and Cubase.",
-  },
-  {
-    icon: Repeat2,
-    title: "Build sections from musical performances.",
-    body: "A large curated MIDI library is auditioned against the current song and adapted before export. Riff Extender develops short guitar ideas, while Solo Ornaments add instrument-specific bends, trills, slides, licks, falls, and swells.",
-    outcome: "The arrangement develops instead of repeating a generic loop.",
+    icon: Music2,
+    title: "Write and develop the song",
+    body: "Build the progression, capture your own sections and develop the harmony before arranging around it.",
+    slugs: ["song-and-chords", "chord-intelligence", "jam-session"],
   },
   {
     icon: WandSparkles,
-    title: "Take one melody to a complete arrangement.",
-    body: "SmartBridge fits singable lyrics to the notes, transfers the result to Synthesizer V, and uses the same chord progression to create humanised vocal stacks and four-part brass or string writing.",
-    outcome: "One melodic idea can become a production-ready section.",
-  },
-]
-
-const audiences = [
-  {
-    icon: SlidersHorizontal,
-    label: "Yamaha + Cubase producer",
-    title: "You want the keyboard to remain central after recording starts.",
-    body: "SmartBridge preserves the Yamaha-specific choices and turns the hardware performance into an organised, editable Cubase project.",
+    title: "Build the arrangement",
+    body: "Add performed rhythm parts, solos, vocals, lyrics, harmonies, brass and strings against the same song.",
+    slugs: ["performance-library", "solo-studio", "vocal-composer"],
   },
   {
-    icon: Music2,
-    label: "Songwriter and arranger",
-    title: "You can find the idea, but finishing every section takes too long.",
-    body: "Chord-aware performed MIDI, riff development, ornaments, lyrics, and harmonies help carry a sketch through verse, chorus, and final arrangement.",
-  },
-  {
-    icon: Layers3,
-    label: "Style creator and live player",
-    title: "You want custom Yamaha accompaniment without living inside small hardware menus.",
-    body: "Style Maker rebuilds native Yamaha styles in the browser, while Desktop connects style work to the wider song and production process.",
+    icon: Cable,
+    title: "Connect Yamaha to production",
+    body: "Keep the real Yamaha voices, effects, Motif ideas, native styles and Cubase tracks organised.",
+    slugs: ["yamaha-cubase", "motif-style-creation"],
   },
 ]
 
 const products = [
   {
     name: "SmartBridge Desktop",
-    status: "Private beta",
-    title: "The complete connected production environment.",
-    body: "Control the Yamaha, define the song, build and transform performed MIDI, create vocals and harmonies, then move the result into Cubase or Synthesizer V.",
-    image: "/images/desktop-v15/37_solo_ideas.png",
-    href: "/features",
-    cta: "See the Desktop workflow",
-    pills: ["macOS + Windows", "VST3 + Standalone", "Genos · Tyros · Motif"],
-    dark: true,
+    body: "The complete connected song-production environment for Yamaha musicians working with a DAW.",
+    href: "/explore",
+    cta: "Explore Desktop",
   },
   {
     name: "Style Maker",
-    status: "$14.99/month",
-    title: "Rebuild the band inside a native Yamaha style.",
-    body: "Keep the donor structure, replace performances section by section, mix channels 9–16, export, and transfer the finished style to the keyboard.",
-    image: "/images/desktop-v15/46_style_maker_build.png",
+    body: "Create and rebuild native Yamaha accompaniment styles in the browser.",
     href: "/style-maker",
-    cta: "Try Style Maker",
-    pills: ["Browser based", "14-day trial", "Native .sty/.prs"],
-    dark: false,
+    cta: "Open Style Maker",
   },
   {
     name: "Jam Player",
-    status: "Free",
-    title: "Practise from a real chord progression.",
-    body: "Choose the progression, key, tempo, and feel, mute the instrument you play, and practise with the rest of the band directly in the browser.",
-    image: "/images/desktop-v15/27_jam_player_song_chords.png",
-    href: "/jam-player/app",
+    body: "Practise directly in the browser with chord progressions and a musical backing band.",
+    href: "/jam-player",
     cta: "Open Jam Player",
-    pills: ["No installation", "Chord progressions", "Practice band"],
-    dark: false,
   },
 ]
 
 export default function HomePage() {
+  const highlighted = ["song-and-chords", "solo-studio", "vocal-composer", "yamaha-cubase"]
+    .map((slug) => FEATURE_STORIES.find((story) => story.slug === slug))
+    .filter((story): story is NonNullable<typeof story> => Boolean(story))
+
   return (
     <div className="marketing-page">
-      <Hero />
-
-      <section className={styles.proofRail} aria-label="SmartBridge core integrations">
-        <div className={`m-wrap ${styles.proofRailInner}`}>
-          <p className={styles.proofRailTitle}>Built around the rig you already use</p>
-          <div className={styles.proofItems}>
-            <span><Cable size={14} /> Genos · Tyros · PSR-SX · Motif</span>
-            <span><SlidersHorizontal size={14} /> Cubase MIDI Remote</span>
-            <span><AudioLines size={14} /> Synthesizer V</span>
-            <span><Layers3 size={14} /> Native Yamaha styles</span>
-          </div>
-        </div>
-      </section>
-
-      <section className={styles.enginesSection}>
-        <div className="m-wrap">
-          <div className={styles.sectionHeader}>
-            <p className={styles.eyebrow}>Why SmartBridge exists</p>
-            <h2 className={styles.sectionTitle}>The gap is not inspiration. It is continuity.</h2>
-            <p className={styles.sectionIntro}>
-              Yamaha arrangers make it fast to discover a musical idea. The workflow becomes slow
-              when the song loses its identity on the way to the DAW, the MIDI library, the vocal
-              tool, or the orchestration stage.
+      <section className="overflow-hidden border-b border-white/10 bg-[#0d0f0c] text-white">
+        <div className="m-wrap grid gap-12 py-16 lg:grid-cols-[.95fr_1.05fr] lg:items-center lg:py-24">
+          <div>
+            <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[.04] px-3 py-1.5 text-xs font-semibold uppercase tracking-[.16em] text-white/55">
+              <span className="size-1.5 rounded-full bg-[#c9f46a]" />
+              One song. Every part understands it.
+            </div>
+            <h1 className="mt-6 max-w-4xl font-[family-name:var(--font-instrument-serif)] text-5xl leading-[.93] md:text-7xl">
+              Turn Yamaha ideas into working productions.
+              <span className="mt-2 block text-[#c9f46a]">Then help shape what SmartBridge becomes.</span>
+            </h1>
+            <p className="mt-6 max-w-2xl text-lg leading-8 text-white/65">
+              SmartBridge keeps the chords, sections, key and tempo connected while you move through
+              Yamaha hardware, performed MIDI, Cubase, Synthesizer V, solos, vocals and harmony.
+              Every major feature now has a video and an open feedback discussion.
             </p>
+            <div className="m-actions mt-8">
+              <Link href="/explore" className="m-button m-button-primary">
+                Explore the real workflows <ArrowRight size={17} />
+              </Link>
+              <Link href="/build-with-us" className="m-button m-button-outline-light">
+                Help build SmartBridge <MessageSquareText size={17} />
+              </Link>
+            </div>
           </div>
 
-          <div className={styles.enginesGrid}>
-            {marketProblems.map((problem) => (
-              <article className={styles.engineCard} key={problem.title}>
-                <span className={styles.engineLabel}><problem.icon size={15} /> {problem.label}</span>
-                <h3>{problem.title}</h3>
-                <p>{problem.body}</p>
-              </article>
-            ))}
+          <div>
+            <div className="overflow-hidden rounded-[1.7rem] border border-white/10 bg-black shadow-[0_30px_100px_rgba(0,0,0,.35)]">
+              <iframe
+                className="aspect-video w-full"
+                src={`https://www.youtube.com/embed/${VIDEO_LIBRARY.intro.youtubeId}?rel=0`}
+                title={VIDEO_LIBRARY.intro.title}
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                allowFullScreen
+              />
+            </div>
+            <div className="mt-4 flex items-center justify-between gap-3 text-xs text-white/40">
+              <span className="inline-flex items-center gap-2"><PlayCircle size={14} /> Introduction to SmartBridge</span>
+              <span>{VIDEO_LIBRARY.intro.duration}</span>
+            </div>
           </div>
         </div>
       </section>
 
-      <section className={`${styles.section} ${styles.darkSection}`}>
-        <div className={`m-wrap ${styles.contextGrid}`}>
-          <div className={styles.contextCopy}>
-            <div className={styles.sectionHeader}>
-              <p className={styles.eyebrow}>The defining difference</p>
-              <h2 className={styles.sectionTitle}>Define the song once. Reuse it everywhere.</h2>
-              <p className={styles.sectionIntro}>
-                Desktop JamPlayer holds the chords, sections, key, tempo, and form. The connected
-                Yamaha, the performance library, Riff Extender, Solo Ornaments, lyrics, harmonies,
-                Cubase, and Synthesizer V all work from that shared musical context.
-                <strong> No chord re-entry and no isolated generators.</strong>
-              </p>
-            </div>
+      <section className="m-section bg-white">
+        <div className="m-wrap">
+          <div className="max-w-3xl">
+            <p className="m-eyebrow">Start with the job</p>
+            <h2 className="mt-3 font-[family-name:var(--font-instrument-serif)] text-4xl text-[#151712] md:text-5xl">
+              You do not need to understand the SmartBridge architecture before you use it.
+            </h2>
           </div>
 
-          <div className={styles.contextDiagram} aria-label="SmartBridge shared song context">
-            <div className={styles.contextCore}>
-              <span className={styles.coreLabel}>Desktop JamPlayer · Shared song context</span>
-              <h3>Verse · 8 bars · Em · 96 BPM · Straight funk</h3>
-              <p>The form and harmony remain available from the first keyboard idea to the final editable production.</p>
-              <div className={styles.chordGrid}>
-                {["Em7", "A7", "Dmaj7", "B7"].map((chord) => <span key={chord} className={styles.chord}>{chord}</span>)}
-              </div>
-            </div>
-            <div className={styles.outputs}>
-              {connectedOutputs.map(([index, title, body]) => (
-                <div className={styles.outputCard} key={title}>
-                  <span className={styles.outputIndex}>{index}</span>
-                  <div><strong>{title}</strong><small>{body}</small></div>
+          <div className="mt-9 grid gap-5 lg:grid-cols-3">
+            {doors.map((door) => (
+              <article key={door.title} className="rounded-[1.6rem] border border-black/10 bg-[#f3f2ec] p-6 md:p-7">
+                <door.icon size={23} className="text-[#667d25]" />
+                <h3 className="mt-5 font-[family-name:var(--font-instrument-serif)] text-3xl text-[#151712]">{door.title}</h3>
+                <p className="mt-3 leading-7 text-black/55">{door.body}</p>
+                <div className="mt-6 flex flex-wrap gap-2">
+                  {door.slugs.map((slug) => {
+                    const story = FEATURE_STORIES.find((item) => item.slug === slug)
+                    if (!story) return null
+                    return (
+                      <Link key={slug} href={`/explore/${slug}`} className="rounded-full border border-black/10 bg-white px-3 py-2 text-xs font-semibold text-black/55 transition hover:border-black/30">
+                        {story.title}
+                      </Link>
+                    )
+                  })}
                 </div>
-              ))}
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="m-section bg-[#ecebe4]">
+        <div className="m-wrap">
+          <div className="flex flex-wrap items-end justify-between gap-5">
+            <div className="max-w-3xl">
+              <p className="m-eyebrow">See something real</p>
+              <h2 className="mt-3 font-[family-name:var(--font-instrument-serif)] text-4xl text-[#151712] md:text-5xl">
+                Each feature is explained as a musical workflow, not a specification list.
+              </h2>
             </div>
-          </div>
-        </div>
-      </section>
-
-      <section className={`${styles.section} ${styles.systemsSection}`}>
-        <div className="m-wrap">
-          <div className={styles.sectionHeader}>
-            <p className={styles.eyebrow}>What changes in practice</p>
-            <h2 className={styles.sectionTitle}>Three connected outcomes—not a catalogue of tools.</h2>
-            <p className={styles.sectionIntro}>
-              The individual features matter because they remove a specific break in the production
-              chain. Together they keep the rig organised, make the arrangement sound performed,
-              and carry the melody through to a finished section.
-            </p>
+            <Link href="/explore" className="m-button m-button-ink">See all features <ArrowRight size={16} /></Link>
           </div>
 
-          <div className={styles.systemsGrid}>
-            {valueSystems.map((system, index) => (
-              <article className={styles.systemCard} key={system.title}>
-                <div className={styles.systemTop}>
-                  <span className={styles.systemNumber}>{String(index + 1).padStart(2, "0")}</span>
-                  <span className={styles.systemIcon}><system.icon size={19} /></span>
+          <div className="mt-9 grid gap-5 md:grid-cols-2">
+            {highlighted.map((story) => (
+              <Link
+                key={story.slug}
+                href={`/explore/${story.slug}`}
+                className="group overflow-hidden rounded-[1.6rem] border border-black/10 bg-white"
+              >
+                <Image
+                  src={story.image}
+                  alt={story.title}
+                  width={1100}
+                  height={700}
+                  className="aspect-[16/9] w-full object-cover transition duration-500 group-hover:scale-[1.015]"
+                />
+                <div className="p-6">
+                  <span className="text-xs font-semibold uppercase tracking-[.16em] text-black/40">{story.group} · {story.eyebrow}</span>
+                  <h3 className="mt-2 font-[family-name:var(--font-instrument-serif)] text-3xl text-[#151712]">{story.title}</h3>
+                  <p className="mt-2 leading-6 text-black/50">{story.summary}</p>
+                  <span className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-[#52651f]">
+                    Watch and discuss <ArrowRight size={14} />
+                  </span>
                 </div>
-                <h3>{system.title}</h3>
-                <p>{system.body}</p>
-                <span className={styles.systemOutcome}>{system.outcome}</span>
-              </article>
+              </Link>
             ))}
           </div>
         </div>
       </section>
 
-      <section className={`${styles.section} ${styles.performanceSection}`}>
-        <div className="m-wrap">
-          <div className={styles.sectionHeader}>
-            <p className={styles.eyebrow}>Who it is for</p>
-            <h2 className={styles.sectionTitle}>Built for Yamaha musicians who also produce on a computer.</h2>
-            <p className={styles.sectionIntro}>
-              SmartBridge is most valuable when the keyboard is already an important part of the
-              creative process and the computer is where the arrangement must become editable,
-              repeatable, and ready to finish.
+      <section className="m-section bg-[#0d0f0c] text-white">
+        <div className="m-wrap grid gap-10 lg:grid-cols-[.85fr_1.15fr]">
+          <div>
+            <p className="m-eyebrow">Built with musicians</p>
+            <h2 className="mt-3 font-[family-name:var(--font-instrument-serif)] text-4xl md:text-5xl">
+              Feedback should lead somewhere visible.
+            </h2>
+            <p className="mt-5 max-w-xl leading-7 text-white/55">
+              Comments stay attached to the feature that triggered them. Suggestions can be voted on
+              without an account, Claudio can reply publicly, and the status can move from review to
+              planned, building and shipped.
             </p>
+            <Link href="/build-with-us" className="m-button m-button-outline-light mt-7 inline-flex">
+              Open Build with us <ArrowRight size={16} />
+            </Link>
           </div>
-
-          <div className={styles.enginesGrid}>
-            {audiences.map((audience) => (
-              <article className={styles.engineCard} key={audience.title}>
-                <span className={styles.engineLabel}><audience.icon size={15} /> {audience.label}</span>
-                <h3>{audience.title}</h3>
-                <p>{audience.body}</p>
-              </article>
-            ))}
-          </div>
+          <CommunityPreview />
         </div>
       </section>
 
-      <section className={`${styles.section} ${styles.pathSection}`}>
+      <section className="m-section bg-white">
         <div className="m-wrap">
-          <div className={styles.sectionHeader}>
-            <p className={styles.eyebrow}>Choose the right entry point</p>
-            <h2 className={styles.sectionTitle}>One product family, three different jobs.</h2>
-            <p className={styles.sectionIntro}>
-              Desktop is the complete production environment. Style Maker focuses on native Yamaha
-              style creation. Jam Player is the free browser experience for practising with a chord-aware band.
-            </p>
+          <div className="max-w-3xl">
+            <p className="m-eyebrow">One product family</p>
+            <h2 className="mt-3 font-[family-name:var(--font-instrument-serif)] text-4xl text-[#151712]">
+              Choose the entry point that matches the job.
+            </h2>
           </div>
-
-          <div className={styles.productGrid}>
+          <div className="mt-8 grid gap-5 md:grid-cols-3">
             {products.map((product) => (
-              <article className={`${styles.productCard}${product.dark ? ` ${styles.productCardDark}` : ""}`} key={product.name}>
-                <div className={styles.productHead}><span>{product.name}</span><strong className={styles.productStatus}>{product.status}</strong></div>
-                <Image className={styles.productImage} src={product.image} alt={product.title} width={900} height={600} />
-                <div className={styles.productBody}>
-                  <h3>{product.title}</h3>
-                  <p>{product.body}</p>
-                  <div className={styles.productPills}>{product.pills.map((pill) => <span key={pill}>{pill}</span>)}</div>
-                  <Link href={product.href} className={product.dark ? "m-button m-button-primary" : "m-button m-button-ink"}>
-                    {product.cta} <ArrowRight size={16} />
-                  </Link>
-                </div>
+              <article key={product.name} className="rounded-2xl border border-black/10 p-6">
+                <Layers3 size={20} className="text-[#667d25]" />
+                <h3 className="mt-4 text-xl font-semibold text-[#151712]">{product.name}</h3>
+                <p className="mt-2 min-h-20 text-sm leading-6 text-black/50">{product.body}</p>
+                <Link href={product.href} className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-[#52651f]">
+                  {product.cta} <ArrowRight size={14} />
+                </Link>
               </article>
             ))}
           </div>
@@ -283,9 +226,9 @@ export default function HomePage() {
           <p className="m-eyebrow">SmartBridge Desktop</p>
           <h2>Keep the Yamaha idea connected until the production is finished.</h2>
           <div className="m-actions">
-            <Link href="/features" className="m-button m-button-primary">See how Desktop works <ArrowRight size={17} /></Link>
+            <Link href="/explore" className="m-button m-button-primary">Explore Desktop <ArrowRight size={17} /></Link>
             <a href={SITE.setupUrl} target="_blank" rel="noopener noreferrer" className="m-button m-button-outline-light">Download Setup</a>
-            <Link href="/beta" className="m-button m-button-outline-light">Request beta access</Link>
+            <Link href="/build-with-us" className="m-button m-button-outline-light">Give feedback</Link>
           </div>
         </div>
       </section>
