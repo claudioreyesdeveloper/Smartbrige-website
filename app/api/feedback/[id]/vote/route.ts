@@ -15,6 +15,7 @@ export async function POST(
   const identity = feedbackIdentity(request)
   try {
     const { id } = await params
+    await ensureFeatureFeedbackSchema()
     const db = requireDb()
     const [target] = await db
       .select({ id: featureFeedback.id })
