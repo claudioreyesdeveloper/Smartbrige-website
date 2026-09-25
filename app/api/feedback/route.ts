@@ -21,6 +21,7 @@ function clean(value: unknown, maxLength: number) {
 }
 
 async function publicFeedback(featureId?: string | null) {
+  await ensureFeatureFeedbackSchema()
   const db = requireDb()
   const rows = await db
     .select()
