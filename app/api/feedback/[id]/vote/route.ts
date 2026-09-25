@@ -2,6 +2,7 @@ import { randomUUID } from "crypto"
 import { eq } from "drizzle-orm"
 import { NextRequest, NextResponse } from "next/server"
 import { requireDb } from "@/lib/db"
+import { ensureFeatureFeedbackSchema } from "@/lib/feature-feedback-schema"
 import { featureFeedback, featureFeedbackVotes } from "@/lib/db/schema"
 import { attachFeedbackCookie, feedbackIdentity } from "@/lib/feedback-identity"
 
