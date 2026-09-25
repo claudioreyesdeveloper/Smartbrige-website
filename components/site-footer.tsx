@@ -15,12 +15,13 @@ export function SiteFooter() {
         <div className="site-footer-grid">
           <div className="site-footer-brand">
             <Link href="/" className="site-logo site-logo-footer"><span>SB</span><strong>SmartBridge</strong></Link>
-            <p>Keep one Yamaha song context connected through performed MIDI, Cubase, Synthesizer V, lyrics, solos, and harmony.</p>
+            <p>One song context connected through Yamaha hardware, performed MIDI, Cubase, Synthesizer V, solos, vocals and harmony.</p>
           </div>
           <div>
-            <p className="site-footer-heading">Products</p>
+            <p className="site-footer-heading">Explore</p>
             <ul className="site-footer-links">
-              <li><Link href="/features">SmartBridge Desktop</Link></li>
+              <li><Link href="/explore">SmartBridge workflows</Link></li>
+              <li><Link href="/build-with-us">Build with us</Link></li>
               <li><Link href="/style-maker">Style Maker</Link></li>
               <li><Link href="/jam-player">Jam Player</Link></li>
             </ul>
@@ -36,8 +37,8 @@ export function SiteFooter() {
           </div>
           <div className="site-footer-cta">
             <p className="site-footer-heading">SmartBridge Desktop</p>
-            <p>See how the Yamaha idea remains connected until the production is finished.</p>
-            <Link href="/features" className="m-button m-button-primary">See the workflow <ArrowUpRight size={15} /></Link>
+            <p>Watch the current workflows and tell me what should improve next.</p>
+            <Link href="/explore" className="m-button m-button-primary">Explore and discuss <ArrowUpRight size={15} /></Link>
           </div>
         </div>
         <div className="site-footer-bottom">
