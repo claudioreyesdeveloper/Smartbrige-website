@@ -15,6 +15,7 @@ export async function PATCH(
   if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status })
 
   try {
+    await ensureFeatureFeedbackSchema()
     const { id } = await params
     const body = (await request.json()) as { status?: string; isHidden?: boolean }
     const changes: { status?: string; isHidden?: number; updatedAt: Date } = {
