@@ -16,6 +16,7 @@ export async function GET(_request: NextRequest) {
   if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status })
 
   try {
+    await ensureFeatureFeedbackSchema()
     const db = requireDb()
     const rows = await db
       .select()
