@@ -23,17 +23,18 @@ export default function ExplorePage() {
           <div>
             <p className="m-eyebrow">Explore SmartBridge</p>
             <h1 className="mt-4 max-w-4xl font-[family-name:var(--font-instrument-serif)] text-5xl leading-[.96] text-white md:text-7xl">
-              See the feature. Understand the workflow. Help shape what comes next.
+              See the feature. Then tell me where SmartBridge should go next.
             </h1>
           </div>
           <div className="max-w-xl lg:justify-self-end">
             <p className="text-lg leading-8 text-white/65">
-              SmartBridge is organised around musical outcomes rather than a catalogue of small tools.
-              Every feature page contains a current walkthrough, the real workflow behind it, and a
-              public discussion where you can leave feedback or suggestions without signing in.
+              I am showing the current SmartBridge workflows so musicians can help me make better
+              product decisions. Watch a feature, then tell me what is valuable, what should be easier,
+              what is missing, and what you would prioritise next. Your input is meant to guide the
+              direction of the product—not just rate what already exists. No sign-in is required.
             </p>
             <Link href="/build-with-us" className="m-button m-button-primary mt-6 inline-flex">
-              See community feedback <MessageSquareText size={17} />
+              Help set the direction <MessageSquareText size={17} />
             </Link>
           </div>
         </div>
@@ -82,7 +83,7 @@ export default function ExplorePage() {
                           Explore {story.title} <ArrowRight size={16} />
                         </Link>
                         <span className="inline-flex items-center gap-1.5 text-sm text-black/45">
-                          <MessageSquareText size={15} /> Feedback enabled
+                          <MessageSquareText size={15} /> I want your input
                         </span>
                       </div>
                     </div>
