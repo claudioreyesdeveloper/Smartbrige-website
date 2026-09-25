@@ -1,6 +1,7 @@
 import { count, desc, eq } from "drizzle-orm"
 import { NextRequest, NextResponse } from "next/server"
 import { requireDb } from "@/lib/db"
+import { ensureFeatureFeedbackSchema } from "@/lib/feature-feedback-schema"
 import {
   featureFeedback,
   featureFeedbackReplies,
