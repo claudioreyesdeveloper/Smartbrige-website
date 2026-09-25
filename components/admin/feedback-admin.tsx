@@ -45,6 +45,8 @@ export function FeedbackAdmin() {
   const [items, setItems] = useState<AdminItem[]>([])
   const [filter, setFilter] = useState("all")
   const [replyDrafts, setReplyDrafts] = useState<Record<string, string>>({})
+  const [editingId, setEditingId] = useState<string | null>(null)
+  const [editDraft, setEditDraft] = useState("")
   const [busyId, setBusyId] = useState<string | null>(null)
 
   const load = useCallback(async () => {
@@ -90,7 +92,10 @@ export function FeedbackAdmin() {
     }
   }
 
-  const update = async (id: string, changes: { status?: string; isHidden?: boolean }) => {
+  const update = async (
+    id: string,
+    changes: { status?: string; isHidden?: boolean; comment?: string },
+  ) => {
     setBusyId(id)
     try {
       const response = await fetch(`/api/admin/feedback/${encodeURIComponent(id)}`, {
@@ -130,6 +135,60 @@ export function FeedbackAdmin() {
     }
   }
 
+
+  const startEditing = (item: AdminItem) => {
+    setEditingId(item.id)
+    setEditDraft(item.comment)
+  }
+
+  const saveComment = async (id: string) => {
+    setBusyId(id)
+    try {
+      const response = await fetch(`/api/admin/feedback/${encodeURIComponent(id)}`, {
+        method: "PATCH",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ comment: editDraft }),
+      })
+      const data = await response.json()
+      if (!response.ok) throw new Error(data.error || "Could not save comment")
+      setEditingId(null)
+      setEditDraft("")
+      toast.success("Comment updated")
+      await load()
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Could not save comment")
+    } finally {
+      setBusyId(null)
+    }
+  }
+
+  const deleteFeedback = async (item: AdminItem) => {
+    const confirmed = window.confirm(
+      `Delete this feedback permanently?\n\n${item.comment || "Pulse response only."}\n\nVotes and replies attached to it will also be deleted.`,
+    )
+    if (!confirmed) return
+
+    setBusyId(item.id)
+    try {
+      const response = await fetch(
+        `/api/admin/feedback/${encodeURIComponent(item.id)}`,
+        { method: "DELETE" },
+      )
+      const data = await response.json()
+      if (!response.ok) throw new Error(data.error || "Could not delete feedback")
+      if (editingId === item.id) {
+        setEditingId(null)
+        setEditDraft("")
+      }
+      toast.success("Feedback deleted permanently")
+      await load()
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Could not delete feedback")
+    } finally {
+      setBusyId(null)
+    }
+  }
+
   const visible = useMemo(
     () => filter === "all" ? items : items.filter((item) => item.status === filter),
     [filter, items],
@@ -161,7 +220,7 @@ export function FeedbackAdmin() {
           <p className="ux-section-label">Admin · Community</p>
           <h1 className="mt-2 font-[family-name:var(--font-instrument-serif)] text-4xl text-slate-50">Feature feedback</h1>
           <p className="mt-2 max-w-2xl text-slate-400">
-            Reply publicly, change development status, or hide a post. Email stays private and is shown here only when a commenter requested reply notifications.
+            Reply publicly, edit comments, change development status, hide posts, or permanently delete feedback. Email stays private and is shown here only when a commenter requested reply notifications.
           </p>
         </div>
         <div className="flex gap-2">
@@ -199,7 +258,43 @@ export function FeedbackAdmin() {
                   {item.pulse ? <span className="text-slate-500">Would use: {item.pulse}</span> : null}
                   {item.videoSeconds != null ? <span className="text-slate-500">Video: {Math.floor(item.videoSeconds / 60)}:{String(item.videoSeconds % 60).padStart(2, "0")}</span> : null}
                 </div>
-                <p className="mt-3 whitespace-pre-wrap text-sm leading-6 text-slate-200">{item.comment || "Pulse response only."}</p>
+                {editingId === item.id ? (
+                  <div className="mt-3">
+                    <textarea
+                      value={editDraft}
+                      onChange={(event) => setEditDraft(event.target.value)}
+                      rows={4}
+                      maxLength={2000}
+                      className="w-full resize-y rounded-xl border border-lime-300/30 bg-black/30 px-3 py-2 text-sm leading-6 text-slate-100 outline-none focus:border-lime-300/60"
+                    />
+                    <div className="mt-2 flex flex-wrap gap-2">
+                      <Button
+                        type="button"
+                        size="sm"
+                        disabled={busyId === item.id}
+                        onClick={() => void saveComment(item.id)}
+                      >
+                        Save comment
+                      </Button>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        disabled={busyId === item.id}
+                        onClick={() => {
+                          setEditingId(null)
+                          setEditDraft("")
+                        }}
+                      >
+                        Cancel
+                      </Button>
+                    </div>
+                  </div>
+                ) : (
+                  <p className="mt-3 whitespace-pre-wrap text-sm leading-6 text-slate-200">
+                    {item.comment || "Pulse response only."}
+                  </p>
+                )}
                 <p className="mt-3 text-xs text-slate-500">
                   {item.displayName || "Anonymous"}
                   {item.email ? ` · ${item.email}${item.notifyOnReply ? " · notify on reply" : ""}` : ""}
@@ -219,10 +314,29 @@ export function FeedbackAdmin() {
                   type="button"
                   size="sm"
                   variant="outline"
+                  disabled={busyId === item.id || editingId === item.id}
+                  onClick={() => startEditing(item)}
+                >
+                  Edit comment
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
                   disabled={busyId === item.id}
                   onClick={() => void update(item.id, { isHidden: !Boolean(item.isHidden) })}
                 >
                   {item.isHidden ? "Unhide" : "Hide"}
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  disabled={busyId === item.id}
+                  onClick={() => void deleteFeedback(item)}
+                  className="border-red-500/30 text-red-300 hover:bg-red-500/10 hover:text-red-200"
+                >
+                  Delete permanently
                 </Button>
               </div>
             </div>
