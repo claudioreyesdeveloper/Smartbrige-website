@@ -37,8 +37,8 @@ export function SiteFooter() {
           </div>
           <div className="site-footer-cta">
             <p className="site-footer-heading">SmartBridge Desktop</p>
-            <p>Watch the current workflows and tell me what should improve next.</p>
-            <Link href="/explore" className="m-button m-button-primary">Explore and discuss <ArrowUpRight size={15} /></Link>
+            <p>Watch the current workflows and help me decide what SmartBridge should improve, simplify or build next.</p>
+            <Link href="/explore" className="m-button m-button-primary">Explore and help shape it <ArrowUpRight size={15} /></Link>
           </div>
         </div>
         <div className="site-footer-bottom">
