@@ -71,19 +71,20 @@ export default function HomePage() {
             </div>
             <h1 className="mt-6 max-w-4xl font-[family-name:var(--font-instrument-serif)] text-5xl leading-[.93] md:text-7xl">
               Turn Yamaha ideas into working productions.
-              <span className="mt-2 block text-[#c9f46a]">Then help shape what SmartBridge becomes.</span>
+              <span className="mt-2 block text-[#c9f46a]">I want musicians to help decide what SmartBridge becomes next.</span>
             </h1>
             <p className="mt-6 max-w-2xl text-lg leading-8 text-white/65">
               SmartBridge keeps the chords, sections, key and tempo connected while you move through
               Yamaha hardware, performed MIDI, Cubase, Synthesizer V, solos, vocals and harmony.
-              Every major feature now has a video and an open feedback discussion.
+              I am showing the real features openly because I want your direction: what is useful,
+              what is missing, what feels too complicated, and what would make SmartBridge a better product for musicians.
             </p>
             <div className="m-actions mt-8">
               <Link href="/explore" className="m-button m-button-primary">
                 Explore the real workflows <ArrowRight size={17} />
               </Link>
               <Link href="/build-with-us" className="m-button m-button-outline-light">
-                Help build SmartBridge <MessageSquareText size={17} />
+                Give me your direction <MessageSquareText size={17} />
               </Link>
             </div>
           </div>
@@ -183,15 +184,16 @@ export default function HomePage() {
           <div>
             <p className="m-eyebrow">Built with musicians</p>
             <h2 className="mt-3 font-[family-name:var(--font-instrument-serif)] text-4xl md:text-5xl">
-              Feedback should lead somewhere visible.
+              I want your input to influence the product.
             </h2>
             <p className="mt-5 max-w-xl leading-7 text-white/55">
-              Comments stay attached to the feature that triggered them. Suggestions can be voted on
-              without an account, Claudio can reply publicly, and the status can move from review to
-              planned, building and shipped.
+              I do not want feedback simply to collect reviews. I want musicians to tell me which
+              workflows matter, what should be simpler, what is missing, and where development should
+              go next. Comments stay attached to the feature, I can respond publicly, and useful ideas
+              can move visibly from review to planned, building and shipped.
             </p>
             <Link href="/build-with-us" className="m-button m-button-outline-light mt-7 inline-flex">
-              Open Build with us <ArrowRight size={16} />
+              Help set the direction <ArrowRight size={16} />
             </Link>
           </div>
           <CommunityPreview />
@@ -228,7 +230,7 @@ export default function HomePage() {
           <div className="m-actions">
             <Link href="/explore" className="m-button m-button-primary">Explore Desktop <ArrowRight size={17} /></Link>
             <a href={SITE.setupUrl} target="_blank" rel="noopener noreferrer" className="m-button m-button-outline-light">Download Setup</a>
-            <Link href="/build-with-us" className="m-button m-button-outline-light">Give feedback</Link>
+            <Link href="/build-with-us" className="m-button m-button-outline-light">Help shape the product</Link>
           </div>
         </div>
       </section>
