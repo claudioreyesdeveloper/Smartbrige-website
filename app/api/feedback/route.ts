@@ -126,6 +126,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Add a valid email for reply notifications." }, { status: 400 })
     }
 
+    await ensureFeatureFeedbackSchema()
     const db = requireDb()
     const since = new Date(Date.now() - 15 * 60 * 1000)
     const [recent] = await db
