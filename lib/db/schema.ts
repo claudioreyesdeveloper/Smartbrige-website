@@ -165,3 +165,66 @@ export type KeyboardModel = typeof keyboardModels.$inferSelect
 export type KeyboardVoice = typeof keyboardVoices.$inferSelect
 export type KeyboardStyle = typeof keyboardStyles.$inferSelect
 export type StyleMakerProjectRow = typeof styleMakerProjects.$inferSelect
+
+/** Anonymous, feature-scoped product feedback used by the public Build with us workflow. */
+export const featureFeedback = pgTable(
+  "feature_feedback",
+  {
+    id: text("id").primaryKey(),
+    featureId: text("feature_id").notNull(),
+    type: text("type").notNull().default("feedback"),
+    pulse: text("pulse"),
+    comment: text("comment").notNull().default(""),
+    displayName: text("display_name").notNull().default("Anonymous"),
+    email: text("email"),
+    notifyOnReply: integer("notify_on_reply").notNull().default(0),
+    videoSeconds: integer("video_seconds"),
+    status: text("status").notNull().default("new"),
+    isHidden: integer("is_hidden").notNull().default(0),
+    fingerprintHash: text("fingerprint_hash").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => [
+    index("feature_feedback_feature_idx").on(table.featureId),
+    index("feature_feedback_status_idx").on(table.status),
+    index("feature_feedback_created_idx").on(table.createdAt),
+    index("feature_feedback_fingerprint_idx").on(table.fingerprintHash),
+  ],
+)
+
+export const featureFeedbackReplies = pgTable(
+  "feature_feedback_replies",
+  {
+    id: text("id").primaryKey(),
+    feedbackId: text("feedback_id").notNull(),
+    authorName: text("author_name").notNull().default("Claudio"),
+    body: text("body").notNull(),
+    isPublic: integer("is_public").notNull().default(1),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => [
+    index("feature_feedback_replies_feedback_idx").on(table.feedbackId),
+  ],
+)
+
+export const featureFeedbackVotes = pgTable(
+  "feature_feedback_votes",
+  {
+    id: text("id").primaryKey(),
+    feedbackId: text("feedback_id").notNull(),
+    fingerprintHash: text("fingerprint_hash").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => [
+    uniqueIndex("feature_feedback_votes_once_idx").on(
+      table.feedbackId,
+      table.fingerprintHash,
+    ),
+    index("feature_feedback_votes_feedback_idx").on(table.feedbackId),
+  ],
+)
+
+export type FeatureFeedbackRow = typeof featureFeedback.$inferSelect
+export type FeatureFeedbackReplyRow = typeof featureFeedbackReplies.$inferSelect
+
