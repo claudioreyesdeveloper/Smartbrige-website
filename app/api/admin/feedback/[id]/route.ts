@@ -1,6 +1,7 @@
 import { eq } from "drizzle-orm"
 import { NextRequest, NextResponse } from "next/server"
 import { requireDb } from "@/lib/db"
+import { ensureFeatureFeedbackSchema } from "@/lib/feature-feedback-schema"
 import { featureFeedback } from "@/lib/db/schema"
 import { requireAdminSession } from "@/lib/style-maker/admin-auth"
 
