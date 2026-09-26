@@ -41,15 +41,22 @@ export default async function FeatureStoryPage({
           </Link>
           <div className="mt-10 grid gap-8 lg:grid-cols-[1.1fr_.9fr] lg:items-end">
             <div>
-              <p className="m-eyebrow">{story.group} · {story.eyebrow}</p>
+              <p className="m-eyebrow">Community feature review · {story.group} · {story.eyebrow}</p>
               <h1 className="mt-4 max-w-4xl font-[family-name:var(--font-instrument-serif)] text-5xl leading-[.95] md:text-7xl">
                 {story.title}
               </h1>
               <p className="mt-5 max-w-3xl text-xl leading-8 text-white/70">{story.summary}</p>
+              <div className="mt-5 inline-flex items-center gap-2 rounded-full border border-[#c9f46a]/25 bg-[#c9f46a]/10 px-3 py-2 text-sm font-semibold text-[#c9f46a]">
+                I am actively asking for direction on this feature
+              </div>
             </div>
-            <p className="max-w-xl text-base leading-7 text-white/55 lg:justify-self-end">
-              {story.description}
-            </p>
+            <div className="max-w-xl lg:justify-self-end">
+              <p className="text-base leading-7 text-white/55">{story.description}</p>
+              <p className="mt-4 text-sm leading-6 text-white/40">
+                Watch the current version below, then tell me what should stay, what should change,
+                what is missing, or whether I am solving the wrong problem.
+              </p>
+            </div>
           </div>
         </div>
       </section>
@@ -126,13 +133,13 @@ export default async function FeatureStoryPage({
 
       <section className="m-section bg-white">
         <div className="m-wrap rounded-[2rem] bg-[#0d0f0c] px-7 py-10 text-white md:px-12 md:py-14">
-          <p className="m-eyebrow">Keep exploring</p>
+          <p className="m-eyebrow">More open product questions</p>
           <div className="mt-4 flex flex-wrap items-end justify-between gap-6">
             <h2 className="max-w-3xl font-[family-name:var(--font-instrument-serif)] text-4xl md:text-5xl">
-              See how the other SmartBridge workflows use the same song context.
+              See the other SmartBridge features where I am asking musicians for direction.
             </h2>
             <Link href="/explore" className="m-button m-button-primary">
-              Explore all features <ArrowRight size={16} />
+              See features needing input <ArrowRight size={16} />
             </Link>
           </div>
         </div>
