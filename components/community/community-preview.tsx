@@ -61,12 +61,13 @@ export function CommunityPreview() {
     return (
       <div className="rounded-[1.6rem] border border-white/10 bg-white/[.04] p-7 text-white">
         <MessageSquareText size={26} className="text-[#c9f46a]" />
-        <h3 className="mt-4 text-xl font-semibold">The discussion starts with the feature videos.</h3>
+        <h3 className="mt-4 text-xl font-semibold">This board is waiting for the first product direction.</h3>
         <p className="mt-2 max-w-xl text-sm leading-6 text-white/55">
-          Each feature page lets musicians comment without an account. Suggestions, developer replies and development status will appear here automatically.
+          Pick a feature, watch the current implementation, and tell me what should change. Suggestions,
+          votes, my replies and development status will appear here publicly.
         </p>
         <Link href="/explore" className="m-button m-button-primary mt-5 inline-flex">
-          Watch a feature <ArrowRight size={15} />
+          Choose a feature to shape <ArrowRight size={15} />
         </Link>
       </div>
     )
@@ -94,7 +95,7 @@ export function CommunityPreview() {
         </Link>
       ))}
       <Link href="/build-with-us" className="inline-flex items-center gap-2 text-sm font-semibold text-[#c9f46a]">
-        Open the public feedback board <ArrowRight size={14} />
+        See all community direction <ArrowRight size={14} />
       </Link>
     </div>
   )
