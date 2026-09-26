@@ -10,8 +10,7 @@ const NAV = [
   { href: "/", label: "Shape SmartBridge" },
   { href: "/explore", label: "Features needing input" },
   { href: "/build-with-us", label: "Community board" },
-  { href: "/style-maker", label: "Style Maker" },
-  { href: "/jam-player", label: "Jam Player" },
+  { href: "/about", label: "Why SmartBridge" },
 ]
 
 export function SiteHeader() {
