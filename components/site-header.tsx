@@ -7,8 +7,9 @@ import { ArrowUpRight, Menu, X } from "lucide-react"
 import { SITE } from "@/lib/site"
 
 const NAV = [
-  { href: "/explore", label: "Explore" },
-  { href: "/build-with-us", label: "Build with us" },
+  { href: "/", label: "Shape SmartBridge" },
+  { href: "/explore", label: "Features needing input" },
+  { href: "/build-with-us", label: "Community board" },
   { href: "/style-maker", label: "Style Maker" },
   { href: "/jam-player", label: "Jam Player" },
 ]
@@ -68,7 +69,7 @@ export function SiteHeader() {
         </nav>
 
         <div className="site-header-actions">
-          <Link href="/build-with-us" className="site-sign-in">Help shape SmartBridge</Link>
+          <Link href="/explore" className="site-sign-in">Give product input</Link>
           <a href={SITE.setupUrl} target="_blank" rel="noopener noreferrer" className="m-button m-button-primary m-button-nav">
             Get SmartBridge Desktop <ArrowUpRight size={15} />
           </a>
@@ -98,7 +99,7 @@ export function SiteHeader() {
               {item.label}
             </Link>
           ))}
-          <Link href="/build-with-us" className="site-nav-link" onClick={() => setOpen(false)}>Help shape SmartBridge</Link>
+          <Link href="/explore" className="site-nav-link" onClick={() => setOpen(false)}>Give product input</Link>
           <a href={SITE.setupUrl} target="_blank" rel="noopener noreferrer" className="m-button m-button-primary" onClick={() => setOpen(false)}>
             Get Desktop <ArrowUpRight size={15} />
           </a>
