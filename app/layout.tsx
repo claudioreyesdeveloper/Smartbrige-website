@@ -29,11 +29,11 @@ const instrumentSerif = Instrument_Serif({
 export const metadata: Metadata = {
   metadataBase: new URL(SITE.url),
   title: {
-    default: "SmartBridge — Yamaha ideas to finished productions",
+    default: "SmartBridge — Help shape what comes next",
     template: "%s · SmartBridge",
   },
   description:
-    "Keep one Yamaha song connected through performed MIDI, Cubase, Synthesizer V, lyrics, solos, harmony, and native style production—from the first chord to the final editable tracks.",
+    "SmartBridge is being built in public. Watch the real Yamaha, MIDI, Cubase and vocal-production features, then help decide what should be simplified, improved or built next.",
   keywords: [
     "Yamaha arranger production software",
     "Genos Cubase integration",
@@ -44,9 +44,9 @@ export const metadata: Metadata = {
     "MegaVoice MIDI",
   ],
   openGraph: {
-    title: "SmartBridge — Turn Yamaha ideas into finished productions",
+    title: "SmartBridge — Help shape what comes next",
     description:
-      "The Yamaha, performed MIDI, Cubase, Synthesizer V, lyrics, solos, and harmony share one chord-aware song context.",
+      "Watch real SmartBridge features, give direct product input, vote on suggestions, and see what moves from feedback into development.",
     url: SITE.url,
     siteName: "SmartBridge",
     locale: "en_US",
@@ -62,8 +62,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "SmartBridge — Yamaha ideas to finished productions",
-    description: "Keep the song connected from the Yamaha performance to the final editable production.",
+    title: "SmartBridge — Help shape what comes next",
+    description: "Watch the current features and help direct what SmartBridge should simplify, improve or build next.",
     images: [`${SITE.url}/og-desktop.png`],
   },
 }
