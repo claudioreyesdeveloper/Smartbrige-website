@@ -5,8 +5,8 @@ import { ArrowRight, MessageSquareText, PlayCircle } from "lucide-react"
 import { FEATURE_GROUPS, FEATURE_STORIES } from "@/lib/feature-stories"
 
 export const metadata: Metadata = {
-  title: "Explore SmartBridge",
-  description: "Watch the current SmartBridge workflows, understand what each feature does, and give direct feedback without creating an account.",
+  title: "Features needing your input",
+  description: "Watch current SmartBridge features and help direct what should be simplified, improved or built next. No account required.",
 }
 
 const groupCopy = {
@@ -21,17 +21,17 @@ export default function ExplorePage() {
       <section className="m-section border-b border-white/10 bg-[#0d0f0c]">
         <div className="m-wrap grid gap-8 py-16 lg:grid-cols-[1.05fr_.95fr] lg:items-end lg:py-24">
           <div>
-            <p className="m-eyebrow">Explore SmartBridge</p>
+            <p className="m-eyebrow">Features needing your input</p>
             <h1 className="mt-4 max-w-4xl font-[family-name:var(--font-instrument-serif)] text-5xl leading-[.96] text-white md:text-7xl">
-              See the feature. Then tell me where SmartBridge should go next.
+              These are the parts of SmartBridge I want musicians to help shape.
             </h1>
           </div>
           <div className="max-w-xl lg:justify-self-end">
             <p className="text-lg leading-8 text-white/65">
-              I am showing the current SmartBridge workflows so musicians can help me make better
-              product decisions. Watch a feature, then tell me what is valuable, what should be easier,
-              what is missing, and what you would prioritise next. Your input is meant to guide the
-              direction of the product—not just rate what already exists. No sign-in is required.
+              This page is not a product catalogue. Each feature is here because I want direction on
+              it. Watch the current implementation and tell me what should stay, what should be simpler,
+              what is missing, and whether this is a problem worth solving at all. Your input is meant
+              to influence development priorities. No sign-in is required.
             </p>
             <Link href="/build-with-us" className="m-button m-button-primary mt-6 inline-flex">
               Help set the direction <MessageSquareText size={17} />
@@ -80,7 +80,7 @@ export default function ExplorePage() {
                       <p className="mt-3 max-w-2xl leading-7 text-black/60">{story.summary}</p>
                       <div className="mt-6 flex flex-wrap items-center gap-4">
                         <Link href={`/explore/${story.slug}`} className="m-button m-button-ink">
-                          Explore {story.title} <ArrowRight size={16} />
+                          Watch & shape {story.title} <ArrowRight size={16} />
                         </Link>
                         <span className="inline-flex items-center gap-1.5 text-sm text-black/45">
                           <MessageSquareText size={15} /> I want your input

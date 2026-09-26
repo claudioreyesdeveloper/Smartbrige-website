@@ -15,13 +15,13 @@ export function SiteFooter() {
         <div className="site-footer-grid">
           <div className="site-footer-brand">
             <Link href="/" className="site-logo site-logo-footer"><span>SB</span><strong>SmartBridge</strong></Link>
-            <p>One song context connected through Yamaha hardware, performed MIDI, Cubase, Synthesizer V, solos, vocals and harmony.</p>
+            <p>SmartBridge is being shaped in public. Watch the real features, tell me what should change, and help direct what I build next.</p>
           </div>
           <div>
-            <p className="site-footer-heading">Explore</p>
+            <p className="site-footer-heading">Shape SmartBridge</p>
             <ul className="site-footer-links">
-              <li><Link href="/explore">SmartBridge workflows</Link></li>
-              <li><Link href="/build-with-us">Build with us</Link></li>
+              <li><Link href="/explore">Features needing input</Link></li>
+              <li><Link href="/build-with-us">Community board</Link></li>
               <li><Link href="/style-maker">Style Maker</Link></li>
               <li><Link href="/jam-player">Jam Player</Link></li>
             </ul>
@@ -36,9 +36,9 @@ export function SiteFooter() {
             </ul>
           </div>
           <div className="site-footer-cta">
-            <p className="site-footer-heading">SmartBridge Desktop</p>
-            <p>Watch the current workflows and help me decide what SmartBridge should improve, simplify or build next.</p>
-            <Link href="/explore" className="m-button m-button-primary">Explore and help shape it <ArrowUpRight size={15} /></Link>
+            <p className="site-footer-heading">Your input is part of development</p>
+            <p>I am actively asking musicians which workflows matter, what is too complex, what is missing, and what should come next.</p>
+            <Link href="/explore" className="m-button m-button-primary">Choose a feature to shape <ArrowUpRight size={15} /></Link>
           </div>
         </div>
         <div className="site-footer-bottom">
