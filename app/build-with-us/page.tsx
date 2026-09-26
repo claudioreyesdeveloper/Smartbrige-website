@@ -4,7 +4,7 @@ import { ArrowRight, MessageSquareText, Milestone, Wrench } from "lucide-react"
 import { CommunityBoard } from "@/components/community/community-board"
 
 export const metadata: Metadata = {
-  title: "Build with us",
+  title: "Community board",
   description: "Help direct SmartBridge development: tell me what matters, what is missing, and what should be improved next. No account required.",
 }
 
@@ -14,9 +14,9 @@ export default function BuildWithUsPage() {
       <section className="border-b border-white/10 bg-[#0d0f0c] text-white">
         <div className="m-wrap grid gap-8 py-16 lg:grid-cols-[1.05fr_.95fr] lg:items-end lg:py-24">
           <div>
-            <p className="m-eyebrow">Build with us</p>
+            <p className="m-eyebrow">SmartBridge community board</p>
             <h1 className="mt-4 max-w-4xl font-[family-name:var(--font-instrument-serif)] text-5xl leading-[.96] md:text-7xl">
-              I want your direction to help me build a better SmartBridge.
+              This is where product feedback becomes visible development direction.
             </h1>
           </div>
           <div className="max-w-xl lg:justify-self-end">
